@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proveedores - L-Farma</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
+    <style>
+        html.sidebar-preload-collapsed .sidebar { width: 70px; min-width: 70px; }
+        html.sidebar-preload-collapsed .sidebar .sidebar-text,
+        html.sidebar-preload-collapsed .sidebar .nav-label,
+        html.sidebar-preload-collapsed .sidebar .logo-text { display: none; }
+        html.sidebar-preload-collapsed .main-content { margin-left: 70px; }
+
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .card-hover {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar no-transition" id="sidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <div class="logo">
+                <i class="bi bi-shield-shielded"></i>
+                <span class="logo-text"> Owner</span>
+            </div>
+            <button class="toggle-btn" onclick="toggleSidebar()">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="/owner/dashboard" class="nav-link">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/owner/gestionar-usuarios" class="nav-link">
+                    <i class="bi bi-people"></i>
+                    <span class="sidebar-text">Gestión de Usuarios</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="/proveedores" class="nav-link">
+                    <i class="bi bi-truck"></i>
+                    <span class="sidebar-text">Proveedores</span>
+                </a>
+            </li>
+            <li class="nav-item"><a href="/productos" class="nav-link"><i class="bi bi-box-seam"></i><span
+                        class="sidebar-text">Productos</span></a></li>
+            <li class="nav-item"><a href="/ventas" class="nav-link"><i class="bi bi-receipt"></i><span
+                        class="sidebar-text">Ventas</span></a></li>
+            <li class="nav-item"><a href="/ventas/nueva" class="nav-link"><i class="bi bi-cart-plus"></i><span
+                        class="sidebar-text">Nueva Venta</span></a></li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="bi bi-gear"></i>
+                    <span class="sidebar-text">Configuración</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <button type="button" id="logoutTrigger" class="nav-link w-100 text-start" style="background: none; border: none; cursor: pointer;">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="sidebar-text">Cerrar Sesión</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content no-transition" id="mainContent">
+        <div class="top-bar">
+            <button class="btn btn-light" id="mobileToggle" style="display: none;"><i class="bi bi-list"></i></button>
+            <div><i class="bi bi-person-circle fs-4 me-2"></i><span><strong
+                        th:text="${#authentication.name}"></strong></span></div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-truck"></i> Proveedores</h1>
+                <a href="/proveedores/nuevo" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nuevo
+                    Proveedor</a>
+            </div>
+
+            <!-- Alertas -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Buscador -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-10">
+                            <input type="text" class="form-control" name="search"
+                                placeholder="Buscar por nombre, empresa o tipo de producto..." th:value="${searchTerm}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i>
+                                Buscar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Total de proveedores: <strong th:text="${totalProveedores}"></strong>
+            </div>
+
+            <!-- Grid de Proveedores -->
+            <div class="row">
+                <div class="col-md-12 mb-3" th:if="${proveedores.empty}">
+                    <div class="alert alert-warning text-center">
+                        <i class="bi bi-exclamation-triangle fs-1"></i>
+                        <h4>No hay proveedores registrados</h4>
+                        <a href="/proveedores/nuevo" class="btn btn-primary mt-2">Crear primer proveedor</a>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 mb-4" th:each="proveedor : ${proveedores}">
+                    <div class="card h-100 card-hover">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-building"></i>
+                                    <strong th:text="${proveedor.nombre}"></strong>
+                                </h5>
+                                <span class="badge bg-secondary" th:text="${proveedor.empresa}"></span>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="text-muted">Teléfono:</small>
+                                <div><i class="bi bi-telephone"></i> <span th:text="${proveedor.telefono}">-</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="text-muted">Email:</small>
+                                <div><i class="bi bi-envelope"></i> <span th:text="${proveedor.email}">-</span></div>
+                            </div>
+
+                            <div class="mb-2">
+                                <small class="text-muted">Dirección:</small>
+                                <div><i class="bi bi-geo-alt"></i> <span th:text="${proveedor.direccion}">-</span></div>
+                            </div>
+
+                            <div th:if="${proveedor.tipoProductos}">
+                                <small class="text-muted">Tipo de productos:</small>
+                                <div><span class="badge bg-info" th:text="${proveedor.tipoProductos}"></span></div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="btn-group w-100">
+                                <a th:href="@{/proveedores/editar/{id}(id=${proveedor.id})}"
+                                    class="btn btn-warning btn-sm">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                    th:data-bs-target="'#eliminarModal' + ${proveedor.id}">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Eliminar -->
+                    <div class="modal fade" th:id="'eliminarModal' + ${proveedor.id}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>¿Estás seguro de que deseas eliminar al proveedor <strong
+                                            th:text="${proveedor.nombre}"></strong>?</p>
+                                    <p class="text-danger">Esta acción no se puede deshacer.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancelar</button>
+                                    <form th:action="@{/proveedores/eliminar/{id}(id=${proveedor.id})}" method="post"
+                                        style="display: inline;">
+                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <i class="bi bi-exclamation-triangle-fill logout-icon"></i>
+                    <p>¿Estás seguro que quieres cerrar sesión?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-logout-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-logout-confirm" id="logoutConfirmBtn">
+                        <i class="bi bi-check-lg"></i> Sí, cerrar sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+</body>
+
+</html>

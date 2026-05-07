@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - L-Farma</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
+    <style>
+        html.sidebar-preload-collapsed .sidebar { width: 70px; min-width: 70px; }
+        html.sidebar-preload-collapsed .sidebar .sidebar-text,
+        html.sidebar-preload-collapsed .sidebar .nav-label,
+        html.sidebar-preload-collapsed .sidebar .logo-text { display: none; }
+        html.sidebar-preload-collapsed .main-content { margin-left: 70px; }
+
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .user-row.inactive {
+            opacity: 0.6;
+            background-color: #f8f9fa;
+        }
+
+        .user-row.inactive:hover {
+            opacity: 0.8;
+        }
+
+        .badge-owner {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .badge-admin {
+            background-color: #0d6efd;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .badge-employee {
+            background-color: #198754;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .badge-inactive {
+            background-color: #6c757d;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar no-transition" id="sidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <div class="logo"><i class="bi bi-shield-shielded"></i><span class="logo-text"> Owner</span></div>
+            <button class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-chevron-left"></i></button>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/owner/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i><span
+                        class="sidebar-text">Dashboard</span></a></li>
+            <li class="nav-item"><a href="/owner/gestionar-usuarios" class="nav-link"><i
+                        class="bi bi-people"></i><span class="sidebar-text">Gestión de Usuarios</span></a></li>
+            <li class="nav-item"><a href="/proveedores" class="nav-link"><i class="bi bi-truck"></i><span
+                        class="sidebar-text">Proveedores</span></a></li>
+            <li class="nav-item"><a href="/productos" class="nav-link"><i class="bi bi-box-seam"></i><span
+                        class="sidebar-text">Productos</span></a></li>
+            <li class="nav-item"><a href="/ventas" class="nav-link"><i class="bi bi-receipt"></i><span
+                        class="sidebar-text">Ventas</span></a></li>
+            <li class="nav-item"><a href="/ventas/nueva" class="nav-link"><i class="bi bi-cart-plus"></i><span
+                        class="sidebar-text">Nueva Venta</span></a></li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="bi bi-gear"></i>
+                    <span class="sidebar-text">Configuración</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <button type="button" id="logoutTrigger" class="nav-link w-100 text-start" style="background: none; border: none; cursor: pointer;">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="sidebar-text">Cerrar Sesión</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content no-transition" id="mainContent">
+        <div class="top-bar">
+            <button class="btn btn-light" id="mobileToggle" style="display: none;"><i class="bi bi-list"></i></button>
+            <div><i class="bi bi-person-circle fs-4 me-2"></i><span><strong
+                        th:text="${#authentication.name}"></strong></span></div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-people-fill"></i> Gestión de Usuarios</h1>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal">
+                    <i class="bi bi-plus-circle"></i> Nuevo Usuario
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-2">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h6>Usuarios Activos</h6>
+                            <h3 th:text="${totalActivos}">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body">
+                            <h6>Usuarios Inactivos</h6>
+                            <h3 th:text="${totalInactivos}">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Filtrar por Estado/Rol</label>
+                            <select name="filtro" class="form-select" onchange="this.form.submit()">
+                                <option value="">Todos los usuarios</option>
+                                <option value="ACTIVOS" th:selected="${filtroActual == 'ACTIVOS'}">Usuarios Activos
+                                </option>
+                                <option value="INACTIVOS" th:selected="${filtroActual == 'INACTIVOS'}">Usuarios
+                                    Inactivos</option>
+                                <option value="ROLE_ADMIN" th:selected="${filtroActual == 'ROLE_ADMIN'}">Administradores
+                                </option>
+                                <option value="ROLE_EMPLOYEE" th:selected="${filtroActual == 'ROLE_EMPLOYEE'}">Empleados
+                                </option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabla de Usuarios -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Usuario</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${usuarios}"
+                                    th:classappend="${user.activo != true} ? 'inactive' : ''"
+                                    th:data-user-id="${user.id}" th:data-user-name="${user.username}"
+                                    th:data-user-email="${user.email}" th:data-user-rol="${user.rol}"
+                                    th:data-user-activo="${user.activo}">
+                                    <td th:text="${user.id}"></td>
+                                    <td>
+                                        <i class="bi bi-person-circle"></i>
+                                        <span th:text="${user.username}"></span>
+                                    </td>
+                                    <td th:text="${user.email} != null ? ${user.email} : '-'"></td>
+                                    <td>
+                                        <span th:if="${user.rol == 'ROLE_OWNER'}" class="badge-owner">👑 OWNER</span>
+                                        <span th:if="${user.rol == 'ROLE_ADMIN'}" class="badge-admin">⚙️ ADMIN</span>
+                                        <span th:if="${user.rol == 'ROLE_EMPLOYEE'}" class="badge-employee">👤
+                                            EMPLEADO</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${user.activo == true}" class="badge bg-success">Activo</span>
+                                        <span th:unless="${user.activo == true}" class="badge-inactive">Inactivo</span>
+                                    </td>
+                                    <td
+                                        th:text="${user.fechaCreacion != null ? #temporals.format(user.fechaCreacion, 'dd/MM/yyyy') : '-'}">
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-info editar-usuario-btn" data-bs-toggle="modal"
+                                                data-bs-target="#editarUsuarioModal" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+
+                                            <button class="btn btn-warning cambiar-rol-btn" data-bs-toggle="modal"
+                                                data-bs-target="#cambiarRolModal" title="Cambiar Rol">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </button>
+
+                                            <button th:if="${user.activo == true && user.rol != 'ROLE_OWNER'}"
+                                                class="btn btn-danger desactivar-usuario-btn" title="Desactivar">
+                                                <i class="bi bi-person-x"></i>
+                                            </button>
+
+                                            <button th:unless="${user.activo == true}"
+                                                class="btn btn-success activar-usuario-btn" title="Activar">
+                                                <i class="bi bi-person-check"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${usuarios.empty}">
+                                    <td colspan="7" class="text-center text-muted">No hay usuarios para mostrar</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Crear Usuario -->
+    <div class="modal fade" id="crearUsuarioModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> Crear Nuevo Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="crearUsuarioForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre(s) *</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellidos *</label>
+                                <input type="text" class="form-control" id="apellido" name="apellido" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Usuario *</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña *</label>
+                            <input type="password" class="form-control" id="password" name="password" minlength="6" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" required placeholder="ejemplo@dominio.com">
+                            <div class="invalid-feedback">Formato de correo inválido</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rol *</label>
+                            <select class="form-select" id="rol" name="rol" required>
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="EMPLOYEE">EMPLOYEE</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarUsuario()">Crear Usuario</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Usuario -->
+    <div class="modal fade" id="editarUsuarioModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Editar Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editarUsuarioForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label class="form-label">Usuario *</label>
+                            <input type="text" class="form-control" id="editUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Rol</label>
+                            <select class="form-select" id="editRol">
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="EMPLOYEE">EMPLOYEE</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-info" onclick="actualizarUsuario()">Actualizar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Rol -->
+    <div class="modal fade" id="cambiarRolModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title"><i class="bi bi-arrow-repeat"></i> Cambiar Rol</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Usuario: <strong id="cambiarRolUsername"></strong></p>
+                    <select class="form-select" id="nuevoRol">
+                        <option value="ADMIN">ADMIN</option>
+                        <option value="EMPLOYEE">EMPLOYEE</option>
+                    </select>
+                    <input type="hidden" id="cambiarRolUserId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" onclick="confirmarCambioRol()">Cambiar Rol</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Estado -->
+    <div class="modal fade" id="cambiarEstadoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-white bg-danger">
+                    <h5 class="modal-title"><i class="bi bi-person-x"></i> Desactivar Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="cambiarEstadoTexto"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarEstado" onclick="confirmarCambioEstado()">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function () {
+            const token = $("meta[name='_csrf']").attr("content");
+            const header = $("meta[name='_csrf_header']").attr("content");
+            if (token && header) {
+                $(document).ajaxSend(function (e, xhr, options) {
+                    xhr.setRequestHeader(header, token);
+                });
+            }
+
+            // Cargar datos en el modal de edición
+            $('#editarUsuarioModal').on('show.bs.modal', function (event) {
+                const button = $(event.relatedTarget);
+                const row = button.closest('tr');
+                const userId = row.data('user-id');
+                const userName = row.data('user-name');
+                const userEmail = row.data('user-email');
+                const userRol = row.data('user-rol');
+
+                $.ajax({
+                    url: '/owner/usuario/' + userId,
+                    method: 'GET',
+                    success: function (response) {
+                        if (response.success) {
+                            $('#editUserId').val(response.id);
+                            $('#editUsername').val(response.username);
+                            $('#editEmail').val(response.email || '');
+                            $('#editRol').val(response.rol);
+                        } else {
+                            $('#editUserId').val(userId);
+                            $('#editUsername').val(userName);
+                            $('#editEmail').val(userEmail || '');
+                            let rolSinPrefijo = userRol ? userRol.replace('ROLE_', '') : 'EMPLOYEE';
+                            $('#editRol').val(rolSinPrefijo);
+                        }
+                    },
+                    error: function () {
+                        $('#editUserId').val(userId);
+                        $('#editUsername').val(userName);
+                        $('#editEmail').val(userEmail || '');
+                        let rolSinPrefijo = userRol ? userRol.replace('ROLE_', '') : 'EMPLOYEE';
+                        $('#editRol').val(rolSinPrefijo);
+                    }
+                });
+            });
+
+            // Cargar datos en el modal de cambio de rol
+            $('#cambiarRolModal').on('show.bs.modal', function (event) {
+                const button = $(event.relatedTarget);
+                const row = button.closest('tr');
+                const userId = row.data('user-id');
+                const userName = row.data('user-name');
+
+                usuarioIdParaCambioRol = userId;
+                $('#cambiarRolUsername').text(userName);
+                $('#cambiarRolUserId').val(userId);
+            });
+
+
+            // Desactivar usuario
+            $(document).on('click', '.desactivar-usuario-btn', function () {
+                const row = $(this).closest('tr');
+                usuarioIdParaCambioEstado = row.data('user-id');
+                const userName = row.data('user-name');
+                accionCambioEstado = 'desactivar';
+
+                $('#cambiarEstadoModal .modal-header').removeClass('bg-success').addClass('bg-danger');
+                $('#cambiarEstadoModal .modal-title').html('<i class="bi bi-person-x"></i> Desactivar Usuario');
+                $('#cambiarEstadoTexto').html(`¿Estás seguro de que deseas desactivar la cuenta de <strong>${userName}</strong>?`);
+                $('#btnConfirmarEstado').removeClass('btn-success').addClass('btn-danger').text('Desactivar');
+                
+                $('#cambiarEstadoModal').modal('show');
+            });
+
+            // Activar usuario
+            $(document).on('click', '.activar-usuario-btn', function () {
+                const row = $(this).closest('tr');
+                usuarioIdParaCambioEstado = row.data('user-id');
+                const userName = row.data('user-name');
+                accionCambioEstado = 'activar';
+
+                $('#cambiarEstadoModal .modal-header').removeClass('bg-danger').addClass('bg-success');
+                $('#cambiarEstadoModal .modal-title').html('<i class="bi bi-person-check"></i> Activar Usuario');
+                $('#cambiarEstadoTexto').html(`¿Estás seguro de que deseas reactivar la cuenta de <strong>${userName}</strong>?`);
+                $('#btnConfirmarEstado').removeClass('btn-danger').addClass('btn-success').text('Activar');
+                
+                $('#cambiarEstadoModal').modal('show');
+            });
+        });
+
+        let usuarioIdParaCambioRol = null;
+        let usuarioIdParaCambioEstado = null;
+        let accionCambioEstado = null; // 'activar' o 'desactivar'
+
+        function guardarUsuario() {
+            const nombre = $('#nombre').val();
+            const apellido = $('#apellido').val();
+            const username = $('#username').val();
+            const password = $('#password').val();
+            const email = $('#email').val();
+            const rol = $('#rol').val();
+
+            if (!nombre || !apellido || !username || !password || !email) {
+                mostrarAlerta('error', 'Por favor complete todos los campos requeridos');
+                return;
+            }
+
+            // Validación estricta de correo con Regex
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(email)) {
+                $('#email').addClass('is-invalid');
+                return;
+            } else {
+                $('#email').removeClass('is-invalid');
+            }
+
+            // Cambiar el texto del botón y deshabilitarlo
+            const btnCrear = $('#crearUsuarioModal .btn-primary');
+            const originalText = btnCrear.html();
+            btnCrear.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creando...');
+            btnCrear.prop('disabled', true);
+
+            $.ajax({
+                url: '/owner/crear-usuario',
+                method: 'POST',
+                data: { nombre: nombre, apellido: apellido, username: username, password: password, email: email, rol: rol },
+                success: function (response) {
+                    btnCrear.html(originalText);
+                    btnCrear.prop('disabled', false);
+                    if (response.success) {
+                        $('#crearUsuarioModal').modal('hide');
+                        $('#crearUsuarioForm')[0].reset();
+                        $('#email').removeClass('is-invalid');
+                        mostrarAlerta('success', response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        mostrarAlerta('error', response.message);
+                    }
+                },
+                error: function (xhr) {
+                    btnCrear.html(originalText);
+                    btnCrear.prop('disabled', false);
+                    let mensaje = 'Error al crear el usuario';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        mensaje = xhr.responseJSON.message;
+                    }
+                    mostrarAlerta('error', mensaje);
+                }
+            });
+        }
+
+        function actualizarUsuario() {
+            const id = $('#editUserId').val();
+            const username = $('#editUsername').val();
+            const email = $('#editEmail').val();
+            const rol = $('#editRol').val();
+
+            if (!username) {
+                mostrarAlerta('error', 'El nombre de usuario es requerido');
+                return;
+            }
+
+            $.ajax({
+                url: '/owner/actualizar-usuario/' + id,
+                method: 'POST',
+                data: { username: username, email: email, rol: rol },
+                success: function (response) {
+                    if (response.success) {
+                        $('#editarUsuarioModal').modal('hide');
+                        mostrarAlerta('success', response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        mostrarAlerta('error', response.message);
+                    }
+                },
+                error: function (xhr) {
+                    let mensaje = 'Error al actualizar el usuario';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        mensaje = xhr.responseJSON.message;
+                    }
+                    mostrarAlerta('error', mensaje);
+                }
+            });
+        }
+
+        function confirmarCambioRol() {
+            const nuevoRol = $('#nuevoRol').val();
+
+            $.ajax({
+                url: '/owner/cambiar-rol/' + usuarioIdParaCambioRol,
+                method: 'POST',
+                data: { nuevoRol: nuevoRol },
+                success: function (response) {
+                    if (response.success) {
+                        $('#cambiarRolModal').modal('hide');
+                        mostrarAlerta('success', response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        mostrarAlerta('error', response.message);
+                    }
+                },
+                error: function (xhr) {
+                    let mensaje = 'Error al cambiar el rol';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        mensaje = xhr.responseJSON.message;
+                    }
+                    mostrarAlerta('error', mensaje);
+                }
+            });
+        }
+
+        function confirmarCambioEstado() {
+            $.ajax({
+                url: '/owner/' + accionCambioEstado + '/' + usuarioIdParaCambioEstado,
+                method: 'POST',
+                success: function (response) {
+                    if (response.success) {
+                        $('#cambiarEstadoModal').modal('hide');
+                        mostrarAlerta('success', response.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        $('#cambiarEstadoModal').modal('hide');
+                        mostrarAlerta('error', response.message);
+                    }
+                },
+                error: function (xhr) {
+                    $('#cambiarEstadoModal').modal('hide');
+                    let mensaje = 'Error al cambiar el estado del usuario';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        mensaje = xhr.responseJSON.message;
+                    }
+                    mostrarAlerta('error', mensaje);
+                }
+            });
+        }
+
+        function mostrarAlerta(tipo, mensaje) {
+            const alertDiv = $(`
+                <div class="alert alert-${tipo === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" 
+                     style="z-index: 9999; min-width: 300px;" role="alert">
+                    <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                    ${mensaje}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+            $('body').append(alertDiv);
+            setTimeout(() => alertDiv.alert('close'), 3000);
+        }
+    </script>
+
+    <!-- Logout Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <i class="bi bi-exclamation-triangle-fill logout-icon"></i>
+                    <p>¿Estás seguro que quieres cerrar sesión?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-logout-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-logout-confirm" id="logoutConfirmBtn">
+                        <i class="bi bi-check-lg"></i> Sí, cerrar sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
+
+    <script src="/js/sidebar.js"></script>
+</body>
+
+</html>

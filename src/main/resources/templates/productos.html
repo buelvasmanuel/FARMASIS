@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos - OWNER</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function () { try { if (localStorage.getItem('sidebarState') === 'closed') { document.documentElement.classList.add('sidebar-preload-collapsed'); } } catch (e) { } }());</script>
+    <style>
+        html.sidebar-preload-collapsed .sidebar {
+            width: 70px;
+            min-width: 70px;
+        }
+
+        html.sidebar-preload-collapsed .sidebar .sidebar-text,
+        html.sidebar-preload-collapsed .sidebar .nav-label,
+        html.sidebar-preload-collapsed .sidebar .logo-text {
+            display: none;
+        }
+
+        html.sidebar-preload-collapsed .main-content {
+            margin-left: 70px;
+        }
+
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-action {
+            padding: 5px 8px;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar no-transition" id="sidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <div class="logo"><i class="bi bi-shield-shielded"></i><span class="logo-text"> Owner</span></div>
+            <button class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-chevron-left"></i></button>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/owner/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i><span
+                        class="sidebar-text">Dashboard</span></a></li>
+            <li class="nav-item"><a href="/owner/gestionar-usuarios" class="nav-link"><i class="bi bi-people"></i><span
+                        class="sidebar-text">Gestión de Usuarios</span></a></li>
+            <li class="nav-item"><a href="/proveedores" class="nav-link"><i class="bi bi-truck"></i><span
+                        class="sidebar-text">Proveedores</span></a></li>
+            <li class="nav-item"><a href="/productos" class="nav-link active"><i class="bi bi-box-seam"></i><span
+                        class="sidebar-text">Productos</span></a></li>
+            <li class="nav-item"><a href="/ventas" class="nav-link"><i class="bi bi-receipt"></i><span
+                        class="sidebar-text">Ventas</span></a></li>
+            <li class="nav-item"><a href="/ventas/nueva" class="nav-link"><i class="bi bi-cart-plus"></i><span
+                        class="sidebar-text">Nueva Venta</span></a></li>
+            <li class="nav-item">
+                <a href="#" class="nav-link"><i class="bi bi-gear"></i><span
+                        class="sidebar-text">Configuración</span></a>
+            </li>
+            <li class="nav-item">
+                <button type="button" id="logoutTrigger" class="nav-link w-100 text-start"
+                    style="background: none; border: none; cursor: pointer;">
+                    <i class="bi bi-box-arrow-right"></i><span class="sidebar-text">Cerrar Sesión</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content no-transition" id="mainContent">
+        <div class="top-bar">
+            <button class="btn btn-light" id="mobileToggle" style="display:none;"><i class="bi bi-list"></i></button>
+            <div><i class="bi bi-person-circle fs-4 me-2"></i><span><strong
+                        th:text="${#authentication.name}"></strong></span></div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-box-seam"></i> Productos</h1>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productoModal"
+                    id="btnNuevoProducto">
+                    <i class="bi bi-plus-circle"></i> Nuevo Producto
+                </button>
+            </div>
+
+            <!-- Alertas -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><span
+                    th:text="${success}"></span><button type="button" class="btn-close"
+                    data-bs-dismiss="alert"></button></div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><span
+                    th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h6>Total Productos</h6>
+                            <h3 th:text="${totalItems}">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h6>Stock Bajo (&lt;5)</h6>
+                            <h3 id="stockBajoCount">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h6>Página</h6>
+                            <h3 th:text="${currentPage + 1} + '/' + ${totalPages}">0/0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body">
+                            <h6>Por Página</h6>
+                            <h3 th:text="${pageSize}">15</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buscador -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-10"><input type="text" class="form-control" name="search"
+                                placeholder="Buscar por nombre o código..." th:value="${search}"></div>
+                        <div class="col-md-2"><button type="submit" class="btn btn-primary w-100"><i
+                                    class="bi bi-search"></i> Buscar</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos -->
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Vencimiento</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${productos}">
+                                <td><span class="badge bg-secondary" th:text="${p.codigo}">-</span></td>
+                                <td><strong th:text="${p.nombre}">-</strong></td>
+                                <td th:text="${p.categoria != null ? p.categoria : '-'}">-</td>
+                                <td>$ <span
+                                        th:text="${p.precio != null ? #numbers.formatDecimal(p.precio, 1, 2) : '0.00'}">0</span>
+                                </td>
+                                <td>
+                                    <span th:if="${p.cantidad == null}">0</span>
+                                    <span th:if="${p.cantidad != null and p.cantidad < 5}" class="badge bg-danger"
+                                        th:text="${p.cantidad}">0</span>
+                                    <span th:if="${p.cantidad != null and p.cantidad >= 5 and p.cantidad < 15}"
+                                        class="badge bg-warning" th:text="${p.cantidad}">0</span>
+                                    <span th:if="${p.cantidad != null and p.cantidad >= 15}" class="badge bg-success"
+                                        th:text="${p.cantidad}">0</span>
+                                </td>
+                                <td
+                                    th:text="${p.fechaVencimiento != null ? #temporals.format(p.fechaVencimiento, 'dd/MM/yyyy') : '-'}">
+                                    -</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-info btn-action editar-producto" th:data-id="${p.id}"
+                                        th:data-codigo="${p.codigo}" th:data-nombre="${p.nombre}"
+                                        th:data-precio="${p.precio}" th:data-costo="${p.costoCompra}"
+                                        th:data-cantidad="${p.cantidad}" th:data-categoria="${p.categoria}"
+                                        th:data-presentacion="${p.presentacion}"
+                                        th:data-concentracion="${p.concentracion}" th:data-lote="${p.lote}"
+                                        th:data-fecha="${p.fechaVencimiento}"
+                                        th:data-principios="${p.principiosActivos}"
+                                        th:data-descripcion="${p.descripcion}"
+                                        th:data-proveedorid="${p.proveedorId}"
+                                        th:data-fechaingreso="${p.fechaIngreso}" title="Editar"><i
+                                            class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-danger btn-action eliminar-producto"
+                                        th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Eliminar"><i
+                                            class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr th:if="${productos.empty}">
+                                <td colspan="7" class="text-center py-5">No hay productos registrados. <button
+                                        class="btn btn-link" data-bs-toggle="modal"
+                                        data-bs-target="#productoModal">Crear primer producto</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="small text-muted">Mostrando <span th:text="${productos.size()}"></span> de <span
+                            th:text="${totalItems}"></span> productos</span>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                                <a class="page-link"
+                                    th:href="@{/productos(page=0, size=${pageSize}, search=${search})}"><i
+                                        class="bi bi-chevron-double-left"></i></a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                                <a class="page-link"
+                                    th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search})}"><i
+                                        class="bi bi-chevron-left"></i></a>
+                            </li>
+                            <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                th:classappend="${i == currentPage} ? 'active' : ''"
+                                th:if="${i >= currentPage - 2 and i <= currentPage + 2}" class="page-item">
+                                <a class="page-link"
+                                    th:href="@{/productos(page=${i}, size=${pageSize}, search=${search})}"
+                                    th:text="${i + 1}"></a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                                <a class="page-link"
+                                    th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search})}"><i
+                                        class="bi bi-chevron-right"></i></a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                                <a class="page-link"
+                                    th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search})}"><i
+                                        class="bi bi-chevron-double-right"></i></a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <select class="form-select w-auto" onchange="changePageSize(this)">
+                        <option value="10" th:selected="${pageSize == 10}">10</option>
+                        <option value="15" th:selected="${pageSize == 15}">15</option>
+                        <option value="25" th:selected="${pageSize == 25}">25</option>
+                        <option value="50" th:selected="${pageSize == 50}">50</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Producto (Crear/Editar) -->
+    <div class="modal fade" id="productoModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title"><i class="bi bi-box-seam"></i> <span id="modalTitle">Nuevo Producto</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="productoForm" th:action="@{/productos/guardar}" method="post">
+                    <input type="hidden" id="productoId" name="id">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Código *</label>
+                                <input type="text" class="form-control" id="codigo" name="codigo" required pattern="^[0-9]{4}$" minlength="4" maxlength="4" title="El código debe ser de exactamente 4 números" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                <div class="invalid-feedback">El código debe ser de exactamente 4 números</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre *</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Precio *</label>
+                                <input type="number" step="0.01" class="form-control" id="precio" name="precio" required
+                                    min="0" onkeydown="if(['e', 'E', '+', '-'].includes(event.key)) event.preventDefault();">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Costo Compra</label>
+                                <input type="number" step="0.01" class="form-control" id="costoCompra"
+                                    name="costoCompra" min="0" onkeydown="if(['e', 'E', '+', '-'].includes(event.key)) event.preventDefault();">
+                                <small id="margenGanancia" class="form-text mt-1 d-block fw-bold"></small>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Stock *</label>
+                                <input type="number" class="form-control" id="cantidad" name="cantidad" required
+                                    min="0" onkeydown="if(['e', 'E', '+', '-'].includes(event.key)) event.preventDefault();">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Categoría</label>
+                                <select class="form-control" id="categoria" name="categoria">
+                                    <option value="">Seleccionar</option>
+                                    <option>Medicamento</option>
+                                    <option>Higiene</option>
+                                    <option>Cosmético</option>
+                                    <option>Suplemento</option>
+                                    <option>Otros</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Presentación</label>
+                                <input type="text" class="form-control" id="presentacion" name="presentacion">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Concentración</label>
+                                <input type="text" class="form-control" id="concentracion" name="concentracion">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Lote</label>
+                                <input type="text" class="form-control" id="lote" name="lote">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha Vencimiento *</label>
+                                <input type="date" class="form-control" id="fechaVencimiento" name="fechaVencimiento"
+                                    required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Principios Activos</label>
+                                <input type="text" class="form-control" id="principiosActivos" name="principiosActivos">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Proveedor</label>
+                                <select class="form-control" id="proveedorId" name="proveedorId">
+                                    <option value="">Seleccionar proveedor</option>
+                                    <option th:each="prov : ${proveedores}"
+                                            th:value="${prov.id}"
+                                            th:text="${prov.nombre + (prov.empresa != null ? ' - ' + prov.empresa : '')}">
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha de Ingreso</label>
+                                <input type="date" class="form-control" id="fechaIngreso" name="fechaIngreso">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="btnGuardarProducto">Guardar Producto</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="bi bi-exclamation-triangle-fill fs-1 text-warning"></i>
+                    <p>¿Estás seguro que quieres cerrar sesión?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="logoutConfirmBtn">Sí, cerrar sesión</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script>
+        $(document).ready(function () {
+            console.log("✅ productos.html cargado correctamente");
+
+            let productModal = new bootstrap.Modal(document.getElementById('productoModal'));
+            let editMode = false;
+
+            // Función para resetear el formulario
+            window.resetForm = function () {
+                console.log("Resetear formulario");
+                document.getElementById('productoForm').reset();
+                document.getElementById('productoId').value = '';
+                document.getElementById('modalTitle').innerText = 'Nuevo Producto';
+                document.getElementById('productoForm').action = '/productos/guardar';
+                editMode = false;
+                // Resetear validaciones
+                document.getElementById('codigo').classList.remove('is-invalid', 'is-valid');
+                document.getElementById('nombre').classList.remove('is-invalid', 'is-valid');
+                document.getElementById('precio').classList.remove('is-invalid', 'is-valid');
+                document.getElementById('cantidad').classList.remove('is-invalid', 'is-valid');
+                document.getElementById('fechaVencimiento').classList.remove('is-invalid', 'is-valid');
+            };
+
+            // Calcular margen de ganancia
+            function calcularMargen() {
+                const precio = parseFloat($('#precio').val());
+                const costo = parseFloat($('#costoCompra').val());
+                const $margen = $('#margenGanancia');
+
+                if (!isNaN(precio) && !isNaN(costo) && costo > 0) {
+                    const margen = ((precio - costo) / costo) * 100;
+                    $margen.text('Margen: ' + margen.toFixed(2) + '%');
+                    if (precio <= costo) {
+                        $margen.removeClass('text-success text-muted').addClass('text-danger');
+                        $margen.text('¡Pérdida! ' + $margen.text());
+                    } else {
+                        $margen.removeClass('text-danger text-muted').addClass('text-success');
+                    }
+                } else if (!isNaN(precio) && !isNaN(costo) && costo === 0) {
+                    $margen.text('Margen: 100%');
+                    $margen.removeClass('text-danger text-muted').addClass('text-success');
+                } else {
+                    $margen.text('');
+                }
+            }
+
+            $('#precio, #costoCompra').on('input', calcularMargen);
+
+            // Evento para botón Nuevo Producto
+            $('#btnNuevoProducto').on('click', function () {
+                console.log("Botón Nuevo Producto clickeado");
+                resetForm();
+                $('#margenGanancia').text('').removeClass('text-danger text-success text-muted');
+                productModal.show();
+            });
+
+            // Evento para botones de editar producto
+            $(document).on('click', '.editar-producto', function () {
+                console.log("Editar producto clickeado");
+                const $btn = $(this);
+
+                $('#productoId').val($btn.data('id'));
+                $('#codigo').val($btn.data('codigo'));
+                $('#nombre').val($btn.data('nombre'));
+                $('#precio').val($btn.data('precio'));
+                $('#costoCompra').val($btn.data('costo') || '');
+                $('#cantidad').val($btn.data('cantidad'));
+                $('#categoria').val($btn.data('categoria') || '');
+                $('#presentacion').val($btn.data('presentacion') || '');
+                $('#concentracion').val($btn.data('concentracion') || '');
+                $('#lote').val($btn.data('lote') || '');
+                $('#principiosActivos').val($btn.data('principios') || '');
+                $('#descripcion').val($btn.data('descripcion') || '');
+                $('#proveedorId').val($btn.data('proveedorid') || '');
+
+                if ($btn.data('fecha')) {
+                    $('#fechaVencimiento').val($btn.data('fecha'));
+                }
+                if ($btn.data('fechaingreso')) {
+                    $('#fechaIngreso').val($btn.data('fechaingreso'));
+                }
+
+                $('#modalTitle').text('Editar Producto');
+                $('#productoForm').attr('action', '/productos/actualizar/' + $btn.data('id'));
+                editMode = true;
+                calcularMargen();
+                productModal.show();
+            });
+
+            // Evento para botones de eliminar
+            $(document).on('click', '.eliminar-producto', function () {
+                const $btn = $(this);
+                const id = $btn.data('id');
+                const nombre = $btn.data('nombre');
+
+                if (confirm('¿Eliminar producto "' + nombre + '"? Esta acción no se puede deshacer.')) {
+                    const form = $('<form method="post" action="/productos/eliminar/' + id + '"></form>');
+                    $('body').append(form);
+                    form.submit();
+                }
+            });
+
+            // Validación del formulario antes de enviar
+            $('#productoForm').on('submit', function (e) {
+                const codigo = $('#codigo').val().trim();
+                const nombre = $('#nombre').val().trim();
+                const precio = parseFloat($('#precio').val());
+                const costoCompra = parseFloat($('#costoCompra').val());
+                const cantidad = parseInt($('#cantidad').val());
+                const fechaVencimiento = $('#fechaVencimiento').val();
+
+                let isValid = true;
+                let errorMsg = '';
+
+                if (!codigo || codigo.length !== 4) { errorMsg += 'El código es requerido y debe tener exactamente 4 dígitos\n'; isValid = false; }
+                if (!nombre) { errorMsg += 'El nombre es requerido\n'; isValid = false; }
+                if (isNaN(precio) || precio <= 0) { errorMsg += 'El precio debe ser mayor a 0\n'; isValid = false; }
+                if (!isNaN(costoCompra) && precio <= costoCompra) { errorMsg += 'El precio de venta debe ser mayor al costo de compra\n'; isValid = false; }
+                if (isNaN(cantidad) || cantidad < 0) { errorMsg += 'La cantidad debe ser un número válido\n'; isValid = false; }
+                if (!fechaVencimiento) { errorMsg += 'La fecha de vencimiento es requerida\n'; isValid = false; }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert(errorMsg);
+                    return false;
+                }
+
+                // Verificar código duplicado solo para nuevos productos
+                if (!editMode && codigo) {
+                    const checkUrl = '/productos/verificar-codigo?codigo=' + encodeURIComponent(codigo);
+                    let exists = false;
+                    $.ajax({
+                        url: checkUrl,
+                        method: 'GET',
+                        async: false,
+                        success: function (data) {
+                            exists = data.exists;
+                        }
+                    });
+                    if (exists) {
+                        e.preventDefault();
+                        alert('El código "' + codigo + '" ya existe. Por favor use otro.');
+                        $('#codigo').addClass('is-invalid');
+                        return false;
+                    }
+                }
+
+                console.log("Formulario válido, enviando...");
+            });
+
+            // Fecha mínima hoy
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaVencimiento').min = today;
+
+            // Función para cambiar tamaño de página
+            window.changePageSize = function (select) {
+                window.location.href = '/productos?size=' + select.value + '&page=0';
+            };
+
+            // Calcular stock bajo después de cargar la tabla
+            function calcularStockBajo() {
+                let stockBajo = 0;
+                $('tbody tr').each(function () {
+                    const $row = $(this);
+                    const stockText = $row.find('td:eq(4)').text().trim();
+                    const stock = parseInt(stockText);
+                    if (!isNaN(stock) && stock < 5 && stock >= 0) {
+                        stockBajo++;
+                    }
+                });
+                $('#stockBajoCount').text(stockBajo);
+            }
+
+            setTimeout(calcularStockBajo, 500);
+
+            // Auto-cerrar alertas después de 5 segundos
+            setTimeout(function () {
+                $('.alert').fadeOut(500, function () { $(this).remove(); });
+            }, 5000);
+        });
+    </script>
+</body>
+
+</html>

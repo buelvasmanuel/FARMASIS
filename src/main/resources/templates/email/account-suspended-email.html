@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); color: #ffffff; text-align: center; padding: 30px 20px; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        .content { padding: 30px; color: #333333; line-height: 1.6; }
+        .content h2 { color: #2d3748; font-size: 20px; margin-top: 0; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; border-radius: 6px; padding: 20px; margin: 20px 0; }
+        .alert-box p { margin: 0; font-size: 16px; color: #991b1b; font-weight: 500; }
+        .footer { background-color: #f1f5f9; text-align: center; padding: 15px; color: #64748b; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Notificación de Suspensión</h1>
+        </div>
+        <div class="content">
+            <h2>Hola, <span th:text="${nombre}">Usuario</span>,</h2>
+            <p>Te informamos que ha habido una actualización en el estado de tu cuenta en el sistema Farmasis de L-farma.</p>
+            
+            <div class="alert-box">
+                <p>Tu acceso ha sido <strong>SUSPENDIDO</strong> temporalmente.</p>
+            </div>
+            
+            <p>Actualmente no podrás iniciar sesión en la plataforma ni acceder a ninguna de sus funciones. Si crees que esto es un error o necesitas más información, por favor contacta inmediatamente con el administrador o el propietario (Owner) del sistema.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 L-farma. Todos los derechos reservados.</p>
+            <p>Este es un mensaje automático, por favor no respondas a este correo.</p>
+        </div>
+    </div>
+</body>
+</html>

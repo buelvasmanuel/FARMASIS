@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verificación 2FA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            border-radius: 1rem;
+            box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
+        }
+
+        .code-input {
+            font-size: 2rem;
+            text-align: center;
+            letter-spacing: 1rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-body p-5">
+                        <h3 class="text-center mb-4">🔐 Verificación de Seguridad</h3>
+                        <p class="text-muted text-center">
+                            Hemos enviado un código de 4 dígitos a:<br>
+                            <strong th:text="${email}"></strong>
+                        </p>
+
+                        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+                        <form th:action="@{/verificar-codigo}" method="post">
+                            <div class="mb-4">
+                                <input type="text" name="codigo" class="form-control code-input" maxlength="4"
+                                    pattern="\d{4}" placeholder="0000" required autofocus>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2">
+                                Verificar y Acceder
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                ¿No recibiste el código?
+                                <a href="/verificar-codigo">Reenviar</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

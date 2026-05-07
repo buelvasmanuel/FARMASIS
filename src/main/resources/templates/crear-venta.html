@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Venta - Owner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
+    <style>
+        html.sidebar-preload-collapsed .sidebar { width: 70px; min-width: 70px; }
+        html.sidebar-preload-collapsed .sidebar .sidebar-text,
+        html.sidebar-preload-collapsed .sidebar .nav-label,
+        html.sidebar-preload-collapsed .sidebar .logo-text { display: none; }
+        html.sidebar-preload-collapsed .main-content { margin-left: 70px; }
+
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        .product-row {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            position: relative;
+            border: 1px solid #dee2e6;
+        }
+
+        .remove-product {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #dc3545;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar no-transition" id="sidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <div class="logo"><i class="bi bi-shield-shielded"></i><span class="logo-text"> Owner</span></div>
+            <button class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-chevron-left"></i></button>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/owner/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i><span
+                        class="sidebar-text">Dashboard</span></a></li>
+            <li class="nav-item"><a href="/owner/gestionar-usuarios" class="nav-link"><i class="bi bi-people"></i><span
+                        class="sidebar-text">Gestión de Usuarios</span></a></li>
+            <li class="nav-item"><a href="/proveedores" class="nav-link"><i class="bi bi-truck"></i><span
+                        class="sidebar-text">Proveedores</span></a></li>
+            <li class="nav-item"><a href="/productos" class="nav-link"><i class="bi bi-box-seam"></i><span
+                        class="sidebar-text">Productos</span></a></li>
+            <li class="nav-item"><a href="/ventas" class="nav-link"><i class="bi bi-receipt"></i><span
+                        class="sidebar-text">Ventas</span></a></li>
+            <li class="nav-item"><a href="/ventas/nueva" class="nav-link"><i class="bi bi-cart-plus"></i><span
+                        class="sidebar-text">Nueva Venta</span></a></li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="bi bi-gear"></i>
+                    <span class="sidebar-text">Configuración</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <button type="button" id="logoutTrigger" class="nav-link w-100 text-start" style="background: none; border: none; cursor: pointer;">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="sidebar-text">Cerrar Sesión</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content no-transition" id="mainContent">
+        <div class="top-bar">
+            <button class="btn btn-light" id="mobileToggle" style="display:none;"><i class="bi bi-list"></i></button>
+            <div><i class="bi bi-person-circle fs-4 me-2"></i><span><strong
+                        th:text="${#authentication.name}"></strong></span></div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-cart-plus"></i> Nueva Venta</h1>
+                <a href="/ventas" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="summary-card">
+                        <h5 class="mb-3"><i class="bi bi-person"></i> Datos del Cliente</h5>
+                        <div class="row">
+                            <div class="col-md-8"><label class="form-label">Cliente</label><select id="clienteId"
+                                    class="form-select">
+                                    <option value="" th:selected="true">Seleccionar cliente</option>
+                                    <option th:value="${consumidorFinal.id}" th:text="${consumidorFinal.nombre}">
+                                    </option>
+                                    <option th:each="c : ${clientes}" th:unless="${c.esConsumidorFinal}"
+                                        th:value="${c.id}" th:text="${c.nombre + ' (' + c.codigo + ')'}"></option>
+                                </select></div>
+                            <div class="col-md-4"><label class="form-label">Método Pago</label><select id="metodoPago"
+                                    class="form-select">
+                                    <option value="EFECTIVO">Efectivo</option>
+                                    <option value="TARJETA">Tarjeta</option>
+                                    <option value="TRANSFERENCIA">Transferencia</option>
+                                </select></div>
+                        </div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="bi bi-box-seam"></i> Productos</h5><button type="button"
+                                class="btn btn-sm btn-outline-primary" id="agregarProductoBtn"><i
+                                    class="bi bi-plus"></i> Agregar</button>
+                        </div>
+                        <div id="productosContainer">
+                            <div class="product-row" data-index="0"><button type="button" class="remove-product"
+                                    style="display:none;">✖</button>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2"><label class="form-label small">Producto</label><select
+                                            class="form-select producto-select" required>
+                                            <option value="">Seleccionar producto</option>
+                                            <option th:each="p : ${productos}" th:value="${p.id}"
+                                                th:text="${p.nombre} + ' - $' + ${#numbers.formatDecimal(p.precio, 1, 2)} + ' (Stock: ' + ${p.cantidad} + ')'"
+                                                th:attr="data-precio=${p.precio}, data-stock=${p.cantidad}"></option>
+                                        </select></div>
+                                    <div class="col-md-3 mb-2"><label class="form-label small">Cantidad</label><input
+                                            type="number" class="form-control cantidad-input" value="1" min="1" onkeydown="if(['e', 'E', '+', '-', '.'].includes(event.key)) event.preventDefault();"></div>
+                                    <div class="col-md-3 mb-2"><label class="form-label small">Subtotal</label><input
+                                            type="text" class="form-control subtotal-display" readonly
+                                            placeholder="$0.00"></div>
+                                </div>
+                                <div class="stock-info small text-muted mt-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="summary-card">
+                        <h5 class="mb-3"><i class="bi bi-calculator"></i> Resumen</h5>
+                        <div class="d-flex justify-content-between mb-2"><span>Subtotal:</span><strong
+                                id="subtotal">$0.00</strong></div>
+                        <div class="d-flex justify-content-between mb-2"><span>IVA (0%):</span><strong>$0.00</strong>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3"><span class="h5">Total:</span><span
+                                class="h5 text-success" id="total">$0.00</span></div>
+                        <textarea id="observaciones" class="form-control mb-3" placeholder="Observaciones (opcional)"
+                            rows="2"></textarea>
+                        <button class="btn btn-primary w-100 py-2" id="btnGenerarVenta"><i class="bi bi-receipt"></i>
+                            Generar Venta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title"><i class="bi bi-check-circle"></i> Venta Exitosa</h5><button type="button"
+                        class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="successMessage"></p>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cerrar</button><a href="/ventas/nueva" class="btn btn-primary">Nueva
+                        Venta</a><a href="/ventas" class="btn btn-outline-primary">Ver Ventas</a></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script>
+
+        let productosSeleccionados = new Set();
+
+        function actualizarTotales() {
+            let subtotal = 0;
+            document.querySelectorAll('.product-row').forEach(row => { const select = row.querySelector('.producto-select'); const cantidad = row.querySelector('.cantidad-input'); if (select.value && cantidad.value > 0) { const precio = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio')); subtotal += precio * parseInt(cantidad.value); } });
+            document.getElementById('subtotal').innerText = '$' + subtotal.toFixed(2);
+            document.getElementById('total').innerText = '$' + subtotal.toFixed(2);
+        }
+
+        function actualizarSubtotalFila(row) {
+            const select = row.querySelector('.producto-select'); const cantidad = row.querySelector('.cantidad-input'); const subtotalDisplay = row.querySelector('.subtotal-display'); const stockInfo = row.querySelector('.stock-info');
+            if (select.value && cantidad.value > 0) {
+                const option = select.options[select.selectedIndex]; const precio = parseFloat(option.getAttribute('data-precio')); const stock = parseInt(option.getAttribute('data-stock')); const cantidadVal = parseInt(cantidad.value);
+                if (cantidadVal > stock) { cantidad.setCustomValidity('Stock insuficiente'); stockInfo.innerHTML = '<span class="text-danger">Stock disponible: ' + stock + '</span>'; subtotalDisplay.value = 'Stock insuficiente'; }
+                else { cantidad.setCustomValidity(''); const subtotal = precio * cantidadVal; subtotalDisplay.value = '$' + subtotal.toFixed(2); stockInfo.innerHTML = stock < 5 ? '<span class="text-danger">Stock bajo: ' + stock + '</span>' : 'Stock: ' + stock; }
+            } else { subtotalDisplay.value = ''; stockInfo.innerHTML = ''; }
+            actualizarTotales();
+        }
+
+        function inicializarSelect2(selectElement) {
+            $(selectElement).select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Seleccionar producto',
+                width: '100%'
+            });
+        }
+
+        function agregarEventosFila(row) {
+            const select = row.querySelector('.producto-select'); 
+            const cantidad = row.querySelector('.cantidad-input'); 
+            const removeBtn = row.querySelector('.remove-product');
+            
+            inicializarSelect2(select);
+
+            let previousValue = $(select).val();
+
+            $(select).on('change', function () { 
+                const currentValue = $(select).val();
+                if (currentValue) { 
+                    if (currentValue !== previousValue && productosSeleccionados.has(currentValue)) { 
+                        alert('Este producto ya fue agregado'); 
+                        $(select).val(previousValue).trigger('change.select2'); 
+                        return; 
+                    }
+                    if (previousValue) productosSeleccionados.delete(previousValue);
+                    productosSeleccionados.add(currentValue);
+                    previousValue = currentValue;
+
+                    const option = select.options[select.selectedIndex]; 
+                    cantidad.max = option.getAttribute('data-stock'); 
+                } else {
+                    if (previousValue) productosSeleccionados.delete(previousValue);
+                    previousValue = '';
+                }
+                actualizarSubtotalFila(row); 
+            });
+
+            cantidad.addEventListener('input', () => actualizarSubtotalFila(row));
+
+            if (removeBtn) { 
+                removeBtn.addEventListener('click', function () { 
+                    if (document.querySelectorAll('.product-row').length > 1) { 
+                        if (select.value) productosSeleccionados.delete(select.value); 
+                        if ($(select).data('select2')) { $(select).select2('destroy'); }
+                        row.remove(); 
+                        actualizarTotales(); 
+                    } 
+                }); 
+            }
+        }
+
+        document.getElementById('agregarProductoBtn').addEventListener('click', function () { 
+            const container = document.getElementById('productosContainer'); 
+            const originalRow = container.querySelector('.product-row');
+            
+            // Destruir select2 temporalmente en la fila original si queremos clonar limpiamente (opcional)
+            // Mejor clonamos y limpiamos el clon:
+            const template = originalRow.cloneNode(true); 
+            template.setAttribute('data-index', Date.now()); 
+            
+            const selectTemplate = template.querySelector('.producto-select');
+            $(selectTemplate).removeClass('select2-hidden-accessible').removeAttr('data-select2-id tabindex aria-hidden');
+            $(template).find('.select2-container').remove();
+            
+            selectTemplate.selectedIndex = 0; 
+            template.querySelector('.cantidad-input').value = 1; 
+            template.querySelector('.subtotal-display').value = ''; 
+            template.querySelector('.stock-info').innerHTML = ''; 
+            template.querySelector('.remove-product').style.display = 'flex'; 
+            
+            container.appendChild(template); 
+            agregarEventosFila(template); 
+        });
+
+        document.getElementById('btnGenerarVenta').addEventListener('click', function () {
+            const clienteId = document.getElementById('clienteId').value; const metodoPago = document.getElementById('metodoPago').value; const observaciones = document.getElementById('observaciones').value;
+            const productos = []; let valido = true;
+            document.querySelectorAll('.product-row').forEach(row => { const productoId = row.querySelector('.producto-select').value; const cantidad = row.querySelector('.cantidad-input').value; const select = row.querySelector('.producto-select'); if (productoId && cantidad > 0) { const option = select.options[select.selectedIndex]; const stock = parseInt(option.getAttribute('data-stock')); if (parseInt(cantidad) > stock) valido = false; productos.push({ productoId: productoId, cantidad: parseInt(cantidad), precioUnitario: parseFloat(option.getAttribute('data-precio')) }); } });
+            if (!valido) { alert('Hay productos con stock insuficiente'); return; } if (productos.length === 0) { alert('Agregue al menos un producto'); return; }
+            let subtotal = 0; productos.forEach(p => subtotal += p.precioUnitario * p.cantidad);
+            fetch('/ventas/guardar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clienteId: clienteId || null, subtotal: subtotal, total: subtotal, metodoPago: metodoPago, observaciones: observaciones, detalles: productos }) })
+                .then(res => res.json()).then(data => { if (data.success) { document.getElementById('successMessage').innerHTML = `<strong>${data.numeroFactura}</strong><br>Cliente: ${data.cliente}<br>Total: $${data.total.toFixed(2)}`; new bootstrap.Modal(document.getElementById('successModal')).show(); setTimeout(() => location.reload(), 2000); } else { alert('Error: ' + data.message); } })
+                .catch(err => { console.error(err); alert('Error al procesar la venta'); });
+        });
+
+        document.querySelectorAll('.product-row').forEach(row => agregarEventosFila(row));
+        actualizarTotales();
+    </script>
+
+    <!-- Logout Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <i class="bi bi-exclamation-triangle-fill logout-icon"></i>
+                    <p>¿Estás seguro que quieres cerrar sesión?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-logout-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-logout-confirm" id="logoutConfirmBtn">
+                        <i class="bi bi-check-lg"></i> Sí, cerrar sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
+</body>
+
+</html>

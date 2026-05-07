@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: #ffffff; text-align: center; padding: 30px 20px; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        .content { padding: 30px; color: #333333; line-height: 1.6; }
+        .content h2 { color: #2d3748; font-size: 20px; margin-top: 0; }
+        .alert-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 4px solid #0284c7; border-radius: 6px; padding: 20px; margin: 20px 0; }
+        .alert-box p { margin: 0; font-size: 16px; color: #0369a1; font-weight: 500; }
+        .footer { background-color: #f1f5f9; text-align: center; padding: 15px; color: #64748b; font-size: 14px; }
+        .btn { display: inline-block; padding: 12px 24px; background-color: #0284c7; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Tu cuenta ha sido reactivada!</h1>
+        </div>
+        <div class="content">
+            <h2>Hola, <span th:text="${nombre}">Usuario</span>,</h2>
+            <p>Nos complace informarte que tu acceso al sistema de gestión Farmasis de L-farma ha sido restaurado.</p>
+            
+            <div class="alert-box">
+                <p>Tu cuenta ahora se encuentra <strong>ACTIVA</strong> y lista para usarse.</p>
+            </div>
+            
+            <p>Ya puedes iniciar sesión nuevamente y continuar con tus actividades regulares dentro de la plataforma.</p>
+            
+            <center>
+                <a href="http://localhost:8091/login" class="btn">Acceder al Sistema</a>
+            </center>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 L-farma. Todos los derechos reservados.</p>
+            <p>Este es un mensaje automático, por favor no respondas a este correo.</p>
+        </div>
+    </div>
+</body>
+</html>

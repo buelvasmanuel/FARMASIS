@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Panel Owner | L-Farma</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>/* Anti-flicker: apply sidebar state before paint */
+    (function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());
+    </script>
+    <style>
+        /* Anti-flicker: pre-apply collapsed state via html class */
+        html.sidebar-preload-collapsed .sidebar { width: 70px; min-width: 70px; }
+        html.sidebar-preload-collapsed .sidebar .sidebar-text,
+        html.sidebar-preload-collapsed .sidebar .nav-label,
+        html.sidebar-preload-collapsed .sidebar .logo-text { display: none; }
+        html.sidebar-preload-collapsed .main-content { margin-left: 70px; }
+
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            color: #0d6efd;
+        }
+
+        .welcome-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .quick-action {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+            color: #333;
+        }
+
+        .quick-action:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: #0d6efd;
+        }
+
+        .quick-action i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar no-transition" id="sidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <div class="logo">
+                <i class="bi bi-shield-shielded"></i>
+                <span class="logo-text"> Owner</span>
+            </div>
+            <button class="toggle-btn" onclick="toggleSidebar()">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="/owner/dashboard" class="nav-link">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/owner/gestionar-usuarios" class="nav-link">
+                    <i class="bi bi-people"></i>
+                    <span class="sidebar-text">Gestión de Usuarios</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="/proveedores" class="nav-link">
+                    <i class="bi bi-truck"></i>
+                    <span class="sidebar-text">Proveedores</span>
+                </a>
+            </li>
+            <li class="nav-item"><a href="/productos" class="nav-link"><i class="bi bi-box-seam"></i><span
+                        class="sidebar-text">Productos</span></a></li>
+            <li class="nav-item"><a href="/ventas" class="nav-link"><i class="bi bi-receipt"></i><span
+                        class="sidebar-text">Ventas</span></a></li>
+            <li class="nav-item"><a href="/ventas/nueva" class="nav-link"><i class="bi bi-cart-plus"></i><span
+                        class="sidebar-text">Nueva Venta</span></a></li>
+            <li class="nav-item">
+                <a href="#" class="nav-link">
+                    <i class="bi bi-gear"></i>
+                    <span class="sidebar-text">Configuración</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <button type="button" id="logoutTrigger" class="nav-link w-100 text-start" style="background: none; border: none; cursor: pointer;">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="sidebar-text">Cerrar Sesión</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content no-transition" id="mainContent">
+        <div class="top-bar">
+            <button class="btn btn-light" id="mobileToggle" style="display: none;">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="d-flex align-items-center">
+                <i class="bi bi-person-circle fs-4 me-2"></i>
+                <span>Bienvenido, <strong th:text="${#authentication.name}"></strong></span>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-bell"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">No hay notificaciones</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Welcome Banner -->
+            <div class="welcome-card">
+                <h2><i class="bi bi-crown"></i> <span th:text="${titulo}"></span></h2>
+                <p class="mb-0">Tienes control total sobre el sistema. Gestiona usuarios, proveedores y configuración
+                    general.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Total Usuarios</h6>
+                                <h2 class="mb-0" th:text="${totalUsuarios}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-people"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Administradores</h6>
+                                <h2 class="mb-0" th:text="${totalAdmins}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-shield-lock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Empleados</h6>
+                                <h2 class="mb-0" th:text="${totalEmployees}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-person-badge"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Proveedores</h6>
+                                <h2 class="mb-0" th:text="${totalProveedores}">0</h2>
+                            </div>
+                            <div class="stat-icon">
+                                <i class="bi bi-truck"></i>
+                            </div>
+                        </div>
+                        <a href="/proveedores" class="btn btn-sm btn-outline-primary mt-2 w-100">
+                            <i class="bi bi-box-arrow-right"></i> Gestionar Proveedores
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <h4 class="mb-3">Acciones Rápidas</h4>
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <a href="/owner/gestionar-usuarios" class="quick-action">
+                        <i class="bi bi-person-plus"></i>
+                        <strong>Crear Usuario</strong>
+                        <small class="text-muted d-block">Configurar desde Gestión</small>
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/proveedores/nuevo" class="quick-action">
+                        <i class="bi bi-building-add"></i>
+                        <strong>Nuevo Proveedor</strong>
+                        <small class="text-muted d-block">Registrar proveedor</small>
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/owner/gestionar-usuarios" class="quick-action">
+                        <i class="bi bi-person-gear"></i>
+                        <strong>Gestionar Roles</strong>
+                        <small class="text-muted d-block">Cambiar permisos</small>
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/proveedores" class="quick-action">
+                        <i class="bi bi-search"></i>
+                        <strong>Ver Proveedores</strong>
+                        <small class="text-muted d-block">Lista completa</small>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recent Activity Section -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Actividad Reciente</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1"></i>
+                                <p>No hay actividad reciente para mostrar</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Sistema</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Versión del Sistema
+                                    <span class="badge bg-primary rounded-pill">1.0.0</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Base de Datos
+                                    <span class="badge bg-success rounded-pill">MongoDB</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Autenticación
+                                    <span class="badge bg-info rounded-pill">2FA Activado</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Último Acceso
+                                    <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}"></span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabel"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <i class="bi bi-exclamation-triangle-fill logout-icon"></i>
+                    <p>¿Estás seguro que quieres cerrar sesión?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-logout-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-logout-confirm" id="logoutConfirmBtn">
+                        <i class="bi bi-check-lg"></i> Sí, cerrar sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+</body>
+
+</html>

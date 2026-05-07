@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; text-align: center; padding: 30px 20px; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        .content { padding: 30px; color: #333333; line-height: 1.6; }
+        .content h2 { color: #2d3748; font-size: 20px; margin-top: 0; }
+        .alert-box { background-color: #eef2ff; border: 1px solid #c7d2fe; border-left: 4px solid #4f46e5; border-radius: 6px; padding: 20px; margin: 20px 0; }
+        .alert-box p { margin: 0; font-size: 16px; color: #3730a3; font-weight: 500; }
+        .footer { background-color: #f1f5f9; text-align: center; padding: 15px; color: #64748b; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Bienvenido a Farmasis!</h1>
+        </div>
+        <div class="content">
+            <h2>Hola, <span th:text="${nombre}">Contacto</span>,</h2>
+            <p>Te confirmamos que tu empresa <strong><span th:text="${empresa}">Empresa</span></strong> ha sido registrada exitosamente en nuestro sistema de gestión Farmasis.</p>
+            
+            <div class="alert-box">
+                <p>A partir de este momento estás habilitado como proveedor oficial para el ingreso de inventario.</p>
+            </div>
+            
+            <p>Agradecemos la confianza y esperamos mantener una excelente relación comercial.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 L-farma. Todos los derechos reservados.</p>
+            <p>Este es un mensaje automático, por favor no respondas a este correo.</p>
+        </div>
+    </div>
+</body>
+</html>
