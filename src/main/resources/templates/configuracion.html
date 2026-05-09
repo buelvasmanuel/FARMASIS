@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - Farmasis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
+    <style>
+        body { background-color: #f8f9fa; }
+        .config-container { max-width: 900px; margin: 2rem auto; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .nav-pills .nav-link { color: #6c757d; border-radius: 10px; padding: 12px 20px; font-weight: 500; transition: all 0.3s; }
+        .nav-pills .nav-link.active { background-color: #0d6efd; color: white; box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3); }
+        .nav-pills .nav-link:hover:not(.active) { background-color: #e9ecef; }
+        
+        .profile-img-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #ccc;
+            margin: 0 auto 1.5rem;
+        }
+
+        .form-label { font-weight: 600; color: #495057; margin-bottom: 0.5rem; }
+        .form-control { border-radius: 10px; padding: 10px 15px; border: 1px solid #dee2e6; }
+        .form-control:focus { box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); border-color: #0d6efd; }
+        
+        .section-title { font-size: 1.1rem; font-weight: 700; color: #212529; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-title i { margin-right: 10px; color: #0d6efd; }
+        
+        .btn-update { border-radius: 10px; padding: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .alert { border-radius: 10px; border: none; }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{fragments/sidebar :: sidebar('configuracion')}"></div>
+
+    <div class="main-content no-transition" id="mainContent">
+        <div class="content-wrapper">
+            <div class="config-container">
+                <h1 class="mb-4 fw-bold"><i class="bi bi-gear-fill me-2 text-primary"></i> Configuración del Sistema</h1>
+
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${success}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Tabs Navigation -->
+                <ul class="nav nav-pills mb-4" id="configTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="perfil-tab" data-bs-toggle="pill" data-bs-target="#perfil" type="button" role="tab">
+                            <i class="bi bi-person-circle me-2"></i> Mi Perfil
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="seguridad-tab" data-bs-toggle="pill" data-bs-target="#seguridad" type="button" role="tab">
+                            <i class="bi bi-shield-lock me-2"></i> Seguridad
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="negocio-tab" data-bs-toggle="pill" data-bs-target="#negocio" type="button" role="tab">
+                            <i class="bi bi-building me-2"></i> Datos del Negocio
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="configTabsContent">
+                    <!-- TAB 1: PERFIL -->
+                    <div class="tab-pane fade show active" id="perfil" role="tabpanel">
+                        <div class="card p-4">
+                            <form th:action="@{/configuracion/actualizar}" method="post" id="perfilForm">
+                                <div class="text-center mb-4">
+                                    <div id="imagePreview" class="profile-img-preview">
+                                        <img th:if="${usuario.fotoPerfil != null}" th:src="${usuario.fotoPerfil}" class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                                        <i th:unless="${usuario.fotoPerfil != null}" class="bi bi-person-fill"></i>
+                                    </div>
+                                    <input type="hidden" id="fotoPerfilInput" name="fotoPerfil" th:value="${usuario.fotoPerfil}">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <label class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-camera me-1"></i> Subir Foto
+                                            <input type="file" id="fileSelector" hidden accept="image/*">
+                                        </label>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearImage()">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="section-title"><i class="bi bi-info-circle"></i> Información de la Cuenta</div>
+                                <div class="mb-4">
+                                    <label class="form-label">Correo Electrónico / Usuario</label>
+                                    <input type="email" name="email" class="form-control" th:value="${usuario.email}" required>
+                                    <div class="form-text">Este correo es su identificador de acceso al sistema.</div>
+                                </div>
+
+                                <div class="alert alert-info py-2 small">
+                                    <i class="bi bi-info-circle-fill me-1"></i> Se requiere su <strong>contraseña actual</strong> para confirmar cualquier cambio en esta pestaña.
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Contraseña Actual</label>
+                                    <input type="password" name="passwordActual" class="form-control" placeholder="Ingrese su clave para confirmar">
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 btn-update">Actualizar Perfil</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: SEGURIDAD -->
+                    <div class="tab-pane fade" id="seguridad" role="tabpanel">
+                        <div class="card p-4">
+                            <form th:action="@{/configuracion/actualizar}" method="post" id="seguridadForm">
+                                <input type="hidden" name="email" th:value="${usuario.email}">
+                                <div class="section-title"><i class="bi bi-key"></i> Cambio de Contraseña</div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Contraseña Actual</label>
+                                    <input type="password" name="passwordActual" class="form-control" required placeholder="Clave actual">
+                                </div>
+                                
+                                <hr class="my-4">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Nueva Contraseña</label>
+                                    <input type="password" name="nuevaPassword" id="newPass" class="form-control" 
+                                           required pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$"
+                                           placeholder="Mínimo 8 caracteres, número y símbolo">
+                                    <div class="form-text">La contraseña debe tener al menos 8 caracteres, un número y un símbolo especial.</div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Confirmar Nueva Contraseña</label>
+                                    <input type="password" id="confirmPass" class="form-control" required placeholder="Repita la clave">
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 btn-update">Cambiar Contraseña</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: NEGOCIO -->
+                    <div class="tab-pane fade" id="negocio" role="tabpanel">
+                        <div class="card p-4">
+                            <form th:action="@{/configuracion/sistema}" method="post">
+                                <div class="section-title"><i class="bi bi-shop"></i> Datos de la Farmacia</div>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-12">
+                                        <label class="form-label">Nombre Comercial</label>
+                                        <input type="text" name="nombreFarmacia" class="form-control" th:value="${config.nombreFarmacia}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">CC / Documento</label>
+                                        <input type="text" name="nit" class="form-control" th:value="${config.nit}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Teléfono de Contacto</label>
+                                        <input type="text" name="telefono" class="form-control" th:value="${config.telefono}" required
+                                               pattern="^3[0-9]{9}$" onkeydown="if(['e','E','+','-','.'].includes(event.key)) event.preventDefault();">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Dirección Física</label>
+                                        <input type="text" name="direccion" class="form-control" th:value="${config.direccion}" required>
+                                    </div>
+                                </div>
+
+                                <div class="section-title"><i class="bi bi-boxes"></i> Preferencias de Inventario</div>
+                                <div class="mb-4">
+                                    <label class="form-label">Umbral de Stock Bajo</label>
+                                    <div class="input-group">
+                                        <input type="number" name="umbralStockBajo" class="form-control" th:value="${config.umbralStockBajo}" min="1" required>
+                                        <span class="input-group-text">Unidades</span>
+                                    </div>
+                                    <div class="form-text">Los productos se marcarán en alerta cuando alcancen esta cantidad.</div>
+                                </div>
+
+                                <button type="submit" class="btn btn-dark w-100 btn-update">Guardar Configuración Global</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script>
+        // Manejo de imagen Base64
+        const fileSelector = document.getElementById('fileSelector');
+        const fotoPerfilInput = document.getElementById('fotoPerfilInput');
+        const imagePreview = document.getElementById('imagePreview');
+
+        fileSelector.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 1024 * 1024) { // 1MB limit
+                    alert('La imagen es muy pesada (máximo 1MB)');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const base64String = event.target.result;
+                    fotoPerfilInput.value = base64String;
+                    imagePreview.innerHTML = `<img src="${base64String}" class="rounded-circle w-100 h-100" style="object-fit: cover;">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function clearImage() {
+            fotoPerfilInput.value = '';
+            imagePreview.innerHTML = '<i class="bi bi-person-fill"></i>';
+            fileSelector.value = '';
+        }
+
+        // Validación de contraseñas
+        const seguridadForm = document.getElementById('seguridadForm');
+        if(seguridadForm) {
+            seguridadForm.addEventListener('submit', function(e) {
+                const newPass = document.getElementById('newPass').value;
+                const confirmPass = document.getElementById('confirmPass').value;
+                
+                if (newPass !== confirmPass) {
+                    e.preventDefault();
+                    alert('Las nuevas contraseñas no coinciden');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

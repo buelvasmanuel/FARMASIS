@@ -61,6 +61,7 @@ public class UsuarioService {
 
     @Transactional
     public Usuario registrar(Usuario usuario) {
+        validarPassword(usuario.getPassword());
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         if (usuario.getRol() == null || usuario.getRol().isEmpty()) {
             usuario.setRol("ROLE_EMPLOYEE");
@@ -88,10 +89,12 @@ public class UsuarioService {
         }
 
         if (usuario.getFechaUltimoCambioRol() != null) {
-            long minutosTranscurridos = java.time.Duration.between(usuario.getFechaUltimoCambioRol(), LocalDateTime.now()).toMinutes();
+            long minutosTranscurridos = java.time.Duration
+                    .between(usuario.getFechaUltimoCambioRol(), LocalDateTime.now()).toMinutes();
             if (minutosTranscurridos < 5) {
                 long minutosRestantes = 5 - minutosTranscurridos;
-                throw new RuntimeException("Por seguridad, debes esperar " + minutosRestantes + " minuto(s) antes de volver a cambiar el rol de este usuario");
+                throw new RuntimeException("Por seguridad, debes esperar " + minutosRestantes
+                        + " minuto(s) antes de volver a cambiar el rol de este usuario");
             }
         }
 
@@ -112,10 +115,12 @@ public class UsuarioService {
         }
 
         if (usuario.getFechaUltimoCambioEstado() != null) {
-            long minutosTranscurridos = java.time.Duration.between(usuario.getFechaUltimoCambioEstado(), LocalDateTime.now()).toMinutes();
+            long minutosTranscurridos = java.time.Duration
+                    .between(usuario.getFechaUltimoCambioEstado(), LocalDateTime.now()).toMinutes();
             if (minutosTranscurridos < 5) {
                 long minutosRestantes = 5 - minutosTranscurridos;
-                throw new RuntimeException("Por seguridad, debes esperar " + minutosRestantes + " minuto(s) antes de volver a cambiar el estado de este usuario");
+                throw new RuntimeException("Por seguridad, debes esperar " + minutosRestantes
+                        + " minuto(s) antes de volver a cambiar el estado de este usuario");
             }
         }
 
@@ -130,10 +135,12 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         if (usuario.getFechaUltimoCambioEstado() != null) {
-            long minutosTranscurridos = java.time.Duration.between(usuario.getFechaUltimoCambioEstado(), LocalDateTime.now()).toMinutes();
+            long minutosTranscurridos = java.time.Duration
+                    .between(usuario.getFechaUltimoCambioEstado(), LocalDateTime.now()).toMinutes();
             if (minutosTranscurridos < 5) {
                 long minutosRestantes = 5 - minutosTranscurridos;
-                throw new RuntimeException("Por seguridad, debes esperar " + minutosRestantes + " minuto(s) antes de volver a cambiar el estado de este usuario");
+                throw new RuntimeException("Por seguridad, debes esperar " + minutosRestantes
+                        + " minuto(s) antes de volver a cambiar el estado de este usuario");
             }
         }
 
@@ -144,6 +151,7 @@ public class UsuarioService {
 
     @Transactional
     public Usuario crearOwner(String username, String password, String email) {
+        validarPassword(password);
         Usuario owner = new Usuario();
         owner.setUsername(username);
         owner.setPassword(passwordEncoder.encode(password));
@@ -166,5 +174,35 @@ public class UsuarioService {
 
     public long contarInactivos() {
         return usuarioRepository.findAll().stream().filter(u -> !Boolean.TRUE.equals(u.getActivo())).count();
+    }
+
+    @Transactional
+    public Usuario actualizarPerfil(Long id, String email, String password, String fotoPerfil) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (email != null && !email.isEmpty()) {
+            usuario.setEmail(email);
+            usuario.setUsername(email); // Mantener consistencia si el username es el email
+        }
+
+        if (password != null && !password.isEmpty()) {
+            validarPassword(password);
+            usuario.setPassword(passwordEncoder.encode(password));
+        }
+
+        if (fotoPerfil != null) {
+            usuario.setFotoPerfil(fotoPerfil);
+        }
+
+        return usuarioRepository.save(usuario);
+    }
+
+    public void validarPassword(String password) {
+        String regex = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$";
+        if (password == null || !password.matches(regex)) {
+            throw new RuntimeException(
+                    "La contraseña debe tener al menos 8 caracteres, incluir un número y un carácter especial.");
+        }
     }
 }

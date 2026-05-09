@@ -30,45 +30,11 @@
 </head>
 
 <body>
-    <div class="sidebar no-transition" id="sidebar">
-        <div class="sidebar-header d-flex justify-content-between align-items-center">
-            <div class="logo"><i class="bi bi-shield-shielded"></i><span class="logo-text"> Owner</span></div>
-            <button class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-chevron-left"></i></button>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item"><a href="/owner/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i><span
-                        class="sidebar-text">Dashboard</span></a></li>
-            <li class="nav-item"><a href="/owner/gestionar-usuarios" class="nav-link"><i class="bi bi-people"></i><span
-                        class="sidebar-text">Gestión de Usuarios</span></a></li>
-            <li class="nav-item"><a href="/proveedores" class="nav-link"><i class="bi bi-truck"></i><span
-                        class="sidebar-text">Proveedores</span></a></li>
-            <li class="nav-item"><a href="/productos" class="nav-link"><i class="bi bi-box-seam"></i><span
-                        class="sidebar-text">Productos</span></a></li>
-            <li class="nav-item"><a href="/ventas" class="nav-link"><i class="bi bi-receipt"></i><span
-                        class="sidebar-text">Ventas</span></a></li>
-            <li class="nav-item"><a href="/ventas/nueva" class="nav-link"><i class="bi bi-cart-plus"></i><span
-                        class="sidebar-text">Nueva Venta</span></a></li>
-            <li class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="bi bi-gear"></i>
-                    <span class="sidebar-text">Configuración</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <button type="button" id="logoutTrigger" class="nav-link w-100 text-start" style="background: none; border: none; cursor: pointer;">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span class="sidebar-text">Cerrar Sesión</span>
-                </button>
-            </li>
-        </ul>
-    </div>
+    <div th:replace="~{fragments/sidebar :: sidebar('ventas')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
 
     <div class="main-content no-transition" id="mainContent">
-        <div class="top-bar">
-            <button class="btn btn-light" id="mobileToggle" style="display:none;"><i class="bi bi-list"></i></button>
-            <div><i class="bi bi-person-circle fs-4 me-2"></i><span><strong
-                        th:text="${#authentication.name}"></strong></span></div>
-        </div>
 
         <div class="content-wrapper">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -82,7 +48,7 @@
                     <div class="card bg-success text-white">
                         <div class="card-body">
                             <h6>Ventas Hoy</h6>
-                            <h3>$<span th:text="${#numbers.formatDecimal(ventasDelDia, 1, 2)}">0</span></h3>
+                            <h3><span th:text="'$ ' + ${#numbers.formatDecimal(ventasDelDia, 1, 'POINT', 0, 'COMMA')}">0</span></h3>
                         </div>
                     </div>
                 </div>
@@ -115,6 +81,7 @@
                                 <th>Subtotal</th>
                                 <th>Total</th>
                                 <th>Método</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -122,13 +89,18 @@
                                 <td><span class="badge bg-secondary" th:text="${v.numeroFactura}">-</span></td>
                                 <td th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy HH:mm')}">-</td>
                                 <td th:text="${v.clienteNombre}">-</td>
-                                <td>$<span th:text="${#numbers.formatDecimal(v.subtotal, 1, 2)}">0</span></td>
-                                <td><strong>$<span th:text="${#numbers.formatDecimal(v.total, 1, 2)}">0</span></strong>
+                                <td><span th:text="'$ ' + ${#numbers.formatDecimal(v.subtotal, 1, 'POINT', 0, 'COMMA')}">0</span></td>
+                                <td><strong><span th:text="'$ ' + ${#numbers.formatDecimal(v.total, 1, 'POINT', 0, 'COMMA')}">0</span></strong>
                                 </td>
                                 <td><span class="badge bg-info" th:text="${v.metodoPago}">-</span></td>
+                                <td class="text-center">
+                                    <a th:href="@{/ventas/{id}/factura(id=${v.id})}" class="btn btn-sm btn-outline-primary" title="Ver Factura">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                </td>
                             </tr>
                             <tr th:if="${ventas.empty}">
-                                <td colspan="6" class="text-center py-5">No hay ventas registradas. <a
+                                <td colspan="7" class="text-center py-5">No hay ventas registradas. <a
                                         href="/ventas/nueva">Crear primera venta</a></td>
                             </tr>
                         </tbody>

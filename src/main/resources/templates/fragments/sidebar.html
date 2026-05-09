@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+</head>
+<body>
+    <!-- Fragmento: Sidebar -->
+    <div th:fragment="sidebar(activePage)" class="sidebar no-transition" id="sidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <div class="logo">
+                <i class="bi bi-shield-shielded"></i>
+                <span class="logo-text" th:if="${#authorization.expression('hasRole(''ROLE_OWNER'')')}"> Owner</span>
+                <span class="logo-text" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"> Admin</span>
+                <span class="logo-text" th:if="${#authorization.expression('hasRole(''ROLE_EMPLOYEE'')')}"> Empleado</span>
+            </div>
+            <button class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-chevron-left"></i></button>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">
+                <a th:href="${#authorization.expression('hasRole(''ROLE_OWNER'')') ? '/owner/dashboard' : '/admin/dashboard'}" 
+                   class="nav-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item" th:if="${#authorization.expression('hasRole(''ROLE_OWNER'')')}">
+                <a href="/owner/gestionar-usuarios" class="nav-link" th:classappend="${activePage == 'usuarios' ? 'active' : ''}">
+                    <i class="bi bi-people"></i>
+                    <span class="sidebar-text">Gestión de Usuarios</span>
+                </a>
+            </li>
+            <li class="nav-item" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">
+                <a href="/proveedores" class="nav-link" th:classappend="${activePage == 'proveedores' ? 'active' : ''}">
+                    <i class="bi bi-truck"></i>
+                    <span class="sidebar-text">Proveedores</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/productos" class="nav-link" th:classappend="${activePage == 'productos' ? 'active' : ''}">
+                    <i class="bi bi-box-seam"></i>
+                    <span class="sidebar-text">Productos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/ventas" class="nav-link" th:classappend="${activePage == 'ventas' ? 'active' : ''}">
+                    <i class="bi bi-receipt"></i>
+                    <span class="sidebar-text">Ventas</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/ventas/nueva" class="nav-link" th:classappend="${activePage == 'nueva-venta' ? 'active' : ''}">
+                    <i class="bi bi-cart-plus"></i>
+                    <span class="sidebar-text">Nueva Venta</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/configuracion" class="nav-link" th:classappend="${activePage == 'configuracion' ? 'active' : ''}">
+                    <i class="bi bi-gear"></i>
+                    <span class="sidebar-text">Configuración</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <button type="button" id="logoutTrigger" class="nav-link w-100 text-start" style="background: none; border: none; cursor: pointer;">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="sidebar-text">Cerrar Sesión</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Fragmento: Top Bar -->
+    <div th:fragment="topbar" class="top-bar">
+        <button class="btn btn-light" id="mobileToggle" style="display: none;"><i class="bi bi-list"></i></button>
+        <div class="ms-auto d-flex align-items-center">
+            <div class="user-info me-3 d-none d-md-block text-end">
+                <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1;" 
+                       th:text="${loggedUser.rol.replace('ROLE_', '')}">ROL</small>
+                <strong th:text="${loggedUser.username}">Usuario</strong>
+            </div>
+            <div class="profile-pic-container">
+                <img th:if="${loggedUser.fotoPerfil != null}" th:src="${loggedUser.fotoPerfil}" class="rounded-circle" 
+                     style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <div th:unless="${loggedUser.fotoPerfil != null}" class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" 
+                     style="width: 40px; height: 40px; font-weight: bold;">
+                    <span th:text="${#strings.substring(loggedUser.username, 0, 1).toUpperCase()}">U</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fragmento: Logout Modal -->
+    <div th:fragment="logoutModal">
+        <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-danger text-white border-0">
+                        <h5 class="modal-title"><i class="bi bi-box-arrow-right"></i> Salir</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <i class="bi bi-question-circle text-danger mb-3" style="font-size: 3rem;"></i>
+                        <p class="mb-0">¿Estás seguro de que deseas cerrar sesión?</p>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light w-100 mb-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger w-100" id="logoutConfirmBtn">Sí, cerrar sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
+
+    </div>
+
+</body>
+</html>

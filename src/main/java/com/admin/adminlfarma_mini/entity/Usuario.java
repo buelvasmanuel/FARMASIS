@@ -55,6 +55,10 @@ public class Usuario {
     @Column(name = "codigo_verificado")
     private Boolean codigoVerificado = false;
 
+    @Lob
+    @Column(name = "foto_perfil", columnDefinition = "LONGTEXT")
+    private String fotoPerfil;
+
     // Constructores
     public Usuario() {
         this.fechaCreacion = LocalDateTime.now();
@@ -187,5 +191,13 @@ public class Usuario {
 
     public void setCodigoVerificado(Boolean codigoVerificado) {
         this.codigoVerificado = codigoVerificado;
+    }
+
+    public String getFotoPerfil() {
+        return fotoPerfil;
+    }
+
+    public void setFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
     }
 }

@@ -77,47 +77,13 @@
 </head>
 
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar no-transition" id="sidebar">
-        <div class="sidebar-header d-flex justify-content-between align-items-center">
-            <div class="logo"><i class="bi bi-shield-shielded"></i><span class="logo-text"> Owner</span></div>
-            <button class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-chevron-left"></i></button>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item"><a href="/owner/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i><span
-                        class="sidebar-text">Dashboard</span></a></li>
-            <li class="nav-item"><a href="/owner/gestionar-usuarios" class="nav-link"><i
-                        class="bi bi-people"></i><span class="sidebar-text">Gestión de Usuarios</span></a></li>
-            <li class="nav-item"><a href="/proveedores" class="nav-link"><i class="bi bi-truck"></i><span
-                        class="sidebar-text">Proveedores</span></a></li>
-            <li class="nav-item"><a href="/productos" class="nav-link"><i class="bi bi-box-seam"></i><span
-                        class="sidebar-text">Productos</span></a></li>
-            <li class="nav-item"><a href="/ventas" class="nav-link"><i class="bi bi-receipt"></i><span
-                        class="sidebar-text">Ventas</span></a></li>
-            <li class="nav-item"><a href="/ventas/nueva" class="nav-link"><i class="bi bi-cart-plus"></i><span
-                        class="sidebar-text">Nueva Venta</span></a></li>
-            <li class="nav-item">
-                <a href="#" class="nav-link">
-                    <i class="bi bi-gear"></i>
-                    <span class="sidebar-text">Configuración</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <button type="button" id="logoutTrigger" class="nav-link w-100 text-start" style="background: none; border: none; cursor: pointer;">
-                    <i class="bi bi-box-arrow-right"></i>
-                    <span class="sidebar-text">Cerrar Sesión</span>
-                </button>
-            </li>
-        </ul>
-    </div>
+    <div th:replace="~{fragments/sidebar :: sidebar('usuarios')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
 
     <!-- Main Content -->
     <div class="main-content no-transition" id="mainContent">
-        <div class="top-bar">
-            <button class="btn btn-light" id="mobileToggle" style="display: none;"><i class="bi bi-list"></i></button>
-            <div><i class="bi bi-person-circle fs-4 me-2"></i><span><strong
-                        th:text="${#authentication.name}"></strong></span></div>
-        </div>
+
 
         <div class="content-wrapper">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -271,7 +237,10 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Contraseña *</label>
-                            <input type="password" class="form-control" id="password" name="password" minlength="6" required>
+                            <input type="password" class="form-control" id="password" name="password" required 
+                                   pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$"
+                                   title="La contraseña debe tener al menos 8 caracteres, incluir un número y un carácter especial.">
+                            <small class="text-muted">Mínimo 8 caracteres, un número y un símbolo.</small>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Email *</label>
@@ -626,28 +595,7 @@
         }
     </script>
 
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <i class="bi bi-exclamation-triangle-fill logout-icon"></i>
-                    <p>¿Estás seguro que quieres cerrar sesión?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-logout-cancel" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-logout-confirm" id="logoutConfirmBtn">
-                        <i class="bi bi-check-lg"></i> Sí, cerrar sesión
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
+
 
     <script src="/js/sidebar.js"></script>
 </body>

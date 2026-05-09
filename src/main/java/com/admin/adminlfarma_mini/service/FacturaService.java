@@ -93,9 +93,8 @@ public class FacturaService {
     }
     
     private String generarNumeroFactura() {
-        String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         long count = facturaRepository.count() + 1;
-        return String.format("FAC-%s-%05d", fecha, count);
+        return String.format("FAC-%06d", count);
     }
     
     public Optional<Factura> obtenerPorId(String id) {

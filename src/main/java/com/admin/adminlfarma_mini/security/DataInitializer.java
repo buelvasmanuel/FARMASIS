@@ -27,46 +27,18 @@ public class DataInitializer {
     @Bean
     public CommandLineRunner initDatabase() {
         return args -> {
-            // Crear OWNER o restaurar contraseña si ya existe
-            if (usuarioRepository.findFirstByUsername("manueljavier2016@gmail.com").isEmpty()) {
-                log.info("👑 Creando OWNER (Superadministrador)...");
+            // Crear OWNER si no existe ninguno en la base de datos (Fail-safe)
+            if (!usuarioRepository.existsByRol("ROLE_OWNER")) {
+                log.info("👑 No se detectó ningún OWNER. Creando Superadministrador inicial...");
                 usuarioService.crearOwner(
-                        "manueljavier2016@gmail.com", // username ahora es el email
-                        "admin123", // password simplificado
-                        "manueljavier2016@gmail.com" // email para 2FA
+                        "manueljavier2016@gmail.com", // username inicial
+                        "admin123", // password inicial
+                        "manueljavier2016@gmail.com" // email inicial
                 );
-                log.info("✅ OWNER creado: usuario='manueljavier2016@gmail.com', contraseña='admin123'");
-                log.info("⚠️ IMPORTANTE: Podrás recibir tu código de 4 dígitos a este correo.");
+                log.info("✅ OWNER inicial creado: usuario='manueljavier2016@gmail.com', contraseña='admin123'");
+                log.info("⚠️ IMPORTANTE: Por favor cambie sus credenciales en el módulo de Configuración.");
             } else {
-                log.info("🔧 Restaurando acceso del OWNER por defecto...");
-                Usuario owner = usuarioRepository.findFirstByUsername("manueljavier2016@gmail.com").get();
-                owner.setPassword(passwordEncoder.encode("admin123"));
-                owner.setActivo(true);
-                owner.setRol("ROLE_OWNER");
-                usuarioRepository.save(owner);
-                log.info("✅ Clave del OWNER reestablecida a 'admin123'.");
-            }
-
-            // En DataInitializer.java, agregar:
-            if (usuarioRepository.findFirstByUsername("empleado1").isEmpty()) {
-                Usuario empleado = new Usuario();
-                empleado.setUsername("empleado1");
-                empleado.setPassword("empleado123");
-                empleado.setRol("ROLE_EMPLOYEE");
-                empleado.setEmail("empleado@example.com");
-                usuarioService.registrar(empleado);
-                log.info("✅ EMPLEADO creado: usuario='empleado1', contraseña='empleado123'");
-            }
-            // Crear ADMIN por defecto si no existe el usuario "admin"
-            if (usuarioRepository.findFirstByUsername("admin").isEmpty()) {
-                log.info("🔧 Creando ADMIN por defecto...");
-                Usuario admin = new Usuario();
-                admin.setUsername("admin");
-                admin.setPassword("admin123");
-                admin.setRol("ROLE_ADMIN");
-                admin.setEmail("admin@example.com");
-                usuarioService.registrar(admin);
-                log.info("✅ ADMIN creado: usuario='admin', contraseña='admin123'");
+                log.info("👑 El sistema ya cuenta con un OWNER. Saltando inicialización.");
             }
         };
     }

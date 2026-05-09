@@ -24,6 +24,7 @@ public class FacturaController {
     private final FacturaService facturaService;
     private final ProductoService productoService;
     private final ClienteService clienteService;
+    private final com.admin.adminlfarma_mini.service.ConfiguracionService configuracionService;
 
     @GetMapping
     public String listarVentas(
@@ -70,6 +71,15 @@ public class FacturaController {
             response.put("message", e.getMessage());
         }
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/factura")
+    public String verFactura(@PathVariable String id, Model model) {
+        Factura factura = facturaService.obtenerPorId(id)
+                .orElseThrow(() -> new RuntimeException("Factura no encontrada"));
+        model.addAttribute("factura", factura);
+        model.addAttribute("config", configuracionService.getConfiguracion());
+        return "factura-ticket";
     }
 
     @GetMapping("/{id}")
