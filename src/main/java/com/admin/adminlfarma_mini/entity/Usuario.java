@@ -19,7 +19,7 @@ public class Usuario {
     private String password;
 
     @Column(length = 20)
-    private String rol; // ROLE_OWNER, ROLE_ADMIN, ROLE_EMPLOYEE
+    private String rol; // ROLE_OWNER, ROLE_ADMIN, ROLE_EMPLEADO
 
     @Column(name = "email")
     private String email;

@@ -1,7 +1,12 @@
 package com.admin.adminlfarma_mini.Controller;
 
+import com.admin.adminlfarma_mini.service.FacturaService;
+import com.admin.adminlfarma_mini.service.ProductoService;
+import com.admin.adminlfarma_mini.service.ProveedorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,21 +15,52 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/admin")
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
+    @Autowired
+    private ProductoService productoService;
+
+    @Autowired
+    private ProveedorService proveedorService;
+
+    @Autowired
+    private FacturaService facturaService;
+
     @GetMapping("/dashboard")
     public String adminDashboard(Model model, Authentication auth) {
         String username = auth.getName();
-        log.info("Admin {} accediendo al panel exclusivo", username);
+        log.info("Admin {} accediendo al panel", username);
 
         model.addAttribute("username", username);
         model.addAttribute("titulo", "Panel de Administración - L-Farma");
+        model.addAttribute("totalProductos", productoService.contarProductos());
+        model.addAttribute("totalProveedores", proveedorService.contarProveedores());
+        model.addAttribute("ventasDelDia", facturaService.getVentasDelDia());
+        model.addAttribute("cantidadVentasDelDia", facturaService.getCantidadVentasDelDia());
         return "admin/dashboard";
     }
 
-    // Aquí puedes añadir más endpoints de gestión según necesites
-    // @GetMapping("/usuarios")
-    // public String gestionarUsuarios(Model model) { ... }
+    @GetMapping("/inventario")
+    public String inventario(Model model) {
+        model.addAttribute("productos", productoService.getProductosDisponibles());
+        model.addAttribute("proveedores", proveedorService.listarTodos());
+        return "admin/inventario";
+    }
+
+    @GetMapping("/proveedores")
+    public String proveedores(Model model) {
+        model.addAttribute("proveedores", proveedorService.listarTodos());
+        return "admin/proveedores";
+    }
+
+    @GetMapping("/ventas")
+    public String ventas(Model model) {
+        model.addAttribute("ventas", facturaService.listarTodasFacturas());
+        model.addAttribute("ventasDelDia", facturaService.getVentasDelDia());
+        model.addAttribute("cantidadVentasDelDia", facturaService.getCantidadVentasDelDia());
+        return "admin/ventas";
+    }
 }

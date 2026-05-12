@@ -32,6 +32,10 @@ public class ProductoService {
         return productoRepository.findProductosDisponibles();
     }
 
+    public long contarProductos() {
+        return productoRepository.count();
+    }
+
     public Optional<Producto> obtenerPorId(String id) {
         return productoRepository.findById(id);
     }

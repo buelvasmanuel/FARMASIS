@@ -64,7 +64,7 @@ public class UsuarioService {
         validarPassword(usuario.getPassword());
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         if (usuario.getRol() == null || usuario.getRol().isEmpty()) {
-            usuario.setRol("ROLE_EMPLOYEE");
+            usuario.setRol("ROLE_EMPLEADO");
         } else if (!usuario.getRol().startsWith("ROLE_")) {
             usuario.setRol("ROLE_" + usuario.getRol());
         }

@@ -32,9 +32,11 @@
         if (state === 'closed') {
             sidebar.classList.add('collapsed');
             mainContent.classList.add('expanded');
+            document.body.classList.add('sidebar-toggled');
         } else {
             sidebar.classList.remove('collapsed');
             mainContent.classList.remove('expanded');
+            document.body.classList.remove('sidebar-toggled');
         }
     }
 
@@ -50,6 +52,9 @@
         sidebar.classList.remove('no-transition');
         mainContent.classList.remove('no-transition');
 
+        // New logic: Toggle on body for global CSS control
+        document.body.classList.toggle('sidebar-toggled');
+        
         sidebar.classList.toggle('collapsed');
         mainContent.classList.toggle('expanded');
 
@@ -140,6 +145,9 @@
         var confirmBtn = document.getElementById('logoutConfirmBtn');
         if (confirmBtn) {
             confirmBtn.addEventListener('click', function () {
+                // ESTA ES LA LÍNEA NUEVA PARA EL BUG DE SESIONES CONECTADAS
+                localStorage.removeItem('sidebarState');
+                
                 var logoutForm = document.getElementById('logoutForm');
                 if (logoutForm) logoutForm.submit();
             });

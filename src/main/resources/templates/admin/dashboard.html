@@ -4,127 +4,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${titulo}">Panel Admin</title>
+    <title th:text="${titulo}">Panel Admin - L-Farma</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
+    <style>
+
+        body { background-color: #ffffff; }
+    </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="bi bi-shield-lock-fill"></i> L-Farma Admin
-            </a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i>
-                            <span sec:authentication="name">Usuario</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form th:action="@{/logout}" method="post">
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
+    <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
+
+    <div class="main-content no-transition" id="mainContent">
+        <div class="container-fluid px-4 py-4">
+            <!-- Welcome Banner -->
+            <div class="welcome-card">
+                <h2><i class="bi bi-shield-lock me-2"></i> <span th:text="${titulo}"></span></h2>
+                <p class="mb-0">Gestiona el inventario, proveedores y ventas del sistema L-Farma.</p>
             </div>
-        </div>
-    </nav>
 
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-2 d-md-block bg-light sidebar">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#">
-                                <i class="bi bi-speedometer2"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="bi bi-people"></i> Usuarios
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="bi bi-graph-up"></i> Reportes
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="bi bi-gear"></i> Configuración
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-
-            <!-- Main Content -->
-            <main class="col-md-10 ms-sm-auto px-md-4">
-                <div
-                    class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Panel de Control</h1>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Bienvenido, <span sec:authentication="name"></span></h5>
-                                <p class="card-text">Has iniciado sesión como <strong>Administrador</strong>.</p>
-                                <p class="card-text text-muted">Desde este panel puedes gestionar todos los recursos del
-                                    sistema L-Farma.</p>
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Ventas del Día</h6>
+                                <h2 class="mb-0" th:text="'$ ' + ${#numbers.formatDecimal(ventasDelDia, 1, 'POINT', 0, 'COMMA')}">$ 0</h2>
+                                <small class="text-muted" th:text="${cantidadVentasDelDia} + ' transacciones'">0 transacciones</small>
                             </div>
+                            <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Aquí irían los widgets, gráficos, etc. -->
-                <div class="row mt-4">
-                    <div class="col-md-4">
-                        <div class="card text-white bg-primary mb-3">
-                            <div class="card-header">Ventas Hoy</div>
-                            <div class="card-body">
-                                <h5 class="card-title">$ 0</h5>
-                                <p class="card-text">0 transacciones</p>
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Total Productos</h6>
+                                <h2 class="mb-0" th:text="${totalProductos}">0</h2>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-success mb-3">
-                            <div class="card-header">Productos Activos</div>
-                            <div class="card-body">
-                                <h5 class="card-title">0</h5>
-                                <p class="card-text">0 con stock bajo</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-warning mb-3">
-                            <div class="card-header">Usuarios Registrados</div>
-                            <div class="card-body">
-                                <h5 class="card-title">1</h5>
-                                <p class="card-text">Administradores</p>
-                            </div>
+                            <div class="stat-icon"><i class="bi bi-box-seam"></i></div>
                         </div>
                     </div>
                 </div>
-            </main>
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted">Proveedores</h6>
+                                <h2 class="mb-0" th:text="${totalProveedores}">0</h2>
+                            </div>
+                            <div class="stat-icon"><i class="bi bi-truck"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <h4 class="mb-3 fw-bold">Acciones Rápidas</h4>
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <a href="/admin/inventario" class="quick-action">
+                        <i class="bi bi-box-seam"></i>
+                        <strong>Inventario</strong>
+                        <small class="text-muted d-block">Gestionar productos</small>
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/admin/proveedores" class="quick-action">
+                        <i class="bi bi-truck"></i>
+                        <strong>Proveedores</strong>
+                        <small class="text-muted d-block">Ver proveedores</small>
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/ventas/nueva" class="quick-action">
+                        <i class="bi bi-cart-plus"></i>
+                        <strong>Nueva Venta</strong>
+                        <small class="text-muted d-block">Punto de venta</small>
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/admin/ventas" class="quick-action">
+                        <i class="bi bi-receipt"></i>
+                        <strong>Historial Ventas</strong>
+                        <small class="text-muted d-block">Ver y anular</small>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
 </body>
 
 </html>

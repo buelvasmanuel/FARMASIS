@@ -1,6 +1,47 @@
-/* ============================================
-   SIDEBAR - Estilos compartidos (layout global)
-   ============================================ */
+/* EL CANDADO PARA QUE NO BRINQUE NADA */
+html, body {
+    overflow-y: scroll !important; /* Fuerza la barra de scroll siempre para evitar saltos */
+    background-color: #f4f7f6 !important;
+}
+
+* {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* --- Brand Color Palette --- */
+:root {
+    --primary-color: #1B4332;       /* Verde Bosque Oscuro */
+    --primary-light: #2D6A4F;       /* Verde Bosque Medio */
+    --secondary-color: #52B788;     /* Verde Menta / Hoja */
+    --accent-color: #74C69D;        /* Verde Menta Claro */
+    --accent-light: #B7E4C7;        /* Verde Pastel */
+    --dark-bg: #081C15;             /* Fondo oscuro sidebar */
+    --dark-bg-alt: #0D2818;         /* Fondo oscuro alternativo */
+    --success-green: #40916C;       /* Para badges de éxito */
+    --danger-color: #E63946;        /* Para acciones destructivas */
+    --warning-color: #F4A261;       /* Para alertas */
+    --text-primary: #212529;
+    --text-muted: #6c757d;
+    --card-shadow: 0 4px 20px rgba(27, 67, 50, 0.08);
+    --card-hover-shadow: 0 8px 30px rgba(27, 67, 50, 0.15);
+}
+
+/* --- Anti-flicker: Preload state --- */
+html.sidebar-preload-collapsed .sidebar { width: 70px !important; min-width: 70px !important; }
+html.sidebar-preload-collapsed .main-content { margin-left: 70px !important; width: calc(100vw - 70px) !important; }
+html.sidebar-preload-collapsed .sidebar .sidebar-text,
+html.sidebar-preload-collapsed .sidebar .nav-label,
+html.sidebar-preload-collapsed .sidebar .logo-text,
+html.sidebar-preload-collapsed .sidebar .brand-text,
+html.sidebar-preload-collapsed .sidebar span { display: none !important; opacity: 0 !important; }
+
+/* Evitar que el texto baje de línea en el sidebar */
+.sidebar, #sidebar, .sidebar-container {
+    white-space: nowrap !important;
+    overflow-x: hidden !important;
+}
+
+
 
 /* --- Anti-flicker: suppress transitions on initial load --- */
 .sidebar.no-transition,
@@ -9,7 +50,9 @@
     transition: none !important;
 }
 
-/* Sidebar container */
+/* ============================================
+   SIDEBAR CONTAINER
+   ============================================ */
 .sidebar {
     position: fixed;
     top: 0;
@@ -18,43 +61,53 @@
     width: 260px;
     min-width: 260px;
     flex-shrink: 0;
-    background: linear-gradient(135deg, #1a1c2e 0%, #2a2d3e 100%);
+    background: linear-gradient(180deg, var(--dark-bg) 0%, var(--primary-color) 100%);
     color: white;
     transition: width 0.3s ease, min-width 0.3s ease;
     z-index: 1000;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.15);
     overflow-x: hidden;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Collapsed state */
-.sidebar.collapsed {
-    width: 70px;
-    min-width: 70px;
-}
 
-.sidebar.collapsed .sidebar-text,
-.sidebar.collapsed .nav-label,
-.sidebar.collapsed .logo-text {
-    display: none;
-}
 
-.sidebar.collapsed .nav-link i {
-    margin-right: 0;
-    font-size: 1.3rem;
-}
-
-/* Sidebar header */
+/* ============================================
+   SIDEBAR HEADER (Brand)
+   ============================================ */
 .sidebar-header {
     padding: 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Logo */
 .sidebar .logo {
     font-size: 1.3rem;
     font-weight: bold;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar .logo i {
+    color: var(--secondary-color);
+    font-size: 1.5rem;
+}
+
+.sidebar .logo-text {
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.logo-subtitle {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.45);
+    display: block;
+    margin-top: 2px;
+    letter-spacing: 0.3px;
 }
 
 /* Toggle button */
@@ -73,15 +126,27 @@
     transform: scale(1.1);
 }
 
-/* Navigation menu */
+/* ============================================
+   NAVIGATION MENU
+   ============================================ */
 .sidebar .nav-menu {
     list-style: none;
     padding: 0;
     margin-top: 20px;
+    flex: 1;
 }
 
 .sidebar .nav-item {
     margin-bottom: 0;
+}
+
+.sidebar .nav-label {
+    padding: 15px 20px 5px;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 600;
 }
 
 /* Nav links */
@@ -89,30 +154,31 @@
     display: flex;
     align-items: center;
     padding: 12px 20px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.55);
     text-decoration: none;
     transition: all 0.25s ease;
     border-left: 3px solid transparent;
     white-space: nowrap;
+    font-size: 0.9rem;
 }
 
 .sidebar .nav-link:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.9);
-    border-left-color: rgba(255, 255, 255, 0.3);
+    background: rgba(82, 183, 136, 0.1);
+    color: rgba(255, 255, 255, 0.95);
+    border-left-color: var(--accent-color);
 }
 
-/* Active state — prominent visual indicator */
+/* Active state */
 .sidebar .nav-link.active {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(82, 183, 136, 0.15);
     color: #ffffff;
-    border-left: 3px solid #4fc3f7;
+    border-left: 3px solid var(--secondary-color);
     font-weight: 600;
     letter-spacing: 0.01em;
 }
 
 .sidebar .nav-link.active i {
-    color: #4fc3f7;
+    color: var(--secondary-color);
 }
 
 .sidebar .nav-link i {
@@ -125,38 +191,223 @@
 }
 
 /* ============================================
-   MAIN CONTENT - Layout junto al sidebar
+   SIDEBAR FOOTER (Farmasis credit)
+   ============================================ */
+.sidebar-footer {
+    padding: 15px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: center;
+    margin-top: auto;
+}
+
+.sidebar-footer small {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-footer small strong {
+    color: var(--accent-color);
+}
+
+/* ============================================
+   MAIN CONTENT
    ============================================ */
 
-.main-content {
-    margin-left: 260px;
-    transition: margin-left 0.3s ease;
-    min-height: 100vh;
-}
-
-.main-content.expanded {
-    margin-left: 70px;
-}
 
 /* Top bar */
 .top-bar {
     background: white;
     padding: 15px 30px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
-/* Content wrapper */
-.content-wrapper {
+.top-bar .brand-text {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    letter-spacing: 0.3px;
+}
+
+.top-bar .brand-text i {
+    color: var(--secondary-color);
+    margin-right: 6px;
+}
+
+
+
+/* ============================================
+   GLOBAL TABLE STYLES (Green headers)
+   ============================================ */
+.table thead.table-lfarma,
+.table thead.table-dark {
+    background: var(--primary-color) !important;
+    color: white;
+}
+
+.table thead.table-lfarma th,
+.table thead.table-dark th {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-light) !important;
+    font-weight: 600;
+    font-size: 0.88rem;
+    letter-spacing: 0.02em;
+}
+
+/* Global card standardization */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* Table container */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+/* ============================================
+   BTN-PRIMARY OVERRIDE (Green theme)
+   ============================================ */
+.btn-primary {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: var(--primary-light) !important;
+    border-color: var(--primary-light) !important;
+    box-shadow: 0 4px 12px rgba(27, 67, 50, 0.25);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color) !important;
+    color: white !important;
+}
+
+/* Modal header green override */
+.modal-header-lfarma,
+.modal-content .modal-header[style*="667eea"] {
+    background: linear-gradient(135deg, var(--dark-bg) 0%, var(--primary-color) 100%) !important;
+    color: white;
+}
+
+/* ============================================
+   SHARED UI COMPONENTS
+   ============================================ */
+
+/* Stat Cards */
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: var(--card-shadow);
+    transition: transform 0.3s, box-shadow 0.3s;
+    height: 100%;
+    border: 1px solid rgba(27, 67, 50, 0.06);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-hover-shadow);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+}
+
+/* Welcome card */
+.welcome-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 50%, var(--secondary-color) 100%);
+    color: white;
+    border-radius: 14px;
     padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 30px rgba(27, 67, 50, 0.25);
+}
+
+/* Quick actions */
+.quick-action {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: block;
+    color: var(--text-primary);
+    border: 1px solid rgba(27, 67, 50, 0.06);
+}
+
+.quick-action:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-hover-shadow);
+    color: var(--primary-color);
+    border-color: var(--accent-light);
+}
+
+.quick-action i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+    color: var(--secondary-color);
+}
+
+/* ============================================
+   BTN OVERRIDES (Green theme)
+   ============================================ */
+.btn-lfarma {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s;
+}
+
+.btn-lfarma:hover {
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-color) 100%);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(27, 67, 50, 0.3);
+}
+
+.btn-outline-lfarma {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s;
+}
+
+.btn-outline-lfarma:hover {
+    background: var(--primary-color);
+    color: white;
 }
 
 /* ============================================
    LOGOUT MODAL
    ============================================ */
-
 #logoutModal .modal-content {
     border: none;
     border-radius: 16px;
@@ -165,7 +416,7 @@
 }
 
 #logoutModal .modal-header {
-    background: linear-gradient(135deg, #1a1c2e 0%, #2a2d3e 100%);
+    background: linear-gradient(135deg, var(--dark-bg) 0%, var(--primary-color) 100%);
     color: white;
     border-bottom: none;
     padding: 1.25rem 1.5rem;
@@ -183,14 +434,14 @@
 
 #logoutModal .modal-body .logout-icon {
     font-size: 3.5rem;
-    color: #dc3545;
+    color: var(--danger-color);
     margin-bottom: 1rem;
     display: block;
 }
 
 #logoutModal .modal-body p {
     font-size: 1.05rem;
-    color: #495057;
+    color: var(--text-muted);
     margin-bottom: 0;
 }
 
@@ -202,7 +453,7 @@
 }
 
 #logoutModal .btn-logout-confirm {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    background: linear-gradient(135deg, var(--danger-color) 0%, #c82333 100%);
     border: none;
     color: white;
     padding: 0.5rem 2rem;
@@ -213,13 +464,13 @@
 
 #logoutModal .btn-logout-confirm:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.4);
 }
 
 #logoutModal .btn-logout-cancel {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
-    color: #495057;
+    color: var(--text-muted);
     padding: 0.5rem 2rem;
     border-radius: 8px;
     font-weight: 500;
@@ -231,9 +482,8 @@
 }
 
 /* ============================================
-   RESPONSIVE - Mobile
+   RESPONSIVE — Mobile
    ============================================ */
-
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
@@ -250,4 +500,65 @@
     .main-content.expanded {
         margin-left: 0;
     }
+
+    .content-wrapper {
+        padding: 15px;
+    }
 }
+
+/* ==========================================
+   LAYOUT BASE ROBUSTO
+   ========================================== */
+.main-content {
+    margin-left: 260px;
+    transition: margin-left 0.3s ease;
+    background-color: #f4f7f6; /* Fondo suave para resaltar contenedores blancos */
+    min-height: 100vh;
+}
+
+.main-content.expanded {
+    margin-left: 70px;
+}
+
+/* ==========================================
+   FIX SIDEBAR (CSS Simple y Limpio)
+   ========================================== */
+.sidebar.collapsed {
+    width: 70px !important;
+    min-width: 70px !important;
+    overflow: hidden !important;
+}
+
+.sidebar.collapsed .nav-text, 
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .sidebar-footer,
+.sidebar.collapsed .logo-subtitle {
+    display: none !important;
+}
+
+/* Ocultar textos del header/logo específicamente */
+.sidebar.collapsed .sidebar-header span,
+.sidebar.collapsed .sidebar-header .brand-text,
+.sidebar.collapsed .sidebar-header h3,
+.sidebar.collapsed .logo-text {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+}
+
+/* Centrado de iconos al colapsar */
+.sidebar.collapsed .nav-link {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.sidebar.collapsed .nav-link i {
+    margin-right: 0 !important;
+    font-size: 1.5rem !important;
+}
+
+
+

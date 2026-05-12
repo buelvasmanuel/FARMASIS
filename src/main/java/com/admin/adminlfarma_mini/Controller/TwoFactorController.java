@@ -52,8 +52,10 @@ public class TwoFactorController {
                 return "redirect:/owner/dashboard";
             } else if ("ROLE_ADMIN".equals(usuario.getRol())) {
                 return "redirect:/admin/dashboard";
+            } else if ("ROLE_EMPLEADO".equals(usuario.getRol())) {
+                return "redirect:/empleado/pos";
             }
-            return "redirect:/dashboard";
+            return "redirect:/login";
         }
 
         model.addAttribute("error", "Código inválido o expirado");

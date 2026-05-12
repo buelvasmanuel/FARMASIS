@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proveedores - L-Farma</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
+    <style>
+        html.sidebar-preload-collapsed .sidebar { width: 70px; min-width: 70px; }
+        html.sidebar-preload-collapsed .sidebar .sidebar-text,
+        html.sidebar-preload-collapsed .sidebar .nav-label,
+        html.sidebar-preload-collapsed .sidebar .logo-text,
+        html.sidebar-preload-collapsed .sidebar .sidebar-footer { display: none; }
+        html.sidebar-preload-collapsed .main-content { margin-left: 70px; }
+        * { font-family: 'Inter', sans-serif; }
+        body { background-color: #ffffff; }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/sidebar :: sidebar('proveedores')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
+
+    <div class="main-content no-transition" id="mainContent">
+        <main class="content-wrapper container-fluid px-4 py-3">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="fw-bold mb-0"><i class="bi bi-truck me-2" style="color: var(--secondary-color);"></i> Proveedores</h1>
+                <span class="badge fs-6" style="background: var(--primary-color);" th:text="'Total: ' + ${proveedores.size()}">Total: 0</span>
+            </div>
+
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Empresa</th>
+                                <th>Teléfono</th>
+                                <th>Email</th>
+                                <th>Dirección</th>
+                                <th>Tipo Productos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${proveedores}">
+                                <td class="fw-bold" th:text="${p.nombre}">Nombre</td>
+                                <td><span class="badge" style="background: var(--primary-color);" th:text="${p.empresa}">Empresa</span></td>
+                                <td><i class="bi bi-telephone me-1 text-muted"></i> <span th:text="${p.telefono}">Tel</span></td>
+                                <td><i class="bi bi-envelope me-1 text-muted"></i> <span th:text="${p.email}">Email</span></td>
+                                <td th:text="${p.direccion != null ? p.direccion : '—'}">—</td>
+                                <td>
+                                    <span th:if="${p.tipoProductos != null}" class="badge bg-light text-dark" th:text="${p.tipoProductos}">Tipo</span>
+                                    <span th:unless="${p.tipoProductos != null}">—</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div th:if="${#lists.isEmpty(proveedores)}" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-1"></i>
+                        <p class="mt-2">No hay proveedores registrados</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+</body>
+</html>

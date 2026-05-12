@@ -30,7 +30,7 @@ public class OwnerController {
         model.addAttribute("titulo", "Panel de Owner - Control Total");
         model.addAttribute("totalUsuarios", usuarioService.contarActivos());
         model.addAttribute("totalAdmins", usuarioService.contarPorRol("ROLE_ADMIN"));
-        model.addAttribute("totalEmployees", usuarioService.contarPorRol("ROLE_EMPLOYEE"));
+        model.addAttribute("totalEmpleados", usuarioService.contarPorRol("ROLE_EMPLEADO"));
         model.addAttribute("totalProveedores", proveedorService.contarProveedores());
         return "owner/dashboard";
     }
@@ -175,9 +175,9 @@ public class OwnerController {
                     nombreCompleto = usuarioActualizado.getUsername();
                 }
 
-                if (rolAnterior.contains("EMPLOYEE") && rolNuevoCompleto.contains("ADMIN")) {
+                if (rolAnterior.contains("EMPLEADO") && rolNuevoCompleto.contains("ADMIN")) {
                     emailService.enviarCorreoAscenso(usuarioActualizado.getEmail(), nombreCompleto);
-                } else if (rolAnterior.contains("ADMIN") && rolNuevoCompleto.contains("EMPLOYEE")) {
+                } else if (rolAnterior.contains("ADMIN") && rolNuevoCompleto.contains("EMPLEADO")) {
                     emailService.enviarCorreoAjusteRol(usuarioActualizado.getEmail(), nombreCompleto);
                 }
             }

@@ -4,55 +4,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuración - Farmasis</title>
+    <title>Configuración - L-Farma</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/sidebar.css">
     <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
     <style>
-        body { background-color: #f8f9fa; }
-        .config-container { max-width: 900px; margin: 2rem auto; }
-        .card { border: none; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .nav-pills .nav-link { color: #6c757d; border-radius: 10px; padding: 12px 20px; font-weight: 500; transition: all 0.3s; }
-        .nav-pills .nav-link.active { background-color: #0d6efd; color: white; box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3); }
-        .nav-pills .nav-link:hover:not(.active) { background-color: #e9ecef; }
+
+        body { background-color: #ffffff; }
+        .config-container { width: 100%; }
+        .card { border: none; border-radius: 15px; box-shadow: var(--card-shadow); }
+        
+        .nav-pills .nav-link { 
+            color: #6c757d; border-radius: 12px; padding: 12px 20px; font-weight: 600; 
+            transition: all 0.3s; font-size: 0.9rem;
+        }
+        .nav-pills .nav-link.active { 
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            color: white; box-shadow: 0 4px 15px rgba(27, 67, 50, 0.25);
+        }
+        .nav-pills .nav-link:hover:not(.active) { background-color: var(--accent-light); color: var(--primary-color); }
         
         .profile-img-preview {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            background-color: #eee;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: #ccc;
-            margin: 0 auto 1.5rem;
+            width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+            border: 4px solid white; box-shadow: 0 4px 15px rgba(27, 67, 50, 0.15);
+            background-color: var(--accent-light); display: flex; align-items: center;
+            justify-content: center; font-size: 3rem; color: var(--primary-color); margin: 0 auto 1.5rem;
         }
 
-        .form-label { font-weight: 600; color: #495057; margin-bottom: 0.5rem; }
-        .form-control { border-radius: 10px; padding: 10px 15px; border: 1px solid #dee2e6; }
-        .form-control:focus { box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1); border-color: #0d6efd; }
+        .form-label { font-weight: 600; color: #495057; margin-bottom: 0.5rem; font-size: 0.88rem; }
+        .form-control { border-radius: 12px; padding: 11px 16px; border: 1.5px solid #dee2e6; }
+        .form-control:focus { box-shadow: 0 0 0 0.25rem rgba(82, 183, 136, 0.12); border-color: var(--secondary-color); }
         
-        .section-title { font-size: 1.1rem; font-weight: 700; color: #212529; margin-bottom: 1.5rem; display: flex; align-items: center; }
-        .section-title i { margin-right: 10px; color: #0d6efd; }
+        .section-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-title i { margin-right: 10px; color: var(--secondary-color); }
         
-        .btn-update { border-radius: 10px; padding: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-update { 
+            border-radius: 12px; padding: 12px; font-weight: 700; text-transform: uppercase; 
+            letter-spacing: 0.5px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            border: none; color: white; transition: all 0.3s;
+        }
+        .btn-update:hover { 
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-color) 100%);
+            color: white; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(27, 67, 50, 0.3);
+        }
         
-        .alert { border-radius: 10px; border: none; }
+        .btn-update-dark {
+            border-radius: 12px; padding: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; background: linear-gradient(135deg, var(--dark-bg) 0%, var(--primary-color) 100%);
+            border: none; color: white; transition: all 0.3s;
+        }
+        .btn-update-dark:hover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white; transform: translateY(-1px);
+        }
+        
+        .alert { border-radius: 12px; border: none; }
     </style>
 </head>
 
 <body>
     <div th:replace="~{fragments/sidebar :: sidebar('configuracion')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
 
     <div class="main-content no-transition" id="mainContent">
-        <div class="content-wrapper">
-            <div class="config-container">
-                <h1 class="mb-4 fw-bold"><i class="bi bi-gear-fill me-2 text-primary"></i> Configuración del Sistema</h1>
+        <div class="container-fluid px-4 py-4">
+            <h1 class="mb-4 fw-bold"><i class="bi bi-gear-fill me-2" style="color: var(--secondary-color);"></i> Configuración del Sistema</h1>
 
                 <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${success}"></span>
@@ -77,7 +96,7 @@
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="negocio-tab" data-bs-toggle="pill" data-bs-target="#negocio" type="button" role="tab">
-                            <i class="bi bi-building me-2"></i> Datos del Negocio
+                            <i class="bi bi-building me-2"></i> Datos de L-Farma
                         </button>
                     </li>
                 </ul>
@@ -94,7 +113,7 @@
                                     </div>
                                     <input type="hidden" id="fotoPerfilInput" name="fotoPerfil" th:value="${usuario.fotoPerfil}">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <label class="btn btn-outline-primary btn-sm">
+                                        <label class="btn btn-outline-lfarma btn-sm">
                                             <i class="bi bi-camera me-1"></i> Subir Foto
                                             <input type="file" id="fileSelector" hidden accept="image/*">
                                         </label>
@@ -111,7 +130,7 @@
                                     <div class="form-text">Este correo es su identificador de acceso al sistema.</div>
                                 </div>
 
-                                <div class="alert alert-info py-2 small">
+                                <div class="alert py-2 small" style="background: var(--accent-light); color: var(--primary-color);">
                                     <i class="bi bi-info-circle-fill me-1"></i> Se requiere su <strong>contraseña actual</strong> para confirmar cualquier cambio en esta pestaña.
                                 </div>
                                 <div class="mb-4">
@@ -119,7 +138,7 @@
                                     <input type="password" name="passwordActual" class="form-control" placeholder="Ingrese su clave para confirmar">
                                 </div>
 
-                                <button type="submit" class="btn btn-primary w-100 btn-update">Actualizar Perfil</button>
+                                <button type="submit" class="btn btn-update w-100">Actualizar Perfil</button>
                             </form>
                         </div>
                     </div>
@@ -151,12 +170,12 @@
                                     <input type="password" id="confirmPass" class="form-control" required placeholder="Repita la clave">
                                 </div>
 
-                                <button type="submit" class="btn btn-primary w-100 btn-update">Cambiar Contraseña</button>
+                                <button type="submit" class="btn btn-update w-100">Cambiar Contraseña</button>
                             </form>
                         </div>
                     </div>
 
-                    <!-- TAB 3: NEGOCIO -->
+                    <!-- TAB 3: DATOS DE L-FARMA -->
                     <div class="tab-pane fade" id="negocio" role="tabpanel">
                         <div class="card p-4">
                             <form th:action="@{/configuracion/sistema}" method="post">
@@ -186,17 +205,16 @@
                                     <label class="form-label">Umbral de Stock Bajo</label>
                                     <div class="input-group">
                                         <input type="number" name="umbralStockBajo" class="form-control" th:value="${config.umbralStockBajo}" min="1" required>
-                                        <span class="input-group-text">Unidades</span>
+                                        <span class="input-group-text" style="border-radius: 0 12px 12px 0;">Unidades</span>
                                     </div>
                                     <div class="form-text">Los productos se marcarán en alerta cuando alcancen esta cantidad.</div>
                                 </div>
 
-                                <button type="submit" class="btn btn-dark w-100 btn-update">Guardar Configuración Global</button>
+                                <button type="submit" class="btn btn-update-dark w-100">Guardar Configuración Global</button>
                             </form>
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
 

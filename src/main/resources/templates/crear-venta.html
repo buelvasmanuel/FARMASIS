@@ -4,26 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nueva Venta - Owner</title>
+    <title>Punto de Venta - L-Farma</title>
     <!-- CSRF Meta Tags -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
     <link rel="stylesheet" href="/css/sidebar.css">
     <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
     <style>
-        html.sidebar-preload-collapsed .sidebar { width: 70px; min-width: 70px; }
-        html.sidebar-preload-collapsed .sidebar .sidebar-text,
-        html.sidebar-preload-collapsed .sidebar .nav-label,
-        html.sidebar-preload-collapsed .sidebar .logo-text { display: none; }
-        html.sidebar-preload-collapsed .main-content { margin-left: 70px; }
+
 
         body {
-            background-color: #f0f2f5;
+            background-color: #ffffff;
         }
 
         .summary-card {
@@ -84,13 +81,15 @@
 
 <body>
     <div th:replace="~{fragments/sidebar :: sidebar('nueva-venta')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
 
     <div class="main-content no-transition" id="mainContent">
 
 
-        <div class="content-wrapper">
+        <div class="container-fluid px-4 py-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0"><i class="bi bi-cart-plus text-primary"></i> Punto de Venta</h1>
+                <h1 class="h3 mb-0 fw-bold"><i class="bi bi-cart-plus" style="color: var(--secondary-color);"></i> Punto de Venta</h1>
                 <a href="/ventas" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Ver Historial</a>
             </div>
 
@@ -200,7 +199,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
     </div>
 
     <!-- Modal Success -->
@@ -458,17 +457,5 @@
             $('.select2-cliente').select2({ theme: 'bootstrap-5', width: '100%' });
         });
     </script>
-
-    <!-- Logout Logic -->
-    <script>
-        document.getElementById('logoutTrigger')?.addEventListener('click', () => {
-            new bootstrap.Modal(document.getElementById('logoutModal')).show();
-        });
-        document.getElementById('logoutConfirmBtn')?.addEventListener('click', () => {
-            document.getElementById('logoutForm').submit();
-        });
-    </script>
-    
-    <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
 </body>
 </html>

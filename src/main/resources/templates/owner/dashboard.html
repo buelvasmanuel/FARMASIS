@@ -7,71 +7,13 @@
     <title>Dashboard - Panel Owner | L-Farma</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/sidebar.css">
-    <script>/* Anti-flicker: apply sidebar state before paint */
+    <script>/* Anti-flicker */
     (function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());
     </script>
     <style>
-        /* Anti-flicker: pre-apply collapsed state via html class */
-        html.sidebar-preload-collapsed .sidebar { width: 70px; min-width: 70px; }
-        html.sidebar-preload-collapsed .sidebar .sidebar-text,
-        html.sidebar-preload-collapsed .sidebar .nav-label,
-        html.sidebar-preload-collapsed .sidebar .logo-text { display: none; }
-        html.sidebar-preload-collapsed .main-content { margin-left: 70px; }
-
-        body {
-            background-color: #f0f2f5;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            height: 100%;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .stat-icon {
-            font-size: 2.5rem;
-            color: #0d6efd;
-        }
-
-        .welcome-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 10px;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-
-        .quick-action {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: block;
-            color: #333;
-        }
-
-        .quick-action:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            color: #0d6efd;
-        }
-
-        .quick-action i {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            display: block;
-        }
+        body { background-color: #ffffff; }
     </style>
 </head>
 
@@ -82,14 +24,11 @@
 
     <!-- Main Content -->
     <div class="main-content no-transition" id="mainContent">
-
-
-        <div class="content-wrapper">
+        <div class="container-fluid px-4 py-4">
             <!-- Welcome Banner -->
             <div class="welcome-card">
-                <h2><i class="bi bi-crown"></i> <span th:text="${titulo}"></span></h2>
-                <p class="mb-0">Tienes control total sobre el sistema. Gestiona usuarios, proveedores y configuración
-                    general.</p>
+                <h2><i class="bi bi-crown me-2"></i> <span th:text="${titulo}"></span></h2>
+                <p class="mb-0">Tienes control total sobre el sistema. Gestiona usuarios, proveedores y configuración general.</p>
             </div>
 
             <!-- Stats Cards -->
@@ -127,7 +66,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="text-muted">Empleados</h6>
-                                <h2 class="mb-0" th:text="${totalEmployees}">0</h2>
+                                <h2 class="mb-0" th:text="${totalEmpleados}">0</h2>
                             </div>
                             <div class="stat-icon">
                                 <i class="bi bi-person-badge"></i>
@@ -147,7 +86,7 @@
                                 <i class="bi bi-truck"></i>
                             </div>
                         </div>
-                        <a href="/proveedores" class="btn btn-sm btn-outline-primary mt-2 w-100">
+                        <a href="/proveedores" class="btn btn-sm btn-outline-lfarma mt-2 w-100">
                             <i class="bi bi-box-arrow-right"></i> Gestionar Proveedores
                         </a>
                     </div>
@@ -155,7 +94,7 @@
             </div>
 
             <!-- Quick Actions -->
-            <h4 class="mb-3">Acciones Rápidas</h4>
+            <h4 class="mb-3 fw-bold">Acciones Rápidas</h4>
             <div class="row mb-4">
                 <div class="col-md-3 mb-3">
                     <a href="/owner/gestionar-usuarios" class="quick-action">
@@ -179,20 +118,20 @@
                     </a>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <a href="/proveedores" class="quick-action">
-                        <i class="bi bi-search"></i>
-                        <strong>Ver Proveedores</strong>
-                        <small class="text-muted d-block">Lista completa</small>
+                    <a href="/configuracion" class="quick-action">
+                        <i class="bi bi-gear"></i>
+                        <strong>Configuración</strong>
+                        <small class="text-muted d-block">Datos del sistema</small>
                     </a>
                 </div>
             </div>
 
-            <!-- Recent Activity Section -->
+            <!-- Recent Activity & System Info -->
             <div class="row">
                 <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-white">
-                            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Actividad Reciente</h5>
+                    <div class="card border-0" style="border-radius: 12px; box-shadow: var(--card-shadow);">
+                        <div class="card-header bg-white border-0 pt-3">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2" style="color: var(--secondary-color);"></i> Actividad Reciente</h5>
                         </div>
                         <div class="card-body">
                             <div class="text-center text-muted py-4">
@@ -204,25 +143,25 @@
                 </div>
 
                 <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header bg-white">
-                            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Información del Sistema</h5>
+                    <div class="card border-0" style="border-radius: 12px; box-shadow: var(--card-shadow);">
+                        <div class="card-header bg-white border-0 pt-3">
+                            <h5 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2" style="color: var(--secondary-color);"></i> Información del Sistema</h5>
                         </div>
                         <div class="card-body">
                             <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0">
                                     Versión del Sistema
-                                    <span class="badge bg-primary rounded-pill">1.0.0</span>
+                                    <span class="badge rounded-pill" style="background: var(--primary-color);">1.0.0</span>
                                 </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0">
                                     Base de Datos
-                                    <span class="badge bg-success rounded-pill">MongoDB</span>
+                                    <span class="badge rounded-pill" style="background: var(--secondary-color);">MongoDB + MySQL</span>
                                 </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0">
                                     Autenticación
-                                    <span class="badge bg-info rounded-pill">2FA Activado</span>
+                                    <span class="badge rounded-pill" style="background: var(--accent-color); color: var(--primary-color);">2FA Activado</span>
                                 </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0">
                                     Último Acceso
                                     <span th:text="${#dates.format(#dates.createNow(), 'dd/MM/yyyy HH:mm')}"></span>
                                 </li>
@@ -233,29 +172,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Logout Modal -->
-    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <i class="bi bi-exclamation-triangle-fill logout-icon"></i>
-                    <p>¿Estás seguro que quieres cerrar sesión?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-logout-cancel" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-logout-confirm" id="logoutConfirmBtn">
-                        <i class="bi bi-check-lg"></i> Sí, cerrar sesión
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/sidebar.js"></script>

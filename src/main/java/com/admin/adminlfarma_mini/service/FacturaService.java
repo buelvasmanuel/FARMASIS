@@ -97,6 +97,10 @@ public class FacturaService {
         return String.format("FAC-%06d", count);
     }
     
+    public List<Factura> listarTodasFacturas() {
+        return facturaRepository.findAll();
+    }
+
     public Optional<Factura> obtenerPorId(String id) {
         return facturaRepository.findById(id);
     }
