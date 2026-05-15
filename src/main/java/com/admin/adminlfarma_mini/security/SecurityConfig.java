@@ -8,21 +8,34 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
                 http
+                .csrf(csrf -> csrf
+                                .ignoringRequestMatchers("/api/chat/**", "/api/**",
+                                        "/novedades/**", "/asistencia/**",
+                                        "/admin/novedades/**", "/admin/asistencia/**",
+                                        "/owner/asistencia/**"))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
-                                                                "/webjars/**", "/configurar-email")
+                                                                "/webjars/**", "/configurar-email", "/api/chat/**", "/api/**")
                                                 .permitAll()
+                                                // OWNER accede a todo (incluyendo /admin/**)
                                                 .requestMatchers("/owner/**").hasRole("OWNER")
-                                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "OWNER")
                                                 .requestMatchers("/empleado/**").hasRole("EMPLEADO")
                                                 .requestMatchers("/configuracion/**").hasAnyRole("OWNER", "ADMIN")
+                                                // Módulos nuevos — cualquier usuario autenticado
+                                                .requestMatchers("/novedades/**").authenticated()
+                                                .requestMatchers("/asistencia/**").authenticated()
+                                                .requestMatchers("/auditoria/**").authenticated()
                                                 .anyRequest().authenticated())
                                 .formLogin(form -> form
                                                 .loginPage("/login")

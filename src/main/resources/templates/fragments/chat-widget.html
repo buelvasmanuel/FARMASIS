@@ -1,0 +1,348 @@
+<style>
+    /* Estilos Épicos del Chatbot FarmaSIS */
+    .farma-chat-container {
+        position: fixed;
+        bottom: 90px;
+        right: 30px;
+        width: 380px;
+        height: 600px;
+        max-height: 80vh;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.1);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 9999;
+        transform-origin: bottom right;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .farma-chat-container.active {
+        display: flex;
+        animation: chatSlideUp 0.4s ease-out forwards;
+    }
+
+    @keyframes chatSlideUp {
+        0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .farma-chat-header {
+        background: linear-gradient(135deg, #1B4332 0%, #52B788 100%);
+        color: white;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
+    }
+
+    .farma-header-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .farma-avatar {
+        width: 45px;
+        height: 45px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2D6A4F;
+        font-size: 24px;
+        box-shadow: 0 0 15px rgba(255,255,255,0.5);
+    }
+
+    .farma-header-text h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+        letter-spacing: 0.5px;
+    }
+
+    .farma-status {
+        font-size: 0.8rem;
+        color: #e0e7ff;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #34d399;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: 0 0 8px #34d399;
+    }
+
+    .farma-close-btn {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .farma-close-btn:hover {
+        background: rgba(255,255,255,0.4);
+        transform: rotate(90deg);
+    }
+
+    .farma-chat-body {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        scroll-behavior: smooth;
+    }
+
+    .farma-chat-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .farma-chat-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    .chat-bubble {
+        max-width: 85%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        animation: bubblePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        transform-origin: bottom left;
+    }
+
+    .chat-bubble.user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #40916C 0%, #2D6A4F 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+        transform-origin: bottom right;
+    }
+
+    .chat-bubble.ai {
+        align-self: flex-start;
+        background: white;
+        color: #334155;
+        border-bottom-left-radius: 4px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .bubble-label {
+        font-size: 0.75rem;
+        margin-bottom: 4px;
+        opacity: 0.7;
+    }
+
+    .chat-bubble.user .bubble-label { text-align: right; }
+    
+    @keyframes bubblePop {
+        0% { transform: scale(0.5); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    .farma-chat-input-area {
+        padding: 15px 20px;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .farma-input-wrapper {
+        flex: 1;
+        position: relative;
+    }
+
+    .farma-input {
+        width: 100%;
+        padding: 14px 20px;
+        border-radius: 25px;
+        border: 2px solid #e2e8f0;
+        background: #f8fafc;
+        outline: none;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .farma-input:focus {
+        border-color: #52B788;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.1);
+    }
+
+    .farma-send-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1B4332 0%, #52B788 100%);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(45, 106, 79, 0.3);
+    }
+
+    .farma-send-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 15px rgba(45, 106, 79, 0.4);
+    }
+
+    .farma-send-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Floating Action Button (FAB) */
+    .farma-fab {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1B4332 0%, #52B788 100%);
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        box-shadow: 0 10px 25px rgba(45, 106, 79, 0.4);
+        z-index: 10000;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .farma-fab::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: rgba(45, 106, 79, 0.4);
+        z-index: -1;
+        animation: pulseEffect 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .farma-fab:hover {
+        transform: scale(1.1) translateY(-5px);
+        box-shadow: 0 15px 35px rgba(45, 106, 79, 0.5);
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    @keyframes pulseEffect {
+        0%, 100% { transform: scale(1); opacity: 0; }
+        50% { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+        display: flex;
+        gap: 5px;
+        padding: 5px 10px;
+        background: white;
+        border-radius: 15px;
+        align-self: flex-start;
+        border: 1px solid #e2e8f0;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: #52B788;
+        border-radius: 50%;
+        animation: typeBounce 1.4s infinite ease-in-out both;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes typeBounce {
+        0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Markdown Formats */
+    .chat-bubble p { margin-bottom: 0; }
+    .chat-bubble ul { padding-left: 20px; margin-bottom: 0; margin-top: 5px; }
+    .chat-bubble strong { color: #1e293b; }
+    .chat-bubble.user strong { color: #f8fafc; }
+</style>
+
+<!-- Floating Action Button -->
+<button id="farma-fab" class="farma-fab" onclick="toggleChat()">
+    <i class="fas fa-robot"></i>
+</button>
+
+<!-- Chat Window -->
+<div id="farma-chat-container" class="farma-chat-container">
+    <div class="farma-chat-header">
+        <div class="farma-header-info">
+            <div class="farma-avatar">
+                <i class="fas fa-pills"></i>
+            </div>
+            <div class="farma-header-text">
+                <h5>IA FarmaSIS</h5>
+                <div class="farma-status">
+                    <span class="status-dot"></span> En línea y listo
+                </div>
+            </div>
+        </div>
+        <button class="farma-close-btn" onclick="toggleChat()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div class="farma-chat-body" id="farma-chat-body">
+        <div class="chat-bubble ai">
+            <div class="bubble-label">FarmaBot IA</div>
+            <div th:with="nombreUser=${loggedUser != null ? loggedUser.nombre : 'Usuario'}">
+                ¡Hola, <span th:text="${nombreUser}"></span>! Soy el Agente de FarmaSIS. 💊<br><br>
+                Puedo revisar el <strong>stock de medicamentos</strong>, consultar <strong>precios</strong> o buscar alertas de <strong>bajo inventario</strong>.<br><br>
+                ¿Qué necesitas verificar hoy?
+            </div>
+        </div>
+    </div>
+    
+    <div class="farma-chat-input-area">
+        <div class="farma-input-wrapper">
+            <input type="text" id="farma-input" class="farma-input" placeholder="Pregúntale al Agente..." autocomplete="off" onkeypress="handleEnter(event)">
+        </div>
+        <button class="farma-send-btn" onclick="sendMessage()">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+<script src="/js/chat.js"></script>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Log de Auditoría - FarmaSIS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
+    <style>body{background:#f8fafc;} .log-card{background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+    .log-badge{font-size:0.7rem;padding:3px 8px;border-radius:20px;}
+    .modulo-VENTAS{background:#d1fae5;color:#065f46;} .modulo-INVENTARIO{background:#dbeafe;color:#1e40af;}
+    .modulo-USUARIOS{background:#ede9fe;color:#5b21b6;} .modulo-SISTEMA{background:#fef3c7;color:#92400e;}</style>
+</head>
+<body>
+    <div th:replace="~{fragments/sidebar :: sidebar('auditoria')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
+
+    <div class="main-content no-transition" id="mainContent">
+        <div class="container-fluid px-4 py-4">
+            <h1 class="h3 mb-4 fw-bold">
+                <i class="bi bi-shield-lock" style="color:#52B788;"></i>
+                <span th:text="${titulo}">Log de Auditoría</span>
+            </h1>
+
+            <div class="log-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small" th:text="${logs.size() + ' registros'}"></span>
+                    <input type="text" id="searchLog" class="form-control form-control-sm w-25" placeholder="🔍 Filtrar...">
+                </div>
+
+                <div th:if="${#lists.isEmpty(logs)}" class="text-center py-5 text-muted">
+                    <i class="bi bi-clipboard" style="font-size:3rem;"></i>
+                    <p class="mt-3">No hay registros de auditoría disponibles.</p>
+                </div>
+
+                <table th:unless="${#lists.isEmpty(logs)}" class="table table-hover align-middle small" id="logTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Usuario</th>
+                            <th>Módulo</th>
+                            <th>Acción</th>
+                            <th>Detalle</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="log : ${logs}">
+                            <td class="text-nowrap" th:text="${#temporals.format(log.fechaHora, 'dd/MM/yy HH:mm')}"></td>
+                            <td>
+                                <span th:text="${log.usuario != null ? log.usuario.username : 'Sistema'}"></span>
+                                <div class="text-muted" style="font-size:0.75rem;"
+                                     th:text="${log.usuario != null ? log.usuario.rol.replace('ROLE_', '') : ''}"></div>
+                            </td>
+                            <td>
+                                <span class="log-badge"
+                                      th:classappend="'modulo-' + ${log.modulo}"
+                                      th:text="${log.modulo}"></span>
+                            </td>
+                            <td><code th:text="${log.accion}"></code></td>
+                            <td class="text-muted" th:text="${log.detalle}"></td>
+                            <td class="text-muted" th:text="${log.ip ?: '—'}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script>
+        document.getElementById('searchLog')?.addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('#logTable tbody tr').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>

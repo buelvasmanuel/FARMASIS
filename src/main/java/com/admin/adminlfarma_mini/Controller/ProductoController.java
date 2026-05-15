@@ -1,9 +1,11 @@
 package com.admin.adminlfarma_mini.Controller;
 
 import com.admin.adminlfarma_mini.entity.Producto;
+import com.admin.adminlfarma_mini.service.CloudinaryService;
 import com.admin.adminlfarma_mini.service.ProductoService;
 import com.admin.adminlfarma_mini.service.ProveedorService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,6 +26,7 @@ public class ProductoController {
 
     private final ProductoService productoService;
     private final ProveedorService proveedorService;
+    private final CloudinaryService cloudinaryService;
 
     @GetMapping
     public String listarProductos(
@@ -55,7 +58,9 @@ public class ProductoController {
     }
 
     @PostMapping("/guardar")
-    public String guardarProducto(@ModelAttribute Producto producto, RedirectAttributes redirectAttributes) {
+    public String guardarProducto(@ModelAttribute Producto producto, 
+                                 @RequestParam(value = "file", required = false) MultipartFile file,
+                                 RedirectAttributes redirectAttributes) {
         try {
             // Normalizar: el form envía "" (string vacío) cuando no hay id, no null
             if (producto.getId() != null && producto.getId().trim().isEmpty()) {
@@ -82,6 +87,12 @@ public class ProductoController {
                 return "redirect:/productos";
             }
 
+            // Subir imagen si existe
+            if (file != null && !file.isEmpty()) {
+                String url = cloudinaryService.subirImagen(file);
+                producto.setImagenUrl(url);
+            }
+
             productoService.guardar(producto);
             redirectAttributes.addFlashAttribute("success", "Producto guardado correctamente");
         } catch (DataIntegrityViolationException e) {
@@ -94,9 +105,16 @@ public class ProductoController {
     }
 
     @PostMapping("/actualizar/{id}")
-    public String actualizarProducto(@PathVariable String id, @ModelAttribute Producto producto,
-            RedirectAttributes redirectAttributes) {
+    public String actualizarProducto(@PathVariable String id, 
+                                    @ModelAttribute Producto producto,
+                                    @RequestParam(value = "file", required = false) MultipartFile file,
+                                    RedirectAttributes redirectAttributes) {
         try {
+            // Subir imagen si existe
+            if (file != null && !file.isEmpty()) {
+                String url = cloudinaryService.subirImagen(file);
+                producto.setImagenUrl(url);
+            }
             productoService.actualizar(id, producto);
             redirectAttributes.addFlashAttribute("success", "Producto actualizado correctamente");
         } catch (DataIntegrityViolationException e) {

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Asistencia - FarmaSIS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
+    <style>
+        body { background-color: #f8fafc; }
+        .month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+        .month-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .month-card:hover:not(.disabled) {
+            border-color: #52B788;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(82, 183, 136, 0.2);
+            color: #1B4332;
+        }
+        .month-card.disabled {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .month-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .status-card {
+            background: linear-gradient(135deg, #1B4332 0%, #52B788 100%);
+            border-radius: 16px;
+            color: white;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+        }
+        @media (max-width: 768px) { .month-grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <div th:replace="~{fragments/sidebar :: sidebar('asistencia')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
+
+    <div class="main-content no-transition" id="mainContent">
+        <div class="container-fluid px-4 py-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0 fw-bold"><i class="bi bi-calendar3" style="color:#52B788;"></i> Mi Asistencia</h1>
+                <span class="badge bg-success fs-6" th:text="${anio}"></span>
+            </div>
+
+            <!-- Alertas -->
+            <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i><span th:text="${successMsg}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${errorMsg}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Panel de acciones de hoy -->
+            <div class="status-card d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h5 class="mb-1"><i class="bi bi-clock me-2"></i>Control de Hoy</h5>
+                    <p class="mb-0 opacity-75" th:text="'Estado: ' + (${tieneEntradaAbierta} ? 'En horario de trabajo ✅' : 'Sin entrada registrada')"></p>
+                </div>
+                <div class="d-flex gap-2">
+                    <form th:unless="${tieneEntradaAbierta}" th:action="@{/asistencia/entrada}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button class="btn btn-light fw-bold px-4">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Registrar Entrada
+                        </button>
+                    </form>
+                    <form th:if="${tieneEntradaAbierta}" th:action="@{/asistencia/salida}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <button class="btn btn-warning fw-bold px-4">
+                            <i class="bi bi-box-arrow-right me-2"></i>Registrar Salida
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Grid de meses -->
+            <h5 class="mb-3 fw-bold text-muted">Selecciona un mes para ver tu horario</h5>
+            <div class="month-grid">
+                <th:block th:each="mes : ${meses}">
+                    <a th:if="${!mes.bloqueado}"
+                       th:href="@{/asistencia/semana(mes=${mes.numero}, anio=${mes.anio})}"
+                       class="month-card">
+                        <div class="month-icon">📅</div>
+                        <strong th:text="${mes.nombre}"></strong>
+                        <div class="small text-muted mt-1">Ver registros</div>
+                    </a>
+                    <div th:if="${mes.bloqueado}" class="month-card disabled">
+                        <div class="month-icon">🔒</div>
+                        <strong th:text="${mes.nombre}"></strong>
+                        <div class="small text-muted mt-1">No disponible</div>
+                    </div>
+                </th:block>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+</body>
+</html>
