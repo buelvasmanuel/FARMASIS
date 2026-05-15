@@ -214,8 +214,12 @@
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <form id="productoForm" th:action="@{/productos/guardar}" method="post">
+                    <form id="productoForm" th:action="@{/productos/guardar}" method="post" enctype="multipart/form-data">
                         <input type="hidden" id="productoId" name="id">
+                        <!-- Campos ocultos para mantener la paginación y búsqueda -->
+                        <input type="hidden" name="page" th:value="${currentPage}">
+                        <input type="hidden" name="size" th:value="${pageSize}">
+                        <input type="hidden" name="search" th:value="${search}">
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -295,6 +299,10 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Fecha de Ingreso</label>
                                     <input type="date" class="form-control" id="fechaIngreso" name="fechaIngreso">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Imagen del Producto</label>
+                                    <input type="file" class="form-control" name="file" accept="image/*">
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Descripción</label>
@@ -414,7 +422,14 @@
                     const nombre = $btn.data('nombre');
 
                     if (confirm('¿Eliminar producto "' + nombre + '"? Esta acción no se puede deshacer.')) {
-                        const form = $('<form method="post" action="/productos/eliminar/' + id + '"></form>');
+                        // Obtener parámetros actuales de la URL o del modelo de Thymeleaf
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const page = urlParams.get('page') || '0';
+                        const size = urlParams.get('size') || '15';
+                        const search = urlParams.get('search') || '';
+                        
+                        const actionUrl = '/productos/eliminar/' + id + '?page=' + page + '&size=' + size + '&search=' + encodeURIComponent(search);
+                        const form = $('<form method="post" action="' + actionUrl + '"></form>');
                         $('body').append(form);
                         form.submit();
                     }

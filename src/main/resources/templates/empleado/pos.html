@@ -96,6 +96,8 @@
                              th:data-id="${p.id}" th:data-name="${p.nombre}" th:data-price="${p.precio}" 
                              th:data-stock="${p.cantidad}" th:data-code="${p.codigo}"
                              onclick="addToCart(this)">
+                            <img th:src="${p.imagenUrl != null and !p.imagenUrl.isEmpty() ? p.imagenUrl : 'https://via.placeholder.com/150?text=Sin+Imagen'}" 
+                                 class="mb-2" alt="Imagen del producto" style="width: 100%; height: 100px; object-fit: contain;">
                             <span class="product-code" th:text="'Cod: ' + ${p.codigo}">Cod: 0001</span>
                             <div class="product-name" th:text="${p.nombre}">Producto</div>
                             <div class="product-price" th:text="'$ ' + ${#numbers.formatDecimal(p.precio, 1, 'POINT', 0, 'COMMA')}">$ 0</div>

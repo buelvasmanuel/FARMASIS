@@ -41,6 +41,14 @@
                 </a>
             </li>
 
+            <!-- Asistente IA — SOLO OWNER -->
+            <li class="nav-item" th:if="${#authorization.expression('hasRole(''ROLE_OWNER'')')}">
+                <a href="/owner/optimizacion-ia" class="nav-link" th:classappend="${activePage == 'optimizacion-ia' ? 'active' : ''}">
+                    <i class="bi bi-cpu"></i>
+                    <span class="nav-text">Asistente de Compras IA</span>
+                </a>
+            </li>
+
             <!-- Proveedores — OWNER y ADMIN -->
             <li class="nav-item" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">
                 <a th:href="${#authorization.expression('hasRole(''ROLE_ADMIN'')') ? '/admin/proveedores' : '/proveedores'}" 
