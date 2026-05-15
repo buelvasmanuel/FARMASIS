@@ -2,6 +2,7 @@ package com.admin.adminlfarma_mini.Controller;
 
 import com.admin.adminlfarma_mini.DTO.FacturaRequestDTO;
 import com.admin.adminlfarma_mini.entity.Factura;
+import com.admin.adminlfarma_mini.entity.Producto;
 import com.admin.adminlfarma_mini.service.ClienteService;
 import com.admin.adminlfarma_mini.service.FacturaService;
 import com.admin.adminlfarma_mini.service.ProductoService;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -48,9 +50,16 @@ public class FacturaController {
 
     @GetMapping("/nueva")
     public String nuevaVenta(Model model) {
-        model.addAttribute("productos", productoService.getProductosDisponibles());
+        List<Producto> productos = productoService.getProductosDisponibles();
+        model.addAttribute("productos", productos);
         model.addAttribute("clientes", clienteService.listarTodos());
         model.addAttribute("consumidorFinal", clienteService.getConsumidorFinal());
+        // Categorías únicas para el filtro
+        List<String> categorias = productos.stream()
+                .map(p -> p.getCategoria())
+                .filter(c -> c != null && !c.isBlank())
+                .distinct().sorted().collect(java.util.stream.Collectors.toList());
+        model.addAttribute("categorias", categorias);
         return "crear-venta";
     }
 

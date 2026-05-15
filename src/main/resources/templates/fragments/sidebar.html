@@ -10,9 +10,9 @@
                 <i class="bi bi-heart-pulse"></i>
                 <div class="nav-text">
                     <span class="logo-text">L-Farma</span>
-                    <span class="logo-subtitle d-block" th:if="${#authorization.expression('hasRole(''ROLE_OWNER'')')}">Owner</span>
-                    <span class="logo-subtitle d-block" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">Administrador</span>
-                    <span class="logo-subtitle d-block" th:if="${#authorization.expression('hasRole(''ROLE_EMPLEADO'')')}">Empleado</span>
+                    <span class="logo-subtitle d-block" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}">Owner</span>
+                    <span class="logo-subtitle d-block" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_ADMIN'}">Administrador</span>
+                    <span class="logo-subtitle d-block" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_EMPLEADO'}">Empleado</span>
                 </div>
             </div>
             <button class="toggle-btn" onclick="toggleSidebar()"><i class="bi bi-chevron-left"></i></button>
@@ -22,8 +22,8 @@
             <li class="nav-label nav-text">Principal</li>
 
             <!-- Dashboard — OWNER y ADMIN -->
-            <li class="nav-item" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">
-                <a th:href="${#authorization.expression('hasRole(''ROLE_OWNER'')') ? '/owner/dashboard' : '/admin/dashboard'}" 
+            <li class="nav-item" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">
+                <a th:href="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER' ? '/owner/dashboard' : '/admin/dashboard'}" 
                    class="nav-link" th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
                     <i class="bi bi-speedometer2"></i>
                     <span class="nav-text">Dashboard</span>
@@ -31,10 +31,10 @@
             </li>
 
             <!-- LABEL: Gestión (OWNER & ADMIN) -->
-            <li class="nav-label nav-text" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">Gestión</li>
+            <li class="nav-label nav-text" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">Gestión</li>
 
             <!-- Gestión de Usuarios — SOLO OWNER -->
-            <li class="nav-item" th:if="${#authorization.expression('hasRole(''ROLE_OWNER'')')}">
+            <li class="nav-item" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}">
                 <a href="/owner/gestionar-usuarios" class="nav-link" th:classappend="${activePage == 'usuarios' ? 'active' : ''}">
                     <i class="bi bi-people"></i>
                     <span class="nav-text">Gestión de Usuarios</span>
@@ -50,8 +50,8 @@
             </li>
 
             <!-- Proveedores — OWNER y ADMIN -->
-            <li class="nav-item" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">
-                <a th:href="${#authorization.expression('hasRole(''ROLE_ADMIN'')') ? '/admin/proveedores' : '/proveedores'}" 
+            <li class="nav-item" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">
+                <a th:href="${loggedUser != null && loggedUser.rol == 'ROLE_ADMIN' ? '/admin/proveedores' : '/proveedores'}" 
                    class="nav-link" th:classappend="${activePage == 'proveedores' ? 'active' : ''}">
                     <i class="bi bi-truck"></i>
                     <span class="nav-text">Proveedores</span>
@@ -59,8 +59,8 @@
             </li>
 
             <!-- Inventario / Productos — OWNER y ADMIN -->
-            <li class="nav-item" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">
-                <a th:href="${#authorization.expression('hasRole(''ROLE_ADMIN'')') ? '/admin/inventario' : '/productos'}" 
+            <li class="nav-item" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">
+                <a th:href="${loggedUser != null && loggedUser.rol == 'ROLE_ADMIN' ? '/admin/inventario' : '/productos'}" 
                    class="nav-link" th:classappend="${activePage == 'productos' || activePage == 'inventario' ? 'active' : ''}">
                     <i class="bi bi-box-seam"></i>
                     <span class="nav-text">Inventario</span>
@@ -71,8 +71,8 @@
             <li class="nav-label nav-text">Ventas</li>
 
             <!-- Historial Ventas — OWNER y ADMIN -->
-            <li class="nav-item" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">
-                <a th:href="${#authorization.expression('hasRole(''ROLE_ADMIN'')') ? '/admin/ventas' : '/ventas'}" 
+            <li class="nav-item" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">
+                <a th:href="${loggedUser != null && loggedUser.rol == 'ROLE_ADMIN' ? '/admin/ventas' : '/ventas'}" 
                    class="nav-link" th:classappend="${activePage == 'ventas' ? 'active' : ''}">
                     <i class="bi bi-receipt"></i>
                     <span class="nav-text">Historial Ventas</span>
@@ -81,21 +81,79 @@
 
             <!-- Nueva Venta (POS) — TODOS los roles -->
             <li class="nav-item">
-                <a th:href="${#authorization.expression('hasRole(''ROLE_EMPLEADO'')') ? '/empleado/pos' : '/ventas/nueva'}" 
+                <a th:href="${loggedUser != null && loggedUser.rol == 'ROLE_EMPLEADO' ? '/empleado/pos' : '/ventas/nueva'}" 
                    class="nav-link" th:classappend="${activePage == 'nueva-venta' || activePage == 'pos' ? 'active' : ''}">
                     <i class="bi bi-cart-plus"></i>
                     <span class="nav-text">Punto de Venta</span>
                 </a>
             </li>
 
+            <!-- LABEL: Recursos Humanos -->
+            <li class="nav-label nav-text">RRHH</li>
+
+            <!-- Asistencia — TODOS -->
+            <li class="nav-item">
+                <a href="/asistencia/calendario" class="nav-link" th:classappend="${activePage == 'asistencia' ? 'active' : ''}">
+                    <i class="bi bi-calendar-check"></i>
+                    <span class="nav-text">Mi Asistencia</span>
+                </a>
+            </li>
+
+            <!-- Asistencia Hoy — ADMIN y OWNER -->
+            <li class="nav-item" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">
+                <a th:href="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER' ? '/admin/asistencia/hoy' : '/admin/asistencia/hoy'}"
+                   class="nav-link" th:classappend="${activePage == 'asistencia-hoy' ? 'active' : ''}">
+                    <i class="bi bi-people-fill"></i>
+                    <span class="nav-text">Asistencia de Hoy</span>
+                </a>
+            </li>
+
+            <!-- Exportar Excel — SOLO OWNER -->
+            <li class="nav-item" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}">
+                <a href="/owner/asistencia/exportar" class="nav-link">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    <span class="nav-text">Exportar Excel</span>
+                </a>
+            </li>
+
+            <!-- Novedades — TODOS -->
+            <li class="nav-item">
+                <a href="/novedades/mis-novedades" class="nav-link" th:classappend="${activePage == 'novedades' ? 'active' : ''}">
+                    <i class="bi bi-journal-medical"></i>
+                    <span class="nav-text">Mis Novedades</span>
+                </a>
+            </li>
+
+            <!-- Gestionar Novedades — ADMIN y OWNER -->
+            <li class="nav-item" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">
+                <a href="/admin/novedades/pendientes" class="nav-link" th:classappend="${activePage == 'novedades-admin' ? 'active' : ''}">
+                    <i class="bi bi-clipboard-check"></i>
+                    <span class="nav-text">Gestionar Novedades</span>
+                </a>
+            </li>
+
             <!-- LABEL: Sistema -->
-            <li class="nav-label nav-text" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">Sistema</li>
+            <li class="nav-label nav-text" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">Sistema</li>
 
             <!-- Configuración — SOLO OWNER y ADMIN -->
-            <li class="nav-item" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">
+            <li class="nav-item" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">
                 <a href="/configuracion" class="nav-link" th:classappend="${activePage == 'configuracion' ? 'active' : ''}">
                     <i class="bi bi-gear"></i>
                     <span class="nav-text">Configuración</span>
+                </a>
+            </li>
+
+            <!-- Auditoría — OWNER ve todo, ADMIN ve empleados -->
+            <li class="nav-item" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}">
+                <a href="/owner/auditoria" class="nav-link" th:classappend="${activePage == 'auditoria' ? 'active' : ''}">
+                    <i class="bi bi-shield-lock"></i>
+                    <span class="nav-text">Log de Auditoría</span>
+                </a>
+            </li>
+            <li class="nav-item" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_ADMIN'}">
+                <a href="/admin/auditoria" class="nav-link" th:classappend="${activePage == 'auditoria' ? 'active' : ''}">
+                    <i class="bi bi-shield-lock"></i>
+                    <span class="nav-text">Auditoría</span>
                 </a>
             </li>
 
@@ -123,15 +181,17 @@
         <div class="ms-auto d-flex align-items-center">
             <div class="user-info me-3 d-none d-md-block text-end">
                 <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1;" 
-                       th:text="${loggedUser.rol.replace('ROLE_', '')}">ROL</small>
-                <strong th:text="${loggedUser.username}">Usuario</strong>
+                       th:text="${loggedUser != null && loggedUser.rol != null ? loggedUser.rol.replace('ROLE_', '') : 'USUARIO'}">ROL</small>
+                <strong th:text="${loggedUser != null ? loggedUser.username : 'Usuario'}">Usuario</strong>
             </div>
             <div class="profile-pic-container">
-                <img th:if="${loggedUser.fotoPerfil != null}" th:src="${loggedUser.fotoPerfil}" class="rounded-circle" 
-                     style="width: 40px; height: 40px; object-fit: cover; border: 2px solid var(--secondary-color); box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <div th:unless="${loggedUser.fotoPerfil != null}" class="rounded-circle d-flex align-items-center justify-content-center" 
+                <img th:if="${loggedUser != null && loggedUser.fotoPerfil != null && !loggedUser.fotoPerfil.empty}" 
+                     th:src="${loggedUser.fotoPerfil}" class="rounded-circle" 
+                     style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #52B788;">
+                <div th:if="${loggedUser == null || loggedUser.fotoPerfil == null || loggedUser.fotoPerfil.empty}" 
+                     class="rounded-circle d-flex align-items-center justify-content-center" 
                      style="width: 40px; height: 40px; font-weight: bold; background: linear-gradient(135deg, #1B4332, #52B788); color: white;">
-                    <span th:text="${#strings.substring(loggedUser.username, 0, 1).toUpperCase()}">U</span>
+                    <span th:text="${loggedUser != null ? #strings.substring(loggedUser.username, 0, 1).toUpperCase() : 'U'}">U</span>
                 </div>
             </div>
         </div>
@@ -160,6 +220,9 @@
             </div>
         </div>
         <form id="logoutForm" th:action="@{/logout}" method="post" style="display:none;"></form>
+        
+        <!-- Chatbot IA Widget (Global) -->
+        <div th:replace="~{fragments/chat-widget}"></div>
     </div>
 
 </body>

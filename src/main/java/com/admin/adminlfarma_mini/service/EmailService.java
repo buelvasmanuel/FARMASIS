@@ -22,7 +22,7 @@ public class EmailService {
         
         helper.setTo(destinatario);
         helper.setSubject("🔐 Código de Autenticación - AdminFarma");
-        helper.setFrom("manueljavier2016@gmail.com", "AdminFarma Seguridad");
+        helper.setFrom("robertoamelendez15@gmail.com", "AdminFarma Seguridad");
         
         String htmlMsg = "<div style='font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px;'>"
                 + "<h2 style='color: #4a5568; text-align: center;'>Verificación de Seguridad</h2>"

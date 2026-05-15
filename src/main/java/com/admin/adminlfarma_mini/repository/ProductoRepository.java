@@ -33,4 +33,15 @@ public interface ProductoRepository extends MongoRepository<Producto, String> {
     // CORREGIDO: Contar activos
     @Query(value = "{ 'activo': true }", count = true)
     long countActivos();
+
+    // Método agregado para el Chatbot: buscar productos por aproximación de nombre
+    List<Producto> findByNombreContainingIgnoreCaseAndActivoTrue(String nombre);
+
+    // Módulo 4 — POS Categorías: filtrar por categoría
+    @Query("{ 'categoria': ?0, 'activo': true, 'cantidad': { $gt: 0 } }")
+    List<Producto> findByCategoriaAndDisponible(String categoria);
+
+    // Módulo 4 — Obtener categorías distintas (se procesa en servicio)
+    @Query(value = "{ 'activo': true, 'cantidad': { $gt: 0 } }", fields = "{ 'categoria': 1 }")
+    List<Producto> findAllForCategorias();
 }

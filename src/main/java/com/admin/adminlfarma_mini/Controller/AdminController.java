@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
 public class AdminController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminController.class);

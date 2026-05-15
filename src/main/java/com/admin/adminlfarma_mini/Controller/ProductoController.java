@@ -1,10 +1,12 @@
 package com.admin.adminlfarma_mini.Controller;
 
 import com.admin.adminlfarma_mini.entity.Producto;
+import com.admin.adminlfarma_mini.service.CloudinaryService;
 import com.admin.adminlfarma_mini.service.ProductoService;
 import com.admin.adminlfarma_mini.service.ProveedorService;
 import com.admin.adminlfarma_mini.service.CloudinaryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -58,19 +60,20 @@ public class ProductoController {
     }
 
     @PostMapping("/guardar")
-    public String guardarProducto(@ModelAttribute Producto producto, 
-                                 @RequestParam(value = "file", required = false) MultipartFile file,
-                                 @RequestParam(defaultValue = "0") int page,
-                                 @RequestParam(defaultValue = "15") int size,
-                                 @RequestParam(required = false) String search,
-                                 RedirectAttributes redirectAttributes) {
+    public String guardarProducto(@ModelAttribute Producto producto,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(required = false) String search,
+            RedirectAttributes redirectAttributes) {
         try {
             // Normalizar: el form envía "" (string vacío) cuando no hay id, no null
             if (producto.getId() != null && producto.getId().trim().isEmpty()) {
                 producto.setId(null);
             }
 
-            // Si es edición, obtener el producto actual para preservar campos no presentes en el form (como imagenUrl)
+            // Si es edición, obtener el producto actual para preservar campos no presentes
+            // en el form (como imagenUrl)
             if (producto.getId() != null) {
                 productoService.obtenerPorId(producto.getId()).ifPresent(pExistente -> {
                     if (producto.getImagenUrl() == null) {
@@ -79,7 +82,8 @@ public class ProductoController {
                 });
             }
 
-            // Subir imagen si existe (esto sobreescribe la URL anterior si se sube algo nuevo)
+            // Subir imagen si existe (esto sobreescribe la URL anterior si se sube algo
+            // nuevo)
             if (file != null && !file.isEmpty()) {
                 String url = cloudinaryService.subirImagen(file);
                 if (url != null) {
@@ -90,21 +94,31 @@ public class ProductoController {
             // Validar campos requeridos
             if (producto.getCodigo() == null || producto.getCodigo().trim().isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "El código es requerido");
-                return String.format("redirect:/productos?page=%d&size=%d%s", page, size, (search != null && !search.isEmpty() ? "&search=" + search : ""));
+                return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
+                        (search != null && !search.isEmpty() ? "&search=" + search : ""));
             }
             if (producto.getNombre() == null || producto.getNombre().trim().isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "El nombre es requerido");
-                return String.format("redirect:/productos?page=%d&size=%d%s", page, size, (search != null && !search.isEmpty() ? "&search=" + search : ""));
+                return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
+                        (search != null && !search.isEmpty() ? "&search=" + search : ""));
             }
             if (producto.getPrecio() == null || producto.getPrecio() <= 0) {
                 redirectAttributes.addFlashAttribute("error", "El precio debe ser mayor a 0");
-                return String.format("redirect:/productos?page=%d&size=%d%s", page, size, (search != null && !search.isEmpty() ? "&search=" + search : ""));
+                return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
+                        (search != null && !search.isEmpty() ? "&search=" + search : ""));
             }
 
             // Validar código único solo para nuevos productos
             if (producto.getId() == null && productoService.existeCodigo(producto.getCodigo())) {
                 redirectAttributes.addFlashAttribute("error", "Ya existe un producto registrado con este código");
-                return String.format("redirect:/productos?page=%d&size=%d%s", page, size, (search != null && !search.isEmpty() ? "&search=" + search : ""));
+                return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
+                        (search != null && !search.isEmpty() ? "&search=" + search : ""));
+            }
+
+            // Subir imagen si existe
+            if (file != null && !file.isEmpty()) {
+                String url = cloudinaryService.subirImagen(file);
+                producto.setImagenUrl(url);
             }
 
             productoService.guardar(producto);
@@ -115,17 +129,18 @@ public class ProductoController {
             redirectAttributes.addFlashAttribute("error", "Error al guardar: " + e.getMessage());
             e.printStackTrace();
         }
-        return String.format("redirect:/productos?page=%d&size=%d%s", page, size, (search != null && !search.isEmpty() ? "&search=" + search : ""));
+        return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
+                (search != null && !search.isEmpty() ? "&search=" + search : ""));
     }
 
     @PostMapping("/actualizar/{id}")
-    public String actualizarProducto(@PathVariable String id, 
-                                   @ModelAttribute Producto producto,
-                                   @RequestParam(value = "file", required = false) MultipartFile file,
-                                   @RequestParam(defaultValue = "0") int page,
-                                   @RequestParam(defaultValue = "15") int size,
-                                   @RequestParam(required = false) String search,
-                                   RedirectAttributes redirectAttributes) {
+    public String actualizarProducto(@PathVariable String id,
+            @ModelAttribute Producto producto,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(required = false) String search,
+            RedirectAttributes redirectAttributes) {
         try {
             // Preservar la imagen anterior si no se sube una nueva
             productoService.obtenerPorId(id).ifPresent(pExistente -> {
@@ -149,22 +164,24 @@ public class ProductoController {
             redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
             e.printStackTrace();
         }
-        return String.format("redirect:/productos?page=%d&size=%d%s", page, size, (search != null && !search.isEmpty() ? "&search=" + search : ""));
+        return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
+                (search != null && !search.isEmpty() ? "&search=" + search : ""));
     }
 
     @PostMapping("/eliminar/{id}")
-    public String eliminarProducto(@PathVariable String id, 
-                                 @RequestParam(defaultValue = "0") int page,
-                                 @RequestParam(defaultValue = "15") int size,
-                                 @RequestParam(required = false) String search,
-                                 RedirectAttributes redirectAttributes) {
+    public String eliminarProducto(@PathVariable String id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(required = false) String search,
+            RedirectAttributes redirectAttributes) {
         try {
             productoService.eliminar(id);
             redirectAttributes.addFlashAttribute("success", "Producto eliminado correctamente");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al eliminar: " + e.getMessage());
         }
-        return String.format("redirect:/productos?page=%d&size=%d%s", page, size, (search != null && !search.isEmpty() ? "&search=" + search : ""));
+        return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
+                (search != null && !search.isEmpty() ? "&search=" + search : ""));
     }
 
     @GetMapping("/verificar-codigo")

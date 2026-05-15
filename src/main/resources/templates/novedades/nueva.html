@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportar Novedad - FarmaSIS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
+    <style>body{background:#f8fafc;} .form-card{background:white;border-radius:16px;padding:2rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);max-width:600px;}</style>
+</head>
+<body>
+    <div th:replace="~{fragments/sidebar :: sidebar('novedades')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
+
+    <div class="main-content no-transition" id="mainContent">
+        <div class="container-fluid px-4 py-4">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <a href="/novedades/mis-novedades" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+                <h1 class="h3 mb-0 fw-bold"><i class="bi bi-journal-plus" style="color:#52B788;"></i> Reportar Novedad</h1>
+            </div>
+
+            <div class="form-card">
+                <!-- Errores de validación -->
+                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <ul>
+                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                    </ul>
+                </div>
+                <div th:if="${errorMsg}" class="alert alert-danger">
+                    <i class="bi bi-x-circle-fill me-2"></i>
+                    <span th:text="${errorMsg}"></span>
+                </div>
+
+                <form th:action="@{/novedades/nueva}" method="post" th:object="${novedad}">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tipo de Novedad</label>
+                        <select class="form-select" th:field="*{tipo}" required>
+                            <option value="">-- Selecciona el tipo --</option>
+                            <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}"></option>
+                        </select>
+                        <div th:if="${#fields.hasErrors('tipo')}" class="text-danger small" th:errors="*{tipo}"></div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Fecha de inicio</label>
+                            <input type="date" class="form-control" th:field="*{fechaInicio}" required>
+                            <div th:if="${#fields.hasErrors('fechaInicio')}" class="text-danger small" th:errors="*{fechaInicio}"></div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Fecha de fin</label>
+                            <input type="date" class="form-control" th:field="*{fechaFin}" required>
+                            <div th:if="${#fields.hasErrors('fechaFin')}" class="text-danger small" th:errors="*{fechaFin}"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Motivo <span class="text-danger">*</span></label>
+                        <textarea class="form-control" th:field="*{motivo}" rows="4"
+                                  placeholder="Describe detalladamente el motivo de tu ausencia..." required></textarea>
+                        <div th:if="${#fields.hasErrors('motivo')}" class="text-danger small" th:errors="*{motivo}"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 py-3 fw-bold">
+                        <i class="bi bi-send me-2"></i>Enviar Solicitud
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+</body>
+</html>
