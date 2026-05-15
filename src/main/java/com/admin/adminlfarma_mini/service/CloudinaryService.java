@@ -61,13 +61,4 @@ public class CloudinaryService {
         }
         return null;
     }
-
-    /**
-     * Método simplificado para subir una imagen (usado por ProductoController).
-     */
-    public String subirImagen(MultipartFile archivo) throws IOException {
-        if (archivo == null || archivo.isEmpty())
-            return null;
-        return uploadImage(archivo, "productos");
-    }
 }
