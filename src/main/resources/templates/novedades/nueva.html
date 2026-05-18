@@ -23,19 +23,19 @@
             </div>
 
             <div class="form-card">
-                <!-- Errores de validación -->
-                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <ul>
-                        <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
-                    </ul>
-                </div>
                 <div th:if="${errorMsg}" class="alert alert-danger">
                     <i class="bi bi-x-circle-fill me-2"></i>
                     <span th:text="${errorMsg}"></span>
                 </div>
 
                 <form th:action="@{/novedades/nueva}" method="post" th:object="${novedad}">
+                    <!-- Errores de validación -->
+                    <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <ul>
+                            <li th:each="err : ${#fields.allErrors()}" th:text="${err}"></li>
+                        </ul>
+                    </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Tipo de Novedad</label>

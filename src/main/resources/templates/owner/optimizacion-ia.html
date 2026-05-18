@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente IA - Panel Owner | L-Farma</title>
+    <title>Motor de Optimización - Panel Owner | L-Farma</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -143,11 +143,12 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h1 class="display-6 fw-bold mb-2">
-                            <i class="bi bi-cpu-fill me-2"></i> Asistente de Compras IA
+                            <i class="bi bi-cpu-fill me-2"></i> Motor de Optimización
                         </h1>
                         <p class="lead mb-0 opacity-75">
-                            Optimización avanzada mediante Inteligencia Artificial para maximizar la utilidad de tu inventario.
+                            Optimización avanzada para maximizar la utilidad de tu inventario. Pre-filtra productos con stock bajo.
                         </p>
+                        <small id="draftBadge" class="badge bg-light text-dark mt-2" style="display:none;"></small>
                     </div>
                     <div class="col-md-4 text-md-end mt-4 mt-md-0">
                         <button id="btnEjecutar" class="btn btn-ia">
@@ -162,8 +163,8 @@
                 <div class="spinner-border spinner-ia mb-3" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <h4 class="fw-bold">Analizando miles de combinaciones...</h4>
-                <p class="text-muted">Esto tomará aproximadamente 30 segundos. El motor de Timefold está calculando el escenario más rentable para tu farmacia.</p>
+                <h4 class="fw-bold">Analizando combinaciones...</h4>
+                <p class="text-muted">Esto tomará aproximadamente 5 segundos. El motor de Timefold está calculando el escenario más rentable.</p>
             </div>
 
             <!-- Results Area -->
@@ -293,6 +294,35 @@
                     alert('Ocurrió un error al ejecutar la optimización: ' + error.message);
                 });
         });
+
+        // Load last draft on page load
+        (function loadDraft() {
+            fetch('/api/optimizacion/ultimo')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'OK') {
+                        const dt = new Date(data.fechaCalculo);
+                        document.getElementById('draftBadge').style.display = 'inline-block';
+                        document.getElementById('draftBadge').innerHTML = '<i class="bi bi-clock-history me-1"></i> Último cálculo: ' + dt.toLocaleDateString('es') + ' ' + dt.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
+                        document.getElementById('btnEjecutar').innerHTML = '<i class="bi bi-arrow-repeat me-2"></i> Recalcular Optimización';
+                        // Show saved results
+                        const resultsArea = document.getElementById('resultsArea');
+                        const tabla = document.getElementById('tablaResultados');
+                        resultsArea.style.display = 'block';
+                        const resumen = data.resumen;
+                        document.getElementById('resumenPresupuesto').innerText = '$' + Number(resumen.costoTotalPedidos).toLocaleString(undefined, {minimumFractionDigits: 2});
+                        document.getElementById('resumenPresupuestoPct').innerText = resumen.presupuestoUsadoPorcentaje + ' del presupuesto máximo';
+                        document.getElementById('resumenUnidades').innerText = Number(resumen.totalUnidadesAPedir).toLocaleString();
+                        document.getElementById('resumenUtilidad').innerText = '$' + Number(resumen.utilidadTotalEstimada).toLocaleString(undefined, {minimumFractionDigits: 2});
+                        tabla.innerHTML = '';
+                        data.propuestas.forEach(p => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `<td><div class="fw-bold">${p.productoNombre}</div><small class="text-muted">Cód: ${p.productoCodigo}</small></td><td class="text-center"><span class="badge badge-stock">${p.cantidadActual}</span></td><td class="text-center"><span class="badge bg-success text-white" style="font-size:0.9rem;">+${p.cantidadAPedir}</span></td><td class="text-center fw-bold">${p.stockResultante}</td><td class="text-center"><span class="badge badge-discount">${p.descuentoPorcentaje}</span></td><td class="text-end text-utility">$${Number(p.utilidadEstimada).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>`;
+                            tabla.appendChild(row);
+                        });
+                    }
+                }).catch(() => {});
+        })();
     </script>
 </body>
 

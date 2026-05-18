@@ -33,6 +33,7 @@ public class ProductoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size,
             @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "lista") String view,
             Model model) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
@@ -44,7 +45,9 @@ public class ProductoController {
         model.addAttribute("totalItems", productosPage.getTotalElements());
         model.addAttribute("pageSize", size);
         model.addAttribute("search", search);
+        model.addAttribute("view", view);
         model.addAttribute("proveedores", proveedorService.listarTodos());
+        model.addAttribute("stockBajoCount", productoService.getProductosBajoStock().size());
 
         return "productos";
     }
@@ -80,8 +83,7 @@ public class ProductoController {
                 });
             }
 
-            // Subir imagen si existe (esto sobreescribe la URL anterior si se sube algo
-            // nuevo)
+            // Subir imagen a Cloudinary si se proporciona un archivo
             if (file != null && !file.isEmpty()) {
                 String url = cloudinaryService.subirImagen(file);
                 if (url != null) {
@@ -111,12 +113,6 @@ public class ProductoController {
                 redirectAttributes.addFlashAttribute("error", "Ya existe un producto registrado con este código");
                 return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
                         (search != null && !search.isEmpty() ? "&search=" + search : ""));
-            }
-
-            // Subir imagen si existe
-            if (file != null && !file.isEmpty()) {
-                String url = cloudinaryService.subirImagen(file);
-                producto.setImagenUrl(url);
             }
 
             productoService.guardar(producto);
@@ -166,19 +162,57 @@ public class ProductoController {
                 (search != null && !search.isEmpty() ? "&search=" + search : ""));
     }
 
-    @PostMapping("/eliminar/{id}")
-    public String eliminarProducto(@PathVariable String id,
+    @GetMapping("/archivados")
+    public String listarProductosArchivados(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(required = false) String search,
+            Model model) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
+        var productosPage = productoService.buscarProductosInactivos(search, pageable);
+
+        model.addAttribute("productos", productosPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", productosPage.getTotalPages());
+        model.addAttribute("totalItems", productosPage.getTotalElements());
+        model.addAttribute("pageSize", size);
+        model.addAttribute("search", search);
+        model.addAttribute("archivadosMode", true); // Flag para identificar la vista
+        model.addAttribute("proveedores", proveedorService.listarTodos());
+
+        return "productos-archivados";
+    }
+
+    @PostMapping("/archivar/{id}")
+    public String archivarProducto(@PathVariable String id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size,
             @RequestParam(required = false) String search,
             RedirectAttributes redirectAttributes) {
         try {
             productoService.eliminar(id);
-            redirectAttributes.addFlashAttribute("success", "Producto eliminado correctamente");
+            redirectAttributes.addFlashAttribute("success", "Producto archivado correctamente");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al eliminar: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error al archivar: " + e.getMessage());
         }
         return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
+                (search != null && !search.isEmpty() ? "&search=" + search : ""));
+    }
+
+    @PostMapping("/restaurar/{id}")
+    public String restaurarProducto(@PathVariable String id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size,
+            @RequestParam(required = false) String search,
+            RedirectAttributes redirectAttributes) {
+        try {
+            productoService.restaurar(id);
+            redirectAttributes.addFlashAttribute("success", "Producto restaurado correctamente");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al restaurar: " + e.getMessage());
+        }
+        return String.format("redirect:/productos/archivados?page=%d&size=%d%s", page, size,
                 (search != null && !search.isEmpty() ? "&search=" + search : ""));
     }
 

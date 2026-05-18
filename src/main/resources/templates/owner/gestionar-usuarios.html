@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/sidebar.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
     <style>
 
@@ -19,14 +20,7 @@
             background-color: #ffffff;
         }
 
-        .user-row.inactive {
-            opacity: 0.6;
-            background-color: #f8f9fa;
-        }
 
-        .user-row.inactive:hover {
-            opacity: 0.8;
-        }
 
         .badge-owner {
             background-color: #dc3545;
@@ -148,7 +142,8 @@
                             </thead>
                             <tbody>
                                 <tr th:each="user : ${usuarios}"
-                                    th:classappend="${user.activo != true} ? 'inactive' : ''"
+                                    th:classappend="${user.activo != true} ? 'table-secondary text-muted' : ''"
+                                    th:style="${user.activo != true} ? 'opacity: 0.6; cursor: not-allowed;' : ''"
                                     th:data-user-id="${user.id}" th:data-user-name="${user.username}"
                                     th:data-user-email="${user.email}" th:data-user-rol="${user.rol}"
                                     th:data-user-activo="${user.activo}">
@@ -173,23 +168,21 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
+                                            <!-- Botón Ver Detalles (Info) -->
                                             <button class="btn btn-info editar-usuario-btn" data-bs-toggle="modal"
-                                                data-bs-target="#editarUsuarioModal" title="Editar">
-                                                <i class="bi bi-pencil"></i>
+                                                data-bs-target="#editarUsuarioModal" title="Ver Detalles">
+                                                <i class="bi bi-info-circle"></i>
                                             </button>
 
-                                            <button class="btn btn-warning cambiar-rol-btn" data-bs-toggle="modal"
-                                                data-bs-target="#cambiarRolModal" title="Cambiar Rol">
-                                                <i class="bi bi-arrow-repeat"></i>
-                                            </button>
-
+                                            <!-- Botón Desactivar (Solo si está ACTIVO) -->
                                             <button th:if="${user.activo == true && user.rol != 'ROLE_OWNER'}"
                                                 class="btn btn-danger desactivar-usuario-btn" title="Desactivar">
                                                 <i class="bi bi-person-x"></i>
                                             </button>
 
+                                            <!-- Botón Reactivar (Solo si está INACTIVO) -->
                                             <button th:unless="${user.activo == true}"
-                                                class="btn btn-success activar-usuario-btn" title="Activar">
+                                                class="btn btn-success activar-usuario-btn" title="Reactivar Cuenta">
                                                 <i class="bi bi-person-check"></i>
                                             </button>
                                         </div>
@@ -259,24 +252,24 @@
         </div>
     </div>
 
-    <!-- Modal Editar Usuario -->
+    <!-- Modal Detalles del Usuario -->
     <div class="modal fade" id="editarUsuarioModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Editar Usuario</h5>
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-info-circle"></i> Detalles del Usuario</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="editarUsuarioForm">
                         <input type="hidden" id="editUserId">
                         <div class="mb-3">
-                            <label class="form-label">Usuario *</label>
-                            <input type="text" class="form-control" id="editUsername" required>
+                            <label class="form-label">Usuario (Solo lectura)</label>
+                            <input type="text" class="form-control bg-light" id="editUsername" readonly>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="editEmail">
+                            <label class="form-label">Email (Solo lectura)</label>
+                            <input type="email" class="form-control bg-light" id="editEmail" readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
@@ -288,55 +281,16 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-info" onclick="actualizarUsuario()">Actualizar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnActualizarRol" onclick="actualizarUsuario()">Actualizar Rol</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Cambiar Rol -->
-    <div class="modal fade" id="cambiarRolModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-warning">
-                    <h5 class="modal-title"><i class="bi bi-arrow-repeat"></i> Cambiar Rol</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Usuario: <strong id="cambiarRolUsername"></strong></p>
-                    <select class="form-select" id="nuevoRol">
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="EMPLEADO">EMPLEADO</option>
-                    </select>
-                    <input type="hidden" id="cambiarRolUserId">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-warning" onclick="confirmarCambioRol()">Cambiar Rol</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal Cambiar Estado -->
-    <div class="modal fade" id="cambiarEstadoModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header text-white bg-danger">
-                    <h5 class="modal-title"><i class="bi bi-person-x"></i> Desactivar Usuario</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="cambiarEstadoTexto"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="btnConfirmarEstado" onclick="confirmarCambioEstado()">Confirmar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -350,7 +304,7 @@
                 });
             }
 
-            // Cargar datos en el modal de edición
+            // Cargar datos en el modal de detalles
             $('#editarUsuarioModal').on('show.bs.modal', function (event) {
                 const button = $(event.relatedTarget);
                 const row = button.closest('tr');
@@ -358,81 +312,111 @@
                 const userName = row.data('user-name');
                 const userEmail = row.data('user-email');
                 const userRol = row.data('user-rol');
+                const userActivo = row.data('user-activo');
 
+                // Limpiar y cargar datos básicos inmediatamente
+                $('#editUserId').val(userId);
+                $('#editUsername').val(userName);
+                $('#editEmail').val(userEmail || '-');
+                let rolSinPrefijo = userRol ? userRol.replace('ROLE_', '') : 'EMPLEADO';
+                $('#editRol').val(rolSinPrefijo);
+
+                // Lógica de inmutabilidad y permisos según estado (Auditoría)
+                if (userActivo === true) {
+                    $('#editRol').prop('disabled', false);
+                    $('#btnActualizarRol').show();
+                    $('#editarUsuarioModal .modal-header').removeClass('bg-secondary').addClass('bg-dark');
+                } else {
+                    $('#editRol').prop('disabled', true);
+                    $('#btnActualizarRol').hide();
+                    $('#editarUsuarioModal .modal-header').removeClass('bg-dark').addClass('bg-secondary');
+                }
+
+                // Cargar datos frescos del servidor
                 $.ajax({
                     url: '/owner/usuario/' + userId,
                     method: 'GET',
                     success: function (response) {
                         if (response.success) {
-                            $('#editUserId').val(response.id);
                             $('#editUsername').val(response.username);
-                            $('#editEmail').val(response.email || '');
+                            $('#editEmail').val(response.email || '-');
                             $('#editRol').val(response.rol);
-                        } else {
-                            $('#editUserId').val(userId);
-                            $('#editUsername').val(userName);
-                            $('#editEmail').val(userEmail || '');
-                            let rolSinPrefijo = userRol ? userRol.replace('ROLE_', '') : 'EMPLEADO';
-                            $('#editRol').val(rolSinPrefijo);
                         }
-                    },
-                    error: function () {
-                        $('#editUserId').val(userId);
-                        $('#editUsername').val(userName);
-                        $('#editEmail').val(userEmail || '');
-                        let rolSinPrefijo = userRol ? userRol.replace('ROLE_', '') : 'EMPLEADO';
-                        $('#editRol').val(rolSinPrefijo);
                     }
                 });
             });
 
-            // Cargar datos en el modal de cambio de rol
-            $('#cambiarRolModal').on('show.bs.modal', function (event) {
-                const button = $(event.relatedTarget);
-                const row = button.closest('tr');
-                const userId = row.data('user-id');
-                const userName = row.data('user-name');
 
-                usuarioIdParaCambioRol = userId;
-                $('#cambiarRolUsername').text(userName);
-                $('#cambiarRolUserId').val(userId);
-            });
 
 
             // Desactivar usuario
             $(document).on('click', '.desactivar-usuario-btn', function () {
                 const row = $(this).closest('tr');
-                usuarioIdParaCambioEstado = row.data('user-id');
+                const id = row.data('user-id');
                 const userName = row.data('user-name');
-                accionCambioEstado = 'desactivar';
 
-                $('#cambiarEstadoModal .modal-header').removeClass('bg-success').addClass('bg-danger');
-                $('#cambiarEstadoModal .modal-title').html('<i class="bi bi-person-x"></i> Desactivar Usuario');
-                $('#cambiarEstadoTexto').html(`¿Estás seguro de que deseas desactivar la cuenta de <strong>${userName}</strong>?`);
-                $('#btnConfirmarEstado').removeClass('btn-success').addClass('btn-danger').text('Desactivar');
-                
-                $('#cambiarEstadoModal').modal('show');
+                Swal.fire({
+                    title: '¿Desactivar usuario?',
+                    text: `¿Estás seguro de que deseas desactivar la cuenta de ${userName}?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, desactivar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/owner/desactivar/' + id,
+                            method: 'POST',
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire('¡Desactivado!', response.message, 'success');
+                                    setTimeout(() => location.reload(), 1500);
+                                } else {
+                                    Swal.fire('Error', response.message, 'error');
+                                }
+                            }
+                        });
+                    }
+                });
             });
 
             // Activar usuario
             $(document).on('click', '.activar-usuario-btn', function () {
                 const row = $(this).closest('tr');
-                usuarioIdParaCambioEstado = row.data('user-id');
+                const id = row.data('user-id');
                 const userName = row.data('user-name');
-                accionCambioEstado = 'activar';
 
-                $('#cambiarEstadoModal .modal-header').removeClass('bg-danger').addClass('bg-success');
-                $('#cambiarEstadoModal .modal-title').html('<i class="bi bi-person-check"></i> Activar Usuario');
-                $('#cambiarEstadoTexto').html(`¿Estás seguro de que deseas reactivar la cuenta de <strong>${userName}</strong>?`);
-                $('#btnConfirmarEstado').removeClass('btn-danger').addClass('btn-success').text('Activar');
-                
-                $('#cambiarEstadoModal').modal('show');
+                Swal.fire({
+                    title: '¿Reactivar usuario?',
+                    text: `¿Deseas reactivar la cuenta de ${userName}?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, reactivar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/owner/activar/' + id,
+                            method: 'POST',
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire('¡Reactivado!', response.message, 'success');
+                                    setTimeout(() => location.reload(), 1500);
+                                } else {
+                                    Swal.fire('Error', response.message, 'error');
+                                }
+                            }
+                        });
+                    }
+                });
             });
         });
 
-        let usuarioIdParaCambioRol = null;
-        let usuarioIdParaCambioEstado = null;
-        let accionCambioEstado = null; // 'activar' o 'desactivar'
+
 
         function guardarUsuario() {
             const nombre = $('#nombre').val();
@@ -493,30 +477,30 @@
 
         function actualizarUsuario() {
             const id = $('#editUserId').val();
-            const username = $('#editUsername').val();
-            const email = $('#editEmail').val();
             const rol = $('#editRol').val();
 
-            if (!username) {
-                mostrarAlerta('error', 'El nombre de usuario es requerido');
-                return;
-            }
+            // Deshabilitar botón durante la carga
+            const btn = $('#btnActualizarRol');
+            const originalText = btn.text();
+            btn.prop('disabled', true).text('Actualizando...');
 
             $.ajax({
                 url: '/owner/actualizar-usuario/' + id,
                 method: 'POST',
-                data: { username: username, email: email, rol: rol },
+                data: { rol: rol }, // Solo enviamos el rol
                 success: function (response) {
                     if (response.success) {
                         $('#editarUsuarioModal').modal('hide');
                         mostrarAlerta('success', response.message);
                         setTimeout(() => location.reload(), 1500);
                     } else {
+                        btn.prop('disabled', false).text(originalText);
                         mostrarAlerta('error', response.message);
                     }
                 },
                 error: function (xhr) {
-                    let mensaje = 'Error al actualizar el usuario';
+                    btn.prop('disabled', false).text(originalText);
+                    let mensaje = 'Error al actualizar el rol';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         mensaje = xhr.responseJSON.message;
                     }
@@ -525,56 +509,9 @@
             });
         }
 
-        function confirmarCambioRol() {
-            const nuevoRol = $('#nuevoRol').val();
 
-            $.ajax({
-                url: '/owner/cambiar-rol/' + usuarioIdParaCambioRol,
-                method: 'POST',
-                data: { nuevoRol: nuevoRol },
-                success: function (response) {
-                    if (response.success) {
-                        $('#cambiarRolModal').modal('hide');
-                        mostrarAlerta('success', response.message);
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        mostrarAlerta('error', response.message);
-                    }
-                },
-                error: function (xhr) {
-                    let mensaje = 'Error al cambiar el rol';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        mensaje = xhr.responseJSON.message;
-                    }
-                    mostrarAlerta('error', mensaje);
-                }
-            });
-        }
 
-        function confirmarCambioEstado() {
-            $.ajax({
-                url: '/owner/' + accionCambioEstado + '/' + usuarioIdParaCambioEstado,
-                method: 'POST',
-                success: function (response) {
-                    if (response.success) {
-                        $('#cambiarEstadoModal').modal('hide');
-                        mostrarAlerta('success', response.message);
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        $('#cambiarEstadoModal').modal('hide');
-                        mostrarAlerta('error', response.message);
-                    }
-                },
-                error: function (xhr) {
-                    $('#cambiarEstadoModal').modal('hide');
-                    let mensaje = 'Error al cambiar el estado del usuario';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        mensaje = xhr.responseJSON.message;
-                    }
-                    mostrarAlerta('error', mensaje);
-                }
-            });
-        }
+
 
         function mostrarAlerta(tipo, mensaje) {
             const alertDiv = $(`

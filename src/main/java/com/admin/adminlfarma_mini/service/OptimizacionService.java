@@ -5,13 +5,18 @@ import ai.timefold.solver.core.api.solver.SolverManager;
 import com.admin.adminlfarma_mini.entity.PlanOptimizacion;
 import com.admin.adminlfarma_mini.entity.Producto;
 import com.admin.adminlfarma_mini.entity.PropuestaPedido;
+import com.admin.adminlfarma_mini.entity.ResultadoOptimizacion;
 import com.admin.adminlfarma_mini.repository.ProductoRepository;
+import com.admin.adminlfarma_mini.repository.ResultadoOptimizacionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -26,6 +31,7 @@ public class OptimizacionService {
 
     private final SolverManager<PlanOptimizacion, Long> solverManager;
     private final ProductoRepository productoRepository;
+    private final ResultadoOptimizacionRepository resultadoRepository;
 
     /**
      * Ejecuta el solver de optimización.
@@ -60,20 +66,18 @@ public class OptimizacionService {
     }
 
     /**
-     * Crea el problema de optimización con 5 propuestas de pedido.
-     * Intenta usar productos reales de MongoDB; si no hay suficientes,
-     * completa con datos mock representativos de una farmacia.
+     * Crea el problema de optimización con las propuestas de pedido.
+     * Utiliza estrictamente productos reales de MongoDB bajo stock.
      */
     private PlanOptimizacion crearProblema() {
         List<PropuestaPedido> propuestas = new ArrayList<>();
-        List<Producto> productosReales = productoRepository.findAll();
+        // PRE-FILTRO: Solo productos cuyo stock <= su stockMinimo individual
+        List<Producto> productosReales = productoRepository.findProductosBajoStock();
 
-        log.info("Productos encontrados en BD: {}", productosReales.size());
+        log.info("Productos bajo stock encontrados: {}", productosReales.size());
 
-        // Usar hasta 5 productos reales
         long idCounter = 1L;
-        for (int i = 0; i < Math.min(5, productosReales.size()); i++) {
-            Producto prod = productosReales.get(i);
+        for (Producto prod : productosReales) {
             // Asegurar que campos críticos del producto no sean nulos
             if (prod.getPrecio() == null) prod.setPrecio(0.0);
             if (prod.getCostoCompra() == null) prod.setCostoCompra(0.0);
@@ -90,13 +94,6 @@ public class OptimizacionService {
             propuesta.setDescuentoProximidad(0.0);
             
             propuestas.add(propuesta);
-        }
-
-        // Si no hay suficientes productos reales, completar con datos mock
-        if (propuestas.size() < 5) {
-            log.info("Completando con {} productos mock", 5 - propuestas.size());
-            List<PropuestaPedido> mocks = generarProductosMock(idCounter, 5 - propuestas.size());
-            propuestas.addAll(mocks);
         }
 
         return new PlanOptimizacion(propuestas);
@@ -120,49 +117,26 @@ public class OptimizacionService {
     }
 
     /**
-     * Genera productos mock representativos de una farmacia.
-     * Estos datos simulan productos típicos con precios y costos realistas.
+     * Guarda (sobrescribe) el resultado de la última optimización en BD.
      */
-    private List<PropuestaPedido> generarProductosMock(long startId, int cantidad) {
-        // Datos mock de productos farmacéuticos típicos
-        String[][] datosMock = {
-                {"Acetaminofén 500mg",   "8500",  "4200",  "45"},
-                {"Ibuprofeno 400mg",     "12000", "6500",  "30"},
-                {"Amoxicilina 500mg",    "18500", "9800",  "20"},
-                {"Omeprazol 20mg",       "15000", "7500",  "35"},
-                {"Loratadina 10mg",      "9500",  "4800",  "25"},
-        };
+    public ResultadoOptimizacion guardarResultado(String score, Integer hardScore, Integer softScore,
+                                                   List<Map<String, Object>> propuestas,
+                                                   Map<String, Object> resumen) {
+        resultadoRepository.deleteAll();
+        ResultadoOptimizacion resultado = new ResultadoOptimizacion();
+        resultado.setScore(score);
+        resultado.setHardScore(hardScore);
+        resultado.setSoftScore(softScore);
+        resultado.setPropuestas(propuestas);
+        resultado.setResumen(resumen);
+        resultado.setFechaCalculo(LocalDateTime.now());
+        return resultadoRepository.save(resultado);
+    }
 
-        int[] demandasMock = {60, 50, 40, 55, 35};
-        double[] espaciosMock = {0.8, 1.0, 1.2, 0.9, 0.7};
-
-        List<PropuestaPedido> mocks = new ArrayList<>();
-
-        for (int i = 0; i < cantidad && i < datosMock.length; i++) {
-            // Crear producto mock
-            Producto productoMock = new Producto();
-            productoMock.setId("MOCK-" + (startId + i));
-            productoMock.setCodigo(String.format("%04d", 9000 + i));
-            productoMock.setNombre(datosMock[i][0]);
-            productoMock.setPrecio(Double.parseDouble(datosMock[i][1]));
-            productoMock.setCostoCompra(Double.parseDouble(datosMock[i][2]));
-            productoMock.setCantidad(Integer.parseInt(datosMock[i][3]));
-            productoMock.setActivo(true);
-
-            // Crear propuesta
-            PropuestaPedido propuesta = new PropuestaPedido();
-            propuesta.setId(startId + i);
-            propuesta.setProducto(productoMock);
-            propuesta.setDemandaEstimada(demandasMock[i]);
-            propuesta.setEspacioUnidad(espaciosMock[i]);
-            
-            // Inicializar variables de planificación
-            propuesta.setCantidadAPedir(0);
-            propuesta.setDescuentoProximidad(0.0);
-            
-            mocks.add(propuesta);
-        }
-
-        return mocks;
+    /**
+     * Obtiene el último resultado de optimización guardado (borrador).
+     */
+    public Optional<ResultadoOptimizacion> obtenerUltimoResultado() {
+        return resultadoRepository.findTopByOrderByFechaCalculoDesc();
     }
 }

@@ -34,7 +34,14 @@ public class TwoFactorController {
         }
 
         // Generar y enviar nuevo código
-        twoFactorAuthService.enviarYGuardarCodigo(usuario);
+        try {
+            twoFactorAuthService.enviarYGuardarCodigo(usuario);
+        } catch (Exception e) {
+            model.addAttribute("error", "Error al enviar el código: " + e.getMessage());
+            model.addAttribute("email", usuario.getEmail());
+            return "verificar-codigo";
+        }
+        
         model.addAttribute("email", usuario.getEmail());
         return "verificar-codigo";
     }

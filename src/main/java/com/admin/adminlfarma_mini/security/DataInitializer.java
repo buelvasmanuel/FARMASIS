@@ -31,11 +31,11 @@ public class DataInitializer {
             if (!usuarioRepository.existsByRol("ROLE_OWNER")) {
                 log.info("👑 No se detectó ningún OWNER. Creando Superadministrador inicial...");
                 usuarioService.crearOwner(
-                        "robertoamelendez15@gmail.com", // username inicial
+                        "manueljavier2016@gmail.com", // username inicial
                         "admin123", // password inicial
-                        "robertoamelendez15@gmail.com" // email inicial
+                        "manueljavier2016@gmail.com" // email inicial
                 );
-                log.info("✅ OWNER inicial creado: usuario='robertoamelendez15@gmail.com', contraseña='admin123'");
+                log.info("✅ OWNER inicial creado: usuario='manueljavier2016@gmail.com', contraseña='admin123'");
                 log.info("⚠️ IMPORTANTE: Por favor cambie sus credenciales en el módulo de Configuración.");
             } else {
                 log.info("👑 El sistema ya cuenta con un OWNER. Saltando inicialización.");

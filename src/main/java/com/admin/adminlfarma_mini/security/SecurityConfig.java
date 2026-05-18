@@ -25,19 +25,27 @@ public class SecurityConfig {
                                                                 "/owner/asistencia/**"))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**",
-                                                                "/webjars/**", "/configurar-email",
-                                                                "/api/optimizar", "/api/chat/**", "/api/**")
+                                                                "/webjars/**", "/favicon.ico")
                                                 .permitAll()
-                                                // OWNER accede a todo (incluyendo /admin/**)
+                                                // Rutas protegidas estrictamente
                                                 .requestMatchers("/owner/**").hasRole("OWNER")
                                                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "OWNER")
                                                 .requestMatchers("/empleado/**").hasRole("EMPLEADO")
                                                 .requestMatchers("/configuracion/**").hasAnyRole("OWNER", "ADMIN")
-                                                // Módulos nuevos — cualquier usuario autenticado
+                                                .requestMatchers("/api/optimizar").hasRole("OWNER")
+                                                .requestMatchers("/api/optimizacion/**").hasRole("OWNER")
+                                                // POS unificado: accesible por todos los roles
+                                                .requestMatchers("/ventas/nueva", "/ventas/guardar").authenticated()
+                                                .requestMatchers("/api/chat/**").authenticated()
+                                                .requestMatchers("/api/**").authenticated()
                                                 .requestMatchers("/novedades/**").authenticated()
                                                 .requestMatchers("/asistencia/**").authenticated()
                                                 .requestMatchers("/auditoria/**").authenticated()
                                                 .anyRequest().authenticated())
+                                .headers(headers -> headers
+                                                // Habilitamos protección contra caché para evitar que el botón 'Atrás' muestre datos sensibles
+                                                .cacheControl(org.springframework.security.config.Customizer.withDefaults())
+                                                .frameOptions(frame -> frame.sameOrigin()))
                                 .formLogin(form -> form
                                                 .loginPage("/login")
                                                 .defaultSuccessUrl("/verificar-codigo", true)
@@ -45,6 +53,8 @@ public class SecurityConfig {
                                 .logout(logout -> logout
                                                 .logoutUrl("/logout")
                                                 .logoutSuccessUrl("/login?logout")
+                                                .invalidateHttpSession(true)
+                                                .deleteCookies("JSESSIONID")
                                                 .permitAll());
 
                 return http.build();

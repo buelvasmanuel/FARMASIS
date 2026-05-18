@@ -36,4 +36,9 @@ public class Producto {
     private String imagenUrl;
     private LocalDate fechaIngreso;
     private Boolean activo = true;
+    private Integer stockMinimo = 5;
+
+    public Integer getStockMinimo() {
+        return stockMinimo != null ? stockMinimo : 5;
+    }
 }

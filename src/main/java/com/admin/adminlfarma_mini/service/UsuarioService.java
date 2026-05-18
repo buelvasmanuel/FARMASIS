@@ -19,6 +19,9 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EmailService emailService;
+
     public Optional<Usuario> buscarPorUsername(String username) {
         return usuarioRepository.findFirstByUsername(username);
     }
@@ -75,7 +78,33 @@ public class UsuarioService {
 
     @Transactional
     public Usuario actualizar(Usuario usuario) {
-        return usuarioRepository.save(usuario);
+        // Buscar el rol anterior antes de guardar para detectar si cambió
+        String rolAnterior = null;
+        if (usuario.getId() != null) {
+            rolAnterior = usuarioRepository.findById(usuario.getId())
+                    .map(Usuario::getRol)
+                    .orElse(null);
+        }
+
+        Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+        // Si el rol cambió, enviar correo asíncrono
+        if (rolAnterior != null && !rolAnterior.equals(usuarioGuardado.getRol())) {
+            if (usuarioGuardado.getEmail() != null && !usuarioGuardado.getEmail().isEmpty()) {
+                String nombreCompleto = (usuarioGuardado.getNombre() != null ? usuarioGuardado.getNombre() : "") + " " + (usuarioGuardado.getApellido() != null ? usuarioGuardado.getApellido() : "");
+                nombreCompleto = nombreCompleto.trim();
+                if (nombreCompleto.isEmpty()) {
+                    nombreCompleto = usuarioGuardado.getUsername();
+                }
+                try {
+                    emailService.enviarCorreoActualizacionRolGenerico(usuarioGuardado.getEmail(), nombreCompleto, usuarioGuardado.getRol());
+                } catch (Exception e) {
+                    System.err.println("Error al enviar correo de actualización de rol en actualizar(): " + e.getMessage());
+                }
+            }
+        }
+
+        return usuarioGuardado;
     }
 
     @Transactional
@@ -101,7 +130,23 @@ public class UsuarioService {
         String rolConPrefijo = nuevoRol.startsWith("ROLE_") ? nuevoRol : "ROLE_" + nuevoRol;
         usuario.setRol(rolConPrefijo);
         usuario.setFechaUltimoCambioRol(LocalDateTime.now());
-        return usuarioRepository.save(usuario);
+        Usuario usuarioGuardado = usuarioRepository.save(usuario);
+
+        // Enviar correo de notificación del cambio de rol DESPUÉS de guardar en la BD
+        if (usuarioGuardado.getEmail() != null && !usuarioGuardado.getEmail().isEmpty()) {
+            String nombreCompleto = (usuarioGuardado.getNombre() != null ? usuarioGuardado.getNombre() : "") + " " + (usuarioGuardado.getApellido() != null ? usuarioGuardado.getApellido() : "");
+            nombreCompleto = nombreCompleto.trim();
+            if (nombreCompleto.isEmpty()) {
+                nombreCompleto = usuarioGuardado.getUsername();
+            }
+            try {
+                emailService.enviarCorreoActualizacionRolGenerico(usuarioGuardado.getEmail(), nombreCompleto, rolConPrefijo);
+            } catch (Exception e) {
+                System.err.println("Error al enviar correo de actualización de rol en actualizarRol(): " + e.getMessage());
+            }
+        }
+
+        return usuarioGuardado;
     }
 
     @Transactional
@@ -169,7 +214,7 @@ public class UsuarioService {
     }
 
     public long contarActivos() {
-        return usuarioRepository.findByActivoTrue().size();
+        return usuarioRepository.countByRolNotAndActivoTrue("ROLE_OWNER");
     }
 
     public long contarInactivos() {

@@ -25,6 +25,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Buscar todos los usuarios activos
     List<Usuario> findByActivoTrue();
 
+    // Contar usuarios activos excluyendo un rol específico
+    long countByRolNotAndActivoTrue(String rol);
+
     // Buscar usuarios por rol ignorando mayúsculas
     @Query("SELECT u FROM Usuario u WHERE UPPER(u.rol) LIKE UPPER(CONCAT('%', :rol, '%')) AND u.activo = true")
     List<Usuario> findUsuariosByRolContaining(@Param("rol") String rol);

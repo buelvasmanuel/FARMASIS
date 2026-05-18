@@ -3,6 +3,10 @@ package com.admin.adminlfarma_mini.Controller;
 import com.admin.adminlfarma_mini.entity.Proveedor;
 import com.admin.adminlfarma_mini.service.ProveedorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -10,12 +14,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-
 import com.admin.adminlfarma_mini.service.EmailService;
 import jakarta.validation.Valid;
 import org.springframework.validation.BindingResult;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 @RequestMapping("/proveedores")
@@ -27,30 +28,35 @@ public class ProveedorController {
     @Autowired
     private EmailService emailService;
 
-    // Listar proveedores (accesible para OWNER y ADMIN)
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public String listarProveedores(
-            @RequestParam(value = "search", required = false) String search,
-            Model model,
-            Authentication auth) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "ACTIVOS") String estado,
+            @RequestParam(required = false) String categoria,
+            Model model, Authentication auth) {
 
-        List<Proveedor> proveedores;
-        if (search != null && !search.isEmpty()) {
-            proveedores = proveedorService.buscarPorTexto(search);
-            model.addAttribute("searchTerm", search);
-        } else {
-            proveedores = proveedorService.listarTodos();
-        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
+        Page<Proveedor> proveedoresPage = proveedorService.listarProveedores(search, estado, categoria, pageable);
 
-        model.addAttribute("proveedores", proveedores);
-        model.addAttribute("totalProveedores", proveedores.size());
+        model.addAttribute("proveedores", proveedoresPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", proveedoresPage.getTotalPages());
+        model.addAttribute("totalItems", proveedoresPage.getTotalElements());
+        model.addAttribute("pageSize", size);
+        model.addAttribute("search", search);
+        model.addAttribute("estado", estado);
+        model.addAttribute("categoria", categoria);
+        model.addAttribute("categorias", proveedorService.obtenerCategorias());
+        model.addAttribute("totalProveedores", proveedoresPage.getTotalElements());
+
         return "proveedores/listar";
     }
 
-    // Mostrar formulario de creación
     @GetMapping("/nuevo")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public String mostrarFormNuevo(Model model) {
         model.addAttribute("proveedor", new Proveedor());
         model.addAttribute("titulo", "Nuevo Proveedor");
@@ -58,14 +64,11 @@ public class ProveedorController {
         return "proveedores/form";
     }
 
-    // Guardar nuevo proveedor
     @PostMapping("/guardar")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public String guardarProveedor(@Valid @ModelAttribute Proveedor proveedor,
-            BindingResult result,
-            Authentication auth,
-            RedirectAttributes redirectAttributes,
-            Model model) {
+            BindingResult result, Authentication auth,
+            RedirectAttributes redirectAttributes, Model model) {
         if (result.hasErrors()) {
             model.addAttribute("titulo", "Nuevo Proveedor");
             model.addAttribute("formAction", "/proveedores/guardar");
@@ -82,9 +85,8 @@ public class ProveedorController {
         return "redirect:/proveedores";
     }
 
-    // Mostrar formulario de edición
     @GetMapping("/editar/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public String mostrarFormEditar(@PathVariable String id, Model model, RedirectAttributes redirectAttributes) {
         try {
             Proveedor proveedor = proveedorService.buscarPorId(id)
@@ -99,14 +101,11 @@ public class ProveedorController {
         }
     }
 
-    // Actualizar proveedor
     @PostMapping("/actualizar/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @PreAuthorize("hasRole('OWNER')")
     public String actualizarProveedor(@PathVariable String id,
-            @Valid @ModelAttribute Proveedor proveedor,
-            BindingResult result,
-            Model model,
-            RedirectAttributes redirectAttributes) {
+            @Valid @ModelAttribute Proveedor proveedor, BindingResult result,
+            Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             model.addAttribute("titulo", "Editar Proveedor");
             model.addAttribute("formAction", "/proveedores/actualizar/" + id);
@@ -121,16 +120,36 @@ public class ProveedorController {
         return "redirect:/proveedores";
     }
 
-    // Eliminar proveedor (soft delete)
-    @PostMapping("/eliminar/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public String eliminarProveedor(@PathVariable String id, RedirectAttributes redirectAttributes) {
+    // Desactivar proveedor (soft delete) — NO envía email
+    @PostMapping("/desactivar/{id}")
+    @PreAuthorize("hasRole('OWNER')")
+    public String desactivarProveedor(@PathVariable String id, RedirectAttributes redirectAttributes) {
         try {
-            proveedorService.eliminarProveedor(id);
-            redirectAttributes.addFlashAttribute("success", "Proveedor eliminado exitosamente");
+            proveedorService.desactivarProveedor(id);
+            redirectAttributes.addFlashAttribute("success", "Proveedor archivado exitosamente");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al eliminar: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Error al archivar: " + e.getMessage());
         }
         return "redirect:/proveedores";
+    }
+
+    // Reactivar proveedor — NO envía email
+    @PostMapping("/reactivar/{id}")
+    @PreAuthorize("hasRole('OWNER')")
+    public String reactivarProveedor(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            proveedorService.reactivarProveedor(id);
+            redirectAttributes.addFlashAttribute("success", "Proveedor reactivado exitosamente");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al reactivar: " + e.getMessage());
+        }
+        return "redirect:/proveedores?estado=ACTIVOS";
+    }
+
+    // Backward compat: old eliminar redirects to desactivar
+    @PostMapping("/eliminar/{id}")
+    @PreAuthorize("hasRole('OWNER')")
+    public String eliminarProveedor(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        return desactivarProveedor(id, redirectAttributes);
     }
 }

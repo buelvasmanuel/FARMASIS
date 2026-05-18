@@ -37,7 +37,7 @@ public class OwnerController {
 
     @GetMapping("/optimizacion-ia")
     public String mostrarOptimizacionIA(Model model) {
-        model.addAttribute("titulo", "Asistente de Compras IA");
+        model.addAttribute("titulo", "Motor de Optimización");
         return "owner/optimizacion-ia";
     }
 
@@ -131,7 +131,7 @@ public class OwnerController {
     @PostMapping("/actualizar-usuario/{id}")
     @ResponseBody
     public Map<String, Object> actualizarUsuario(@PathVariable Long id,
-            @RequestParam String username,
+            @RequestParam(required = false) String username,
             @RequestParam(required = false) String email,
             @RequestParam String rol) {
         Map<String, Object> response = new HashMap<>();
@@ -146,14 +146,20 @@ public class OwnerController {
                 return response;
             }
 
-            usuario.setUsername(username);
-            usuario.setEmail(email);
+            // REGLA DE AUDITORÍA: Solo actualizar si el usuario está ACTIVO
+            if (!Boolean.TRUE.equals(usuario.getActivo())) {
+                response.put("success", false);
+                response.put("message", "No se puede actualizar un usuario inactivo");
+                return response;
+            }
+
+            // REGLA DE AUDITORÍA: Ignorar username y email enviados, mantener inmutabilidad
             String rolConPrefijo = rol.startsWith("ROLE_") ? rol : "ROLE_" + rol;
             usuario.setRol(rolConPrefijo);
 
             usuarioService.actualizar(usuario);
             response.put("success", true);
-            response.put("message", "Usuario actualizado exitosamente");
+            response.put("message", "Rol actualizado exitosamente. Los datos de identidad (Username/Email) permanecen inmutables.");
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
@@ -168,8 +174,15 @@ public class OwnerController {
         try {
             Usuario usuarioActual = usuarioService.buscarPorId(id)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-            String rolAnterior = usuarioActual.getRol();
 
+            // REGLA DE AUDITORÍA: Solo permitir cambio de rol si el usuario está ACTIVO
+            if (!Boolean.TRUE.equals(usuarioActual.getActivo())) {
+                response.put("success", false);
+                response.put("message", "No se puede cambiar el rol de un usuario inactivo");
+                return response;
+            }
+
+            String rolAnterior = usuarioActual.getRol();
             Usuario usuarioActualizado = usuarioService.actualizarRol(id, nuevoRol);
             
             String rolNuevoCompleto = usuarioActualizado.getRol();

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -16,20 +17,69 @@ public class ProductoService {
     private final ProductoRepository productoRepository;
 
     public Page<Producto> listarProductos(Pageable pageable) {
-        // CORREGIDO: Solo productos activos
         return productoRepository.findActivos(pageable);
+    }
+
+    public Page<Producto> listarProductosInactivos(Pageable pageable) {
+        return productoRepository.findInactivos(pageable);
     }
 
     public Page<Producto> buscarProductos(String search, Pageable pageable) {
         if (search == null || search.trim().isEmpty()) {
             return listarProductos(pageable);
         }
-        // CORREGIDO: Búsqueda correcta
         return productoRepository.searchByNombreOrCodigo(search, search, pageable);
+    }
+
+    public Page<Producto> buscarProductosInactivos(String search, Pageable pageable) {
+        if (search == null || search.trim().isEmpty()) {
+            return listarProductosInactivos(pageable);
+        }
+        return productoRepository.searchByNombreOrCodigoInactivo(search, search, pageable);
     }
 
     public List<Producto> getProductosDisponibles() {
         return productoRepository.findProductosDisponibles();
+    }
+
+    // POS: Todos los activos (incluido stock 0 para mostrar en gris)
+    public List<Producto> getProductosParaPOS() {
+        return productoRepository.findProductosActivos();
+    }
+
+    // POS paginado
+    public Page<Producto> getProductosParaPOS(Pageable pageable) {
+        return productoRepository.findProductosActivosPaginado(pageable);
+    }
+
+    // POS paginado con filtro por categoría
+    public Page<Producto> getProductosParaPOSPorCategoria(String categoria, Pageable pageable) {
+        return productoRepository.findProductosActivosPorCategoria(categoria, pageable);
+    }
+
+    // POS paginado con búsqueda por término (nombre o código)
+    public Page<Producto> getProductosParaPOSConBusqueda(String search, Pageable pageable) {
+        return productoRepository.searchByNombreOrCodigo(search, search, pageable);
+    }
+
+    // POS paginado con búsqueda por término y categoría
+    public Page<Producto> getProductosParaPOSConBusquedaYCategoria(String search, String categoria, Pageable pageable) {
+        return productoRepository.searchByNombreOrCodigoAndCategoria(search, search, categoria, pageable);
+    }
+
+    // Obtener categorías únicas de productos activos
+    public List<String> obtenerCategorias() {
+        return productoRepository.findProductosActivos().stream()
+                .map(Producto::getCategoria)
+                .filter(c -> c != null && !c.isBlank())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    // Productos bajo stock (para Motor de Optimización)
+    public List<Producto> getProductosBajoStock() {
+        return productoRepository.findProductosBajoStock();
     }
 
     public long contarProductos() {
@@ -62,6 +112,9 @@ public class ProductoService {
         if (producto.getActivo() == null) {
             producto.setActivo(true);
         }
+        if (producto.getStockMinimo() == null) {
+            producto.setStockMinimo(5);
+        }
         return productoRepository.save(producto);
     }
 
@@ -80,6 +133,9 @@ public class ProductoService {
         if (productoActualizado.getActivo() == null) {
             productoActualizado.setActivo(true);
         }
+        if (productoActualizado.getStockMinimo() == null) {
+            productoActualizado.setStockMinimo(5);
+        }
         return productoRepository.save(productoActualizado);
     }
 
@@ -88,6 +144,15 @@ public class ProductoService {
         if (productoOpt.isPresent()) {
             Producto producto = productoOpt.get();
             producto.setActivo(false);
+            productoRepository.save(producto);
+        }
+    }
+
+    public void restaurar(String id) {
+        Optional<Producto> productoOpt = productoRepository.findById(id);
+        if (productoOpt.isPresent()) {
+            Producto producto = productoOpt.get();
+            producto.setActivo(true);
             productoRepository.save(producto);
         }
     }

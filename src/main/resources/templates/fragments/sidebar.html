@@ -45,7 +45,7 @@
             <li class="nav-item" th:if="${#authorization.expression('hasRole(''ROLE_OWNER'')')}">
                 <a href="/owner/optimizacion-ia" class="nav-link" th:classappend="${activePage == 'optimizacion-ia' ? 'active' : ''}">
                     <i class="bi bi-cpu"></i>
-                    <span class="nav-text">Asistente de Compras IA</span>
+                    <span class="nav-text">Motor de Optimización</span>
                 </a>
             </li>
 
@@ -223,6 +223,22 @@
         
         <!-- Chatbot IA Widget (Global) -->
         <div th:replace="~{fragments/chat-widget}"></div>
+        
+        <!-- Bloqueo Virtual del Botón Atrás (History API) -->
+        <script type="text/javascript">
+            (function() {
+                // Prevenir caché de retroceso
+                window.history.pushState(null, null, window.location.href);
+                window.onpopstate = function() {
+                    window.history.pushState(null, null, window.location.href);
+                };
+                
+                // Evitar que el usuario retroceda después de cerrar sesión o al login
+                if (window.location.pathname === '/login') {
+                    window.history.forward();
+                }
+            })();
+        </script>
     </div>
 
 </body>

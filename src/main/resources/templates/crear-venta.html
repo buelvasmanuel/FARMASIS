@@ -1,220 +1,240 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Punto de Venta - L-Farma</title>
-    <!-- CSRF Meta Tags -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
     <link rel="stylesheet" href="/css/sidebar.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
     <style>
+        body { background: #f8f9fa; font-family: 'Inter', sans-serif; }
+        .pos-grid { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; min-height: calc(100vh - 100px); }
+        @media (max-width: 992px) { .pos-grid { grid-template-columns: 1fr; } }
 
-
-        body {
-            background-color: #ffffff;
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        @media (min-width: 768px) {
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (min-width: 1200px) {
+            .product-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
-        .summary-card {
+        .product-item {
             background: white;
             border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            margin-bottom: 1.5rem;
-            border: 1px solid rgba(0,0,0,0.05);
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         }
 
-        .product-row {
-            background: #ffffff;
+        .product-item:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        .product-item .product-img {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            background: #f8fafc;
             border-radius: 8px;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            position: relative;
-            border: 1px solid #e9ecef;
-            transition: all 0.2s ease;
+            padding: 8px;
         }
 
-        .product-row:hover {
-            border-color: #dee2e6;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        .product-item .product-code {
+            font-size: 0.7rem;
+            color: var(--text-muted);
         }
 
-        .remove-product {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            width: 32px;
-            height: 32px;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+        .product-item .product-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 6px 0;
+            color: var(--text-primary);
         }
 
-        .select2-container--bootstrap-5 .select2-selection {
-            border-radius: 0.375rem;
+        .product-item .product-price {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.1rem;
         }
-        
-        .stock-info {
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
+
+        .product-item .product-stock {
+            font-size: 0.75rem;
+            color: var(--text-muted);
         }
-        
-        .total-section {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 1rem;
+
+        .product-item.out-of-stock {
+            opacity: 0.5;
+            pointer-events: none;
         }
+
+        /* Category Pills */
+        .pill-container { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+        .pill { padding: 6px 16px; border-radius: 20px; border: 1.5px solid #dee2e6; background: white; color: #495057; font-size: 0.85rem; font-weight: 500; text-decoration: none; transition: all 0.2s; }
+        .pill:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .pill.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+        /* Cart */
+        .cart-panel { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; max-height: calc(100vh - 100px); position: sticky; top: 80px; }
+        .cart-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f3f5; }
+        .cart-body { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+        .cart-footer { padding: 1.2rem 1.5rem; border-top: 1px solid #f1f3f5; background: #fafafa; border-radius: 0 0 16px 16px; }
+        .cart-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f8f9fa; }
+        .cart-item-img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #e8f5e9; flex-shrink: 0; }
+        .cart-item-info { flex: 1; min-width: 0; }
+        .cart-item-name { font-weight: 600; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cart-item-price { font-size: 0.8rem; color: #6c757d; }
+        .qty-control { display: flex; align-items: center; gap: 4px; }
+        .qty-control button { width: 26px; height: 26px; border-radius: 6px; border: 1px solid #dee2e6; background: white; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .qty-control span { min-width: 20px; text-align: center; font-weight: 600; font-size: 0.85rem; }
+        .btn-remove-item { background: none; border: none; color: #dc3545; cursor: pointer; padding: 4px; }
     </style>
 </head>
-
 <body>
     <div th:replace="~{fragments/sidebar :: sidebar('nueva-venta')}"></div>
     <div th:replace="~{fragments/sidebar :: topbar}"></div>
     <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
 
     <div class="main-content no-transition" id="mainContent">
+        <div class="container-fluid px-4 py-3">
+            <h4 class="fw-bold mb-3"><i class="bi bi-cart-plus" style="color: var(--secondary-color);"></i> Punto de Venta</h4>
 
-
-        <div class="container-fluid px-4 py-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0 fw-bold"><i class="bi bi-cart-plus" style="color: var(--secondary-color);"></i> Punto de Venta</h1>
-                <a href="/ventas" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Ver Historial</a>
-            </div>
-
-            <div class="row">
-                <div class="col-lg-8">
-                    <!-- Datos del Cliente -->
-                    <div class="summary-card">
-                        <h5 class="mb-3 fs-6 fw-bold text-uppercase text-muted"><i class="bi bi-person"></i> Cliente y Pago</h5>
-                        <div class="row g-3">
-                            <div class="col-md-7">
-                                <label class="form-label small fw-medium">Seleccionar Cliente</label>
-                                <select id="clienteId" class="form-select select2-cliente">
-                                    <option value="" th:selected="true">Consumidor Final</option>
-                                    <option th:value="${consumidorFinal.id}" th:text="${consumidorFinal.nombre}"></option>
-                                    <option th:each="c : ${clientes}" th:unless="${c.esConsumidorFinal}"
-                                        th:value="${c.id}" th:text="${c.nombre + ' (' + c.codigo + ')'}"></option>
-                                </select>
+            <div class="pos-grid">
+                <!-- LEFT: Products -->
+                <div>
+                    <!-- Search Input -->
+                    <div class="mb-3">
+                        <form th:action="@{/ventas/nueva}" method="get" id="searchForm" class="d-flex gap-2">
+                            <input type="hidden" name="categoria" th:value="${categoriaActual}">
+                            <input type="hidden" name="size" th:value="${pageSize}">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px;"><i class="bi bi-search text-muted"></i></span>
+                                <input type="search" class="form-control border-start-0 border-end-0" id="searchProducts" name="search"
+                                       th:value="${search}" placeholder="Buscar producto por nombre o código..." autocomplete="off">
+                                <button th:if="${search != null and !search.isEmpty()}" type="button" class="btn btn-outline-secondary border-start-0 border-end-0" onclick="clearSearch()"><i class="bi bi-x-lg"></i></button>
+                                <button type="submit" class="btn btn-primary" style="border-radius: 0 10px 10px 0;"><i class="bi bi-search"></i> Buscar</button>
                             </div>
-                            <div class="col-md-5">
-                                <label class="form-label small fw-medium">Método de Pago</label>
-                                <select id="metodoPago" class="form-select">
-                                    <option value="EFECTIVO">💵 Efectivo</option>
-                                    <option value="TARJETA">💳 Tarjeta</option>
-                                    <option value="TRANSFERENCIA">🏦 Transferencia</option>
-                                </select>
+                        </form>
+                    </div>
+
+                    <!-- Category Pills -->
+                    <div class="pill-container">
+                        <a class="pill" th:classappend="${categoriaActual == null || categoriaActual.isEmpty()} ? 'active'" th:href="@{/ventas/nueva(search=${search})}">Todos</a>
+                        <a class="pill" th:each="cat : ${categorias}" th:classappend="${categoriaActual == cat} ? 'active'" th:href="@{/ventas/nueva(categoria=${cat}, search=${search})}" th:text="${cat}"></a>
+                    </div>
+
+                    <!-- Product Grid (Original L-Farma Layout) -->
+                    <div class="product-grid" id="productGrid" style="margin-bottom: 2rem;">
+                        <div th:each="p : ${productos}"
+                             th:class="${p.cantidad == null || p.cantidad <= 0} ? 'product-item out-of-stock' : 'product-item'"
+                             th:data-id="${p.id}" th:data-nombre="${p.nombre}" th:data-precio="${p.precio}"
+                             th:data-stock="${p.cantidad}" th:data-codigo="${p.codigo}"
+                             th:data-img="${p.imagenUrl}" onclick="addToCart(this)">
+                            <img th:src="${p.imagenUrl != null and !p.imagenUrl.isEmpty() ? p.imagenUrl : 'https://via.placeholder.com/150?text=Sin+Imagen'}"
+                                 class="product-img" alt="Imagen del producto">
+                            <span class="product-code" th:text="'Cod: ' + ${p.codigo}">Cod: -</span>
+                            <div class="product-name" th:text="${p.nombre}">Producto</div>
+                            <div class="product-price"
+                                 th:text="'$ ' + ${p.precio != null ? #numbers.formatDecimal(p.precio, 1, 'POINT', 0, 'COMMA') : '0'}">$ 0</div>
+                            <div class="product-stock">
+                                <span th:if="${p.cantidad != null and p.cantidad > 0}" th:text="'Stock: ' + ${p.cantidad}">Stock: 0</span>
+                                <span th:if="${p.cantidad == null || p.cantidad <= 0}" class="text-danger">Agotado</span>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Listado de Productos -->
-                    <div class="summary-card">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0 fs-6 fw-bold text-uppercase text-muted"><i class="bi bi-box-seam"></i> Detalle de Productos</h5>
-                            <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" id="agregarProductoBtn">
-                                <i class="bi bi-plus-circle"></i> Agregar Fila
+                    <div th:if="${productos.isEmpty() and (search == null or search.isEmpty())}" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                        <p class="mt-2">No hay productos disponibles</p>
+                    </div>
+                    <div th:if="${productos.isEmpty() and search != null and !search.isEmpty()}" class="text-center py-5 text-muted card shadow-sm border border-light" style="border-radius: 16px; background-color: #fafafa;">
+                        <div class="card-body">
+                            <i class="bi bi-search text-danger mb-3" style="font-size: 3rem; display: block;"></i>
+                            <h5 class="fw-bold text-dark">No se encontraron productos con ese criterio</h5>
+                            <p class="small text-muted mb-4">No se halló ningún producto que coincida con "<span th:text="${search}" class="fw-semibold text-primary"></span>" en esta categoría.</p>
+                            <button type="button" class="btn btn-secondary px-4" onclick="clearSearch()" style="border-radius: 10px; font-weight: 500;">
+                                <i class="bi bi-x-circle me-1"></i> Limpiar Búsqueda
                             </button>
                         </div>
-                        
-                        <div id="productosContainer">
-                            <!-- Fila Inicial -->
-                            <div class="product-row" data-index="0">
-                                <button type="button" class="btn btn-danger btn-sm remove-product" title="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-medium">Producto</label>
-                                        <select class="form-select producto-select" required>
-                                            <option value="">Buscar producto...</option>
-                                            <option th:each="p : ${productos}" th:value="${p.id}"
-                                                th:text="${p.nombre} + ' - $ ' + ${#numbers.formatDecimal(p.precio, 1, 'POINT', 0, 'COMMA')} + ' (Stock: ' + ${p.cantidad} + ')'"
-                                                th:attr="data-precio=${p.precio}, data-stock=${p.cantidad}"></option>
-                                        </select>
-                                        <div class="stock-info text-muted"></div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label small fw-medium">Cantidad</label>
-                                        <input type="number" class="form-control cantidad-input" value="1" min="1" 
-                                               onkeydown="if(['e', 'E', '+', '-', '.'].includes(event.key)) event.preventDefault();">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label class="form-label small fw-medium">Subtotal</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="text" class="form-control subtotal-display bg-light" readonly placeholder="0.00">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div th:if="${totalPages > 1 and !productos.isEmpty()}" class="mt-4">
+                        <nav>
+                            <ul class="pagination justify-content-center mb-2">
+                                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/ventas/nueva(page=${currentPage - 1}, size=${pageSize}, categoria=${categoriaActual}, search=${search})}"><i class="bi bi-chevron-left"></i></a>
+                                </li>
+                                <li th:each="i : ${#numbers.sequence(0, (totalPages > 0 ? totalPages - 1 : 0))}"
+                                    th:if="${totalPages > 0 and i >= currentPage - 2 and i <= currentPage + 2}"
+                                    th:classappend="${i == currentPage} ? 'active'" class="page-item">
+                                    <a class="page-link" th:href="@{/ventas/nueva(page=${i}, size=${pageSize}, categoria=${categoriaActual}, search=${search})}" th:text="${i + 1}"></a>
+                                </li>
+                                <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/ventas/nueva(page=${currentPage + 1}, size=${pageSize}, categoria=${categoriaActual}, search=${search})}"><i class="bi bi-chevron-right"></i></a>
+                                </li>
+                            </ul>
+                        </nav>
+                        <div class="text-center small text-muted mt-1">
+                            Mostrando <span th:text="${productos.size()}"></span> de <span th:text="${totalItems}"></span> productos
                         </div>
                     </div>
                 </div>
 
-                <!-- Resumen de Venta -->
-                <div class="col-lg-4">
-                    <div class="summary-card sticky-top" style="top: 2rem;">
-                        <h5 class="mb-4 fs-6 fw-bold text-uppercase text-muted"><i class="bi bi-calculator"></i> Resumen de Venta</h5>
-                        
-                        <div class="total-section mb-4">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">Subtotal:</span>
-                                <span class="fw-bold" id="subtotal_text">$ 0</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">IVA (0%):</span>
-                                <span class="fw-bold">$ 0</span>
-                            </div>
-                            <hr class="my-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="h5 mb-0">Total a Pagar:</span>
-                                <span class="h4 mb-0 text-success fw-bold" id="total_text">$ 0</span>
-                            </div>
+                <!-- RIGHT: Cart -->
+                <div class="cart-panel">
+                    <div class="cart-header">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-cart3 me-2"></i> Carrito <span id="cartCount" class="badge bg-secondary ms-1">0</span></h5>
+                    </div>
+                    <div class="cart-body" id="cartBody">
+                        <div id="emptyCart" class="text-center py-5 text-muted">
+                            <i class="bi bi-cart-x" style="font-size: 2.5rem;"></i>
+                            <p class="mt-2">Agrega productos al carrito</p>
                         </div>
-
-                        <div class="mb-4">
-                            <label class="form-label small fw-medium">Notas / Observaciones</label>
-                            <textarea id="observaciones" class="form-control" placeholder="Opcional..." rows="3"></textarea>
+                        <div id="cartItems"></div>
+                    </div>
+                    <div class="cart-footer">
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-muted">Cliente</label>
+                            <select class="form-select form-select-sm" id="clienteSelect">
+                                <option th:value="${consumidorFinal.id}" th:text="${consumidorFinal.nombre}" selected></option>
+                                <option th:each="c : ${clientes}" th:if="${c.id != consumidorFinal.id}" th:value="${c.id}" th:text="${c.nombre}"></option>
+                            </select>
                         </div>
-
-                        <button class="btn btn-success w-100 py-3 fw-bold shadow-sm" id="btnGenerarVenta">
-                            <i class="bi bi-check-all fs-5 me-2"></i> CONFIRMAR VENTA
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold text-muted">Método de Pago</label>
+                            <select class="form-select form-select-sm" id="metodoPago">
+                                <option value="EFECTIVO">Efectivo</option>
+                                <option value="TARJETA">Tarjeta</option>
+                                <option value="TRANSFERENCIA">Transferencia</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+                            <span class="fw-bold fs-5">Total:</span>
+                            <span class="fw-bold fs-4" style="color: var(--primary-color);" id="cartTotal">$ 0</span>
+                        </div>
+                        <button class="btn btn-lfarma w-100 py-2 fw-bold" id="btnPagar" disabled>
+                            <i class="bi bi-check-circle me-1"></i> Confirmar Venta
                         </button>
-                        
-                        <div class="mt-3 text-center">
-                            <small class="text-muted"><i class="bi bi-info-circle"></i> Revisa los productos antes de confirmar.</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </div>
-    </div>
-
-    <!-- Modal Success -->
-    <div class="modal fade" id="successModal" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-body text-center p-5">
-                    <div class="mb-4">
-                        <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
-                    </div>
-                    <h3 class="fw-bold mb-2">¡Venta Realizada!</h3>
-                    <p class="text-muted mb-4" id="successMessage"></p>
-                    <div class="d-grid gap-2">
-                        <a href="/ventas/nueva" class="btn btn-primary py-2">Nueva Venta</a>
-                        <a href="/ventas" class="btn btn-outline-secondary py-2">Ver Historial</a>
                     </div>
                 </div>
             </div>
@@ -222,240 +242,203 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="/js/sidebar.js"></script>
-    
     <script>
-        // Configuración CSRF para Fetch
-        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        let cart = [];
+        const csrf = document.querySelector('meta[name="_csrf"]').content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
 
-        // Formateador COP
-        const formateadorCOP = new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            minimumFractionDigits: 0
-        });
-
-        let productosSeleccionados = new Set();
-
-        // 1. Inicialización de Plugins
-        function initSelect2(element) {
-            $(element).select2({
-                theme: 'bootstrap-5',
-                width: '100%',
-                placeholder: 'Buscar producto...',
-                dropdownParent: $(element).closest('.product-row') // Para que funcione bien dentro de scrolls o modales
-            });
+        // Clear search input and submit
+        function clearSearch() {
+            const form = document.getElementById('searchForm');
+            form.querySelector('input[name="search"]').value = '';
+            form.submit();
         }
 
-        // 2. Lógica de Cálculos
-        function calcularTotales() {
-            let totalGeneral = 0;
-            document.querySelectorAll('.product-row').forEach(row => {
-                const subtotalInput = row.querySelector('.subtotal-display');
-                const val = parseFloat(subtotalInput.getAttribute('data-value')) || 0;
-                totalGeneral += val;
-            });
-            
-            document.getElementById('subtotal_text').innerText = formateadorCOP.format(totalGeneral);
-            document.getElementById('total_text').innerText = formateadorCOP.format(totalGeneral);
-        }
-
-        function actualizarFila(row) {
-            const select = row.querySelector('.producto-select');
-            const cantidadInput = row.querySelector('.cantidad-input');
-            const subtotalInput = row.querySelector('.subtotal-display');
-            const stockInfo = row.querySelector('.stock-info');
-            
-            const option = select.options[select.selectedIndex];
-            
-            if (select.value && cantidadInput.value > 0) {
-                const precio = parseFloat(option.getAttribute('data-precio')) || 0;
-                const stock = parseInt(option.getAttribute('data-stock')) || 0;
-                const cantidad = parseInt(cantidadInput.value) || 0;
-
-                if (cantidad > stock) {
-                    cantidadInput.classList.add('is-invalid');
-                    stockInfo.innerHTML = `<span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle"></i> Stock insuficiente (${stock} disponibles)</span>`;
-                    subtotalInput.value = formateadorCOP.format(0);
-                    subtotalInput.setAttribute('data-value', '0');
-                } else {
-                    cantidadInput.classList.remove('is-invalid');
-                    const subtotal = precio * cantidad;
-                    subtotalInput.value = formateadorCOP.format(subtotal);
-                    subtotalInput.setAttribute('data-value', subtotal);
-                    stockInfo.innerHTML = stock < 10 
-                        ? `<span class="text-warning fw-medium"><i class="bi bi-hourglass-split"></i> Stock bajo: ${stock}</span>` 
-                        : `<span class="text-success small">Stock disponible: ${stock}</span>`;
-                }
-            } else {
-                subtotalInput.value = formateadorCOP.format(0);
-                subtotalInput.setAttribute('data-value', '0');
-                stockInfo.innerHTML = '';
-            }
-            calcularTotales();
-        }
-
-        // 3. Event Delegation para Filas Dinámicas
-        const container = document.getElementById('productosContainer');
-
-        container.addEventListener('input', (e) => {
-            const row = e.target.closest('.product-row');
-            if (row) actualizarFila(row);
-        });
-
-        $(container).on('change', '.producto-select', function() {
-            const row = this.closest('.product-row');
-            const selectedId = $(this).val();
-            
-            // Validar si ya existe en otra fila
-            let duplicado = false;
-            document.querySelectorAll('.producto-select').forEach(s => {
-                if (s !== this && $(s).val() === selectedId && selectedId !== "") duplicado = true;
+        // Desplazamiento inteligente al paginar o filtrar
+        document.addEventListener("DOMContentLoaded", function () {
+            // Guardar indicador en sessionStorage al paginar
+            document.querySelectorAll(".page-link, .pagination a").forEach(link => {
+                link.addEventListener("click", function () {
+                    sessionStorage.setItem("didPaginate", "true");
+                });
             });
 
-            if (duplicado) {
-                alert('Este producto ya ha sido agregado a la lista.');
-                $(this).val('').trigger('change.select2');
-            } else {
-                actualizarFila(row);
-            }
-        });
+            document.querySelectorAll("form").forEach(form => {
+                form.addEventListener("submit", function () {
+                    sessionStorage.setItem("didPaginate", "true");
+                });
+            });
 
-        container.addEventListener('click', (e) => {
-            const btn = e.target.closest('.remove-product');
-            if (btn) {
-                const row = btn.closest('.product-row');
-                if (document.querySelectorAll('.product-row').length > 1) {
-                    // Limpiar Select2 antes de remover
-                    const select = $(row).find('.producto-select');
-                    if (select.data('select2')) select.select2('destroy');
-                    row.remove();
-                    calcularTotales();
-                } else {
-                    alert('Debe haber al menos un producto en la venta.');
-                }
-            }
-        });
-
-        // 4. Agregar Nueva Fila
-        document.getElementById('agregarProductoBtn').addEventListener('click', () => {
-            const firstRow = container.querySelector('.product-row');
-            
-            // Destruir select2 antes de clonar para evitar bugs de ID
-            const $originalSelect = $(firstRow).find('.producto-select');
-            if ($originalSelect.data('select2')) $originalSelect.select2('destroy');
-            
-            const newRow = firstRow.cloneNode(true);
-            
-            // Limpiar valores del clon
-            newRow.querySelector('.producto-select').value = "";
-            newRow.querySelector('.cantidad-input').value = 1;
-            newRow.querySelector('.subtotal-display').value = formateadorCOP.format(0);
-            newRow.querySelector('.subtotal-display').setAttribute('data-value', '0');
-            newRow.querySelector('.stock-info').innerHTML = "";
-            newRow.classList.remove('is-invalid');
-            
-            container.appendChild(newRow);
-            
-            // Re-inicializar Select2 en ambas filas
-            initSelect2($originalSelect);
-            initSelect2($(newRow).find('.producto-select'));
-            
-            // Scroll a la nueva fila
-            newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-
-        // 5. Guardar Venta (POST con CSRF)
-        document.getElementById('btnGenerarVenta').addEventListener('click', function() {
-            const btn = this;
-            const clienteId = document.getElementById('clienteId').value;
-            const metodoPago = document.getElementById('metodoPago').value;
-            const observaciones = document.getElementById('observaciones').value;
-            
-            const detalles = [];
-            let hayError = false;
-
-            document.querySelectorAll('.product-row').forEach(row => {
-                const select = row.querySelector('.producto-select');
-                const cantidadInput = row.querySelector('.cantidad-input');
-                
-                if (select.value) {
-                    const cantidad = parseInt(cantidadInput.value);
-                    const stock = parseInt(select.options[select.selectedIndex].getAttribute('data-stock'));
-                    const precio = parseFloat(select.options[select.selectedIndex].getAttribute('data-precio'));
-
-                    if (cantidad > stock || cantidad <= 0) {
-                        hayError = true;
-                        cantidadInput.classList.add('is-invalid');
-                    } else {
-                        detalles.push({
-                            productoId: select.value,
-                            cantidad: cantidad,
-                            precioUnitario: precio
-                        });
+            // Limpieza automática en botón 'X' nativo de buscadores
+            document.querySelectorAll('input[type="search"]').forEach(input => {
+                input.addEventListener('search', function() {
+                    if (this.value === '') {
+                        const form = this.closest('form');
+                        if (form) form.submit();
+                        else window.location.href = window.location.pathname;
                     }
-                }
+                });
             });
 
-            if (detalles.length === 0) {
-                alert('Por favor, agregue al menos un producto válido.');
-                return;
-            }
-
-            if (hayError) {
-                alert('Por favor, corrija los errores de cantidad o stock.');
-                return;
-            }
-
-            // Desactivar botón para evitar doble envío
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
-
-            const totalVenta = detalles.reduce((acc, d) => acc + (d.cantidad * d.precioUnitario), 0);
-
-            fetch('/ventas/guardar', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    [csrfHeader]: csrfToken
-                },
-                body: JSON.stringify({
-                    clienteId: clienteId || null,
-                    metodoPago: metodoPago,
-                    observaciones: observaciones,
-                    subtotal: totalVenta,
-                    total: totalVenta,
-                    detalles: detalles
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('successMessage').innerHTML = `
-                        Orden: <strong>${data.numeroFactura}</strong><br>
-                        Cliente: <strong>${data.cliente}</strong><br>
-                        Monto: <strong>${formateadorCOP.format(data.total)}</strong>
-                    `;
-                    new bootstrap.Modal(document.getElementById('successModal')).show();
-                } else {
-                    throw new Error(data.message);
+            // Al cargar, si venimos de paginación o filtro, hacemos scroll suave al listado
+            if (sessionStorage.getItem("didPaginate") === "true") {
+                sessionStorage.removeItem("didPaginate");
+                const targetEl = document.getElementById('productGrid') || document.querySelector('.product-grid');
+                if (targetEl) {
+                    setTimeout(() => {
+                        const targetPosition = targetEl.getBoundingClientRect().top + window.scrollY - 15;
+                        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                    }, 100);
                 }
-            })
-            .catch(error => {
-                alert('Error al guardar: ' + error.message);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-check-all fs-5 me-2"></i> CONFIRMAR VENTA';
-            });
+            }
         });
 
-        // Inicialización inicial
-        $(document).ready(function() {
-            initSelect2('.producto-select');
-            $('.select2-cliente').select2({ theme: 'bootstrap-5', width: '100%' });
+        function addToCart(el) {
+            const id = el.dataset.id;
+            const nombre = el.dataset.nombre;
+            const precio = parseFloat(el.dataset.precio);
+            const stock = parseInt(el.dataset.stock);
+            const img = el.dataset.img || '';
+
+            const existing = cart.find(i => i.id === id);
+            if (existing) {
+                if (existing.qty >= stock) { alert('Stock insuficiente'); return; }
+                existing.qty++;
+            } else {
+                cart.push({ id, nombre, precio, stock, img, qty: 1 });
+            }
+            renderCart();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(i => i.id !== id);
+            renderCart();
+        }
+
+        function changeQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            const newQty = item.qty + delta;
+            if (newQty <= 0) { removeFromCart(id); return; }
+            if (newQty > item.stock) { alert('Stock insuficiente'); return; }
+            item.qty = newQty;
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            const empty = document.getElementById('emptyCart');
+            const countBadge = document.getElementById('cartCount');
+            const totalEl = document.getElementById('cartTotal');
+            const btnPagar = document.getElementById('btnPagar');
+
+            if (cart.length === 0) {
+                container.innerHTML = '';
+                empty.style.display = 'block';
+                countBadge.textContent = '0';
+                totalEl.textContent = '$ 0';
+                btnPagar.disabled = true;
+                return;
+            }
+            empty.style.display = 'none';
+            btnPagar.disabled = false;
+            countBadge.textContent = cart.length;
+
+            let total = 0;
+            let html = '';
+            cart.forEach(item => {
+                const subtotal = item.precio * item.qty;
+                total += subtotal;
+                const imgTag = item.img
+                    ? `<img src="${item.img}" class="cart-item-img" alt="">`
+                    : `<div class="cart-item-img d-flex align-items-center justify-content-center" style="background:#e8f5e9;"><i class="bi bi-capsule" style="color:var(--primary-color);font-size:0.8rem;"></i></div>`;
+                html += `
+                <div class="cart-item">
+                    ${imgTag}
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">${item.nombre}</div>
+                        <div class="cart-item-price">$ ${item.precio.toLocaleString()} x ${item.qty} = <strong>$ ${subtotal.toLocaleString()}</strong></div>
+                    </div>
+                    <div class="qty-control">
+                        <button onclick="changeQty('${item.id}', -1)">−</button>
+                        <span>${item.qty}</span>
+                        <button onclick="changeQty('${item.id}', 1)">+</button>
+                    </div>
+                    <button class="btn-remove-item" onclick="removeFromCart('${item.id}')"><i class="bi bi-trash"></i></button>
+                </div>`;
+            });
+            container.innerHTML = html;
+            totalEl.textContent = '$ ' + total.toLocaleString();
+        }
+
+        document.getElementById('btnPagar').addEventListener('click', function() {
+            if (cart.length === 0) return;
+
+            Swal.fire({
+                title: '¿Deseas procesar la venta?',
+                text: "Esta acción registrará la transacción en el sistema.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#1B4332', // Verde corporativo L-Farma
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, confirmar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const btn = this;
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Procesando...';
+
+                    const body = {
+                        clienteId: document.getElementById('clienteSelect').value,
+                        metodoPago: document.getElementById('metodoPago').value,
+                        detalles: cart.map(i => ({ productoId: i.id, cantidad: i.qty, precioUnitario: i.precio }))
+                    };
+
+                    fetch('/ventas/guardar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', [csrfHeader]: csrf },
+                        body: JSON.stringify(body)
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            cart = [];
+                            renderCart();
+                            
+                            Swal.fire({
+                                title: '¡Venta Registrada!',
+                                text: 'Venta ' + data.numeroFactura + ' registrada con éxito por un total de $' + Number(data.total).toLocaleString() + '.',
+                                icon: 'success',
+                                confirmButtonColor: '#1B4332'
+                            }).then(() => {
+                                window.location.href = '/ventas/' + data.facturaId + '/factura';
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'No se pudo procesar la venta.',
+                                icon: 'error',
+                                confirmButtonColor: '#E63946'
+                            });
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> Confirmar Venta';
+                        }
+                    })
+                    .catch(e => {
+                        Swal.fire({
+                            title: 'Error de Conexión',
+                            text: 'No se pudo establecer contacto con el servidor: ' + e.message,
+                            icon: 'error',
+                            confirmButtonColor: '#E63946'
+                        });
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-check-circle me-1"></i> Confirmar Venta';
+                    });
+                }
+            });
         });
     </script>
 </body>
-</html>
+</html>

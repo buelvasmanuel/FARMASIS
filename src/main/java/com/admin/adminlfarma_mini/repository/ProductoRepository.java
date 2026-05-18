@@ -16,19 +16,47 @@ public interface ProductoRepository extends MongoRepository<Producto, String> {
 
     boolean existsByCodigo(String codigo);
 
-    // CORREGIDO: Buscar productos activos (activo = true, no null)
+    // Buscar productos activos (activo = true, no null)
     @Query("{ 'activo': true }")
     Page<Producto> findActivos(Pageable pageable);
 
-    // CORREGIDO: Método para búsqueda por nombre o código
+    // Buscar productos archivados (activo = false)
+    @Query("{ 'activo': false }")
+    Page<Producto> findInactivos(Pageable pageable);
+
+    // Método para búsqueda por nombre o código (Activos)
     @Query("{ $or: [ { 'nombre': { $regex: ?0, $options: 'i' } }, { 'codigo': { $regex: ?1, $options: 'i' } } ], 'activo': true }")
     Page<Producto> searchByNombreOrCodigo(String nombre, String codigo, Pageable pageable);
 
-    // CORREGIDO: Productos disponibles (activo true y cantidad > 0)
+    // Método para búsqueda por nombre o código (Archivados)
+    @Query("{ $or: [ { 'nombre': { $regex: ?0, $options: 'i' } }, { 'codigo': { $regex: ?1, $options: 'i' } } ], 'activo': false }")
+    Page<Producto> searchByNombreOrCodigoInactivo(String nombre, String codigo, Pageable pageable);
+
+    // Productos disponibles (activos con stock > 0) — para compatibilidad
     @Query("{ 'activo': true, 'cantidad': { $gt: 0 } }")
     List<Producto> findProductosDisponibles();
 
+    // Todos los productos activos (incluidos stock 0) — para POS con bloqueo visual
+    @Query("{ 'activo': true }")
+    List<Producto> findProductosActivos();
+
+    // POS paginado — todos los activos (incluye stock 0 para mostrar en gris)
+    @Query("{ 'activo': true }")
+    Page<Producto> findProductosActivosPaginado(Pageable pageable);
+
+    // POS paginado — filtro por categoría
+    @Query("{ 'activo': true, 'categoria': ?0 }")
+    Page<Producto> findProductosActivosPorCategoria(String categoria, Pageable pageable);
+
     List<Producto> findByCantidadLessThan(Integer stockMinimo);
+
+    // Motor de Optimización: productos activos con stock <= su stockMinimo individual (con fallback de 5 si es nulo)
+    @Query("{ 'activo': true, $expr: { $lte: [ '$cantidad', { $ifNull: [ '$stockMinimo', 5 ] } ] } }")
+    List<Producto> findProductosBajoStock();
+
+    // Búsqueda en POS filtrada por categoría y término (nombre/código)
+    @Query("{ $or: [ { 'nombre': { $regex: ?0, $options: 'i' } }, { 'codigo': { $regex: ?1, $options: 'i' } } ], 'categoria': ?2, 'activo': true }")
+    Page<Producto> searchByNombreOrCodigoAndCategoria(String nombre, String codigo, String categoria, Pageable pageable);
 
     // CORREGIDO: Contar activos
     @Query(value = "{ 'activo': true }", count = true)

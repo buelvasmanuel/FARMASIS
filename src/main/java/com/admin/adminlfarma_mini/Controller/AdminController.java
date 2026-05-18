@@ -43,24 +43,19 @@ public class AdminController {
         return "admin/dashboard";
     }
 
+    // Redirigir a vistas principales (con filtros y paginación)
     @GetMapping("/inventario")
-    public String inventario(Model model) {
-        model.addAttribute("productos", productoService.getProductosDisponibles());
-        model.addAttribute("proveedores", proveedorService.listarTodos());
-        return "admin/inventario";
+    public String inventario() {
+        return "redirect:/productos";
     }
 
     @GetMapping("/proveedores")
-    public String proveedores(Model model) {
-        model.addAttribute("proveedores", proveedorService.listarTodos());
-        return "admin/proveedores";
+    public String proveedores() {
+        return "redirect:/proveedores";
     }
 
     @GetMapping("/ventas")
-    public String ventas(Model model) {
-        model.addAttribute("ventas", facturaService.listarTodasFacturas());
-        model.addAttribute("ventasDelDia", facturaService.getVentasDelDia());
-        model.addAttribute("cantidadVentasDelDia", facturaService.getCantidadVentasDelDia());
-        return "admin/ventas";
+    public String ventas() {
+        return "redirect:/ventas";
     }
 }

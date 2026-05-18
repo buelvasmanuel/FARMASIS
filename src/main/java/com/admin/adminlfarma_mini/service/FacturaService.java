@@ -6,10 +6,15 @@ import com.admin.adminlfarma_mini.repository.FacturaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,9 +25,64 @@ public class FacturaService {
     private final FacturaRepository facturaRepository;
     private final ProductoService productoService;
     private final ClienteService clienteService;
+    private final MongoTemplate mongoTemplate;
     
     public Page<Factura> listarFacturas(Pageable pageable) {
         return facturaRepository.findAllByOrderByFechaDesc(pageable);
+    }
+
+    public Page<Factura> buscarFacturas(String fechaDesde, String fechaHasta,
+                                         String metodoPago, String numFactura, Pageable pageable) {
+        Query query = new Query().with(pageable).with(Sort.by(Sort.Direction.DESC, "fecha"));
+        List<Criteria> criterios = new ArrayList<>();
+
+        if (fechaDesde != null && !fechaDesde.isEmpty()) {
+            LocalDateTime desde = LocalDate.parse(fechaDesde).atStartOfDay();
+            criterios.add(Criteria.where("fecha").gte(desde));
+        }
+        if (fechaHasta != null && !fechaHasta.isEmpty()) {
+            LocalDateTime hasta = LocalDate.parse(fechaHasta).atTime(23, 59, 59);
+            criterios.add(Criteria.where("fecha").lte(hasta));
+        }
+        if (metodoPago != null && !metodoPago.isEmpty()) {
+            criterios.add(Criteria.where("metodoPago").is(metodoPago));
+        }
+        if (numFactura != null && !numFactura.isEmpty()) {
+            criterios.add(Criteria.where("numeroFactura").regex(numFactura, "i"));
+        }
+
+        if (!criterios.isEmpty()) {
+            query.addCriteria(new Criteria().andOperator(criterios.toArray(new Criteria[0])));
+        }
+
+        List<Factura> facturas = mongoTemplate.find(query, Factura.class);
+        Query countQuery = Query.of(query).limit(-1).skip(-1);
+        long total = mongoTemplate.count(countQuery, Factura.class);
+
+        return PageableExecutionUtils.getPage(facturas, pageable, () -> total);
+    }
+
+    public List<Factura> exportarFacturas(String fechaDesde, String fechaHasta,
+                                           String metodoPago, String numFactura) {
+        Query query = new Query().with(Sort.by(Sort.Direction.DESC, "fecha"));
+        List<Criteria> criterios = new ArrayList<>();
+
+        if (fechaDesde != null && !fechaDesde.isEmpty()) {
+            criterios.add(Criteria.where("fecha").gte(LocalDate.parse(fechaDesde).atStartOfDay()));
+        }
+        if (fechaHasta != null && !fechaHasta.isEmpty()) {
+            criterios.add(Criteria.where("fecha").lte(LocalDate.parse(fechaHasta).atTime(23, 59, 59)));
+        }
+        if (metodoPago != null && !metodoPago.isEmpty()) {
+            criterios.add(Criteria.where("metodoPago").is(metodoPago));
+        }
+        if (numFactura != null && !numFactura.isEmpty()) {
+            criterios.add(Criteria.where("numeroFactura").regex(numFactura, "i"));
+        }
+        if (!criterios.isEmpty()) {
+            query.addCriteria(new Criteria().andOperator(criterios.toArray(new Criteria[0])));
+        }
+        return mongoTemplate.find(query, Factura.class);
     }
     
     public Double getVentasDelDia() {
@@ -39,7 +99,6 @@ public class FacturaService {
     }
     
     public Factura crearFactura(FacturaRequestDTO request) {
-        // Obtener cliente
         Cliente cliente;
         if (request.getClienteId() != null && !request.getClienteId().isEmpty()) {
             cliente = clienteService.obtenerPorId(request.getClienteId())
@@ -48,7 +107,6 @@ public class FacturaService {
             cliente = clienteService.getConsumidorFinal();
         }
         
-        // Crear factura
         Factura factura = new Factura();
         factura.setNumeroFactura(generarNumeroFactura());
         factura.setClienteId(cliente.getId());
@@ -59,17 +117,14 @@ public class FacturaService {
         
         double subtotal = 0.0;
         
-        // Procesar detalles
         for (FacturaRequestDTO.DetalleDTO detalleDTO : request.getDetalles()) {
             Producto producto = productoService.obtenerPorId(detalleDTO.getProductoId())
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
             
-            // Validar stock
             if (producto.getCantidad() < detalleDTO.getCantidad()) {
                 throw new RuntimeException("Stock insuficiente para: " + producto.getNombre());
             }
             
-            // Crear detalle
             DetalleFactura detalle = new DetalleFactura();
             detalle.setProductoId(producto.getId());
             detalle.setProductoNombre(producto.getNombre());
@@ -81,7 +136,6 @@ public class FacturaService {
             factura.getDetalles().add(detalle);
             subtotal += detalle.getSubtotal();
             
-            // Actualizar stock
             productoService.actualizarStock(producto.getId(), detalleDTO.getCantidad());
         }
         

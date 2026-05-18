@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,14 +10,15 @@
     <link rel="stylesheet" href="/css/sidebar.css">
     <script>(function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());</script>
     <style>
-
         body { background-color: #ffffff; }
-
         .card-hover { transition: transform 0.3s, box-shadow 0.3s; }
         .card-hover:hover { transform: translateY(-4px); box-shadow: var(--card-hover-shadow); }
+        .filter-bar { background: white; border-radius: 12px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 1.5rem; }
+        .btn-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: none; color: #999; cursor: pointer; font-size: 1rem; }
+        .btn-clear:hover { color: #333; }
+        .card-archived { opacity: 0.7; border: 2px dashed #dee2e6; }
     </style>
 </head>
-
 <body>
     <div th:replace="~{fragments/sidebar :: sidebar('proveedores')}"></div>
     <div th:replace="~{fragments/sidebar :: topbar}"></div>
@@ -28,7 +28,7 @@
         <div class="container-fluid px-4 py-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="fw-bold"><i class="bi bi-truck me-2" style="color: var(--secondary-color);"></i> Proveedores</h1>
-                <a href="/proveedores/nuevo" class="btn btn-lfarma"><i class="bi bi-plus-circle me-1"></i> Nuevo Proveedor</a>
+                <a th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}" href="/proveedores/nuevo" class="btn btn-lfarma"><i class="bi bi-plus-circle me-1"></i> Nuevo Proveedor</a>
             </div>
 
             <!-- Alertas -->
@@ -41,28 +41,49 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
 
-            <!-- Buscador -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-10">
-                            <input type="text" class="form-control" name="search"
-                                placeholder="Buscar por nombre, empresa o tipo de producto..." th:value="${searchTerm}"
-                                style="border-radius: 12px; padding: 11px 16px;">
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100" style="border-radius: 12px; padding: 11px;">
-                                <i class="bi bi-search"></i> Buscar
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <!-- Barra de Filtros -->
+            <div class="filter-bar">
+                <form method="get" class="row g-2 align-items-end">
+                    <div class="col-md-5 position-relative">
+                        <label class="form-label small fw-bold text-muted">Buscar</label>
+                        <input type="search" class="form-control" name="search" id="searchInput"
+                            placeholder="Nombre, empresa o tipo..." th:value="${search}"
+                            style="border-radius: 10px;">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted">Estado</label>
+                        <select class="form-select" name="estado" style="border-radius: 10px;">
+                            <option value="ACTIVOS" th:selected="${estado == null || estado == 'ACTIVOS'}">Activos</option>
+                            <option value="ARCHIVADOS" th:selected="${estado == 'ARCHIVADOS'}">Archivados</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted">Categoría</label>
+                        <select class="form-select" name="categoria" style="border-radius: 10px;">
+                            <option value="">Todas</option>
+                            <option value="Cosmético" th:selected="${categoria == 'Cosmético'}">Cosmético</option>
+                            <option value="Higiene" th:selected="${categoria == 'Higiene'}">Higiene</option>
+                            <option value="Medicamento" th:selected="${categoria == 'Medicamento'}">Medicamento</option>
+                            <option value="Otros" th:selected="${categoria == 'Otros'}">Otros</option>
+                            <option value="Suplemento" th:selected="${categoria == 'Suplemento'}">Suplemento</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100" style="border-radius: 10px; padding: 9px;">
+                            <i class="bi bi-funnel"></i> Filtrar
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- Estadísticas -->
             <div class="stat-card mb-4 d-flex align-items-center gap-3" style="padding: 16px 22px;">
                 <i class="bi bi-info-circle" style="color: var(--secondary-color); font-size: 1.3rem;"></i>
-                <span>Total de proveedores: <strong th:text="${totalProveedores}">0</strong></span>
+                <span>
+                    <span th:if="${estado == null || estado == 'ACTIVOS'}">Proveedores activos: </span>
+                    <span th:if="${estado == 'ARCHIVADOS'}">Proveedores archivados: </span>
+                    <strong th:text="${totalProveedores}">0</strong>
+                </span>
             </div>
 
             <!-- Grid de Proveedores -->
@@ -71,14 +92,14 @@
                     <div class="card text-center py-5">
                         <div class="card-body">
                             <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
-                            <h5 class="mt-3 text-muted">No hay proveedores registrados</h5>
-                            <a href="/proveedores/nuevo" class="btn btn-lfarma mt-2">Crear primer proveedor</a>
+                            <h5 class="mt-3 text-muted" th:if="${estado == null || estado == 'ACTIVOS'}">No hay proveedores activos</h5>
+                            <h5 class="mt-3 text-muted" th:if="${estado == 'ARCHIVADOS'}">No hay proveedores archivados</h5>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-md-6 col-lg-4 mb-4" th:each="proveedor : ${proveedores}">
-                    <div class="card h-100 card-hover">
+                    <div class="card h-100 card-hover" th:classappend="${estado == 'ARCHIVADOS' ? 'card-archived' : ''}">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h5 class="card-title mb-0">
@@ -87,58 +108,61 @@
                                 </h5>
                                 <span class="badge" style="background: var(--primary-color);" th:text="${proveedor.empresa}"></span>
                             </div>
-
-                            <div class="mb-2">
-                                <small class="text-muted">Teléfono:</small>
+                            <div class="mb-2"><small class="text-muted">Teléfono:</small>
                                 <div><i class="bi bi-telephone"></i> <span th:text="${proveedor.telefono}">-</span></div>
                             </div>
-
-                            <div class="mb-2">
-                                <small class="text-muted">Email:</small>
+                            <div class="mb-2"><small class="text-muted">Email:</small>
                                 <div><i class="bi bi-envelope"></i> <span th:text="${proveedor.email}">-</span></div>
                             </div>
-
-                            <div class="mb-2">
-                                <small class="text-muted">Dirección:</small>
+                            <div class="mb-2"><small class="text-muted">Dirección:</small>
                                 <div><i class="bi bi-geo-alt"></i> <span th:text="${proveedor.direccion}">-</span></div>
                             </div>
-
                             <div th:if="${proveedor.tipoProductos}">
                                 <small class="text-muted">Tipo de productos:</small>
                                 <div><span class="badge" style="background: var(--accent-color); color: var(--primary-color);" th:text="${proveedor.tipoProductos}"></span></div>
                             </div>
                         </div>
-                        <div class="card-footer bg-transparent border-0 pb-3">
-                            <div class="btn-group w-100">
-                                <a th:href="@{/proveedores/editar/{id}(id=${proveedor.id})}"
-                                    class="btn btn-outline-lfarma btn-sm">
+                        <!-- Actions: Only OWNER can modify -->
+                        <div class="card-footer bg-transparent border-0 pb-3" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}">
+                            <div class="btn-group w-100" th:if="${estado == null || estado == 'ACTIVOS'}">
+                                <a th:href="@{/proveedores/editar/{id}(id=${proveedor.id})}" class="btn btn-outline-lfarma btn-sm">
                                     <i class="bi bi-pencil"></i> Editar
                                 </a>
-                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal"
-                                    th:data-bs-target="'#eliminarModal' + ${proveedor.id}">
-                                    <i class="bi bi-trash"></i> Eliminar
+                                <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal"
+                                    th:data-bs-target="'#archivarModal' + ${proveedor.id}">
+                                    <i class="bi bi-archive"></i> Archivar
                                 </button>
+                            </div>
+                            <div th:if="${estado == 'ARCHIVADOS'}">
+                                <form th:action="@{/proveedores/reactivar/{id}(id=${proveedor.id})}" method="post" class="d-grid">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Reactivar
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Modal Eliminar -->
-                    <div class="modal fade" th:id="'eliminarModal' + ${proveedor.id}" tabindex="-1">
+                    <!-- Modal Archivar -->
+                    <div class="modal fade" th:id="'archivarModal' + ${proveedor.id}" tabindex="-1"
+                         th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
-                                <div class="modal-header" style="background: linear-gradient(135deg, var(--dark-bg) 0%, var(--danger-color) 100%); color: white;">
-                                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Confirmar Eliminación</h5>
+                                <div class="modal-header" style="background: linear-gradient(135deg, var(--dark-bg) 0%, #e67e22 100%); color: white;">
+                                    <h5 class="modal-title"><i class="bi bi-archive"></i> Confirmar Archivado</h5>
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body text-center py-4">
-                                    <i class="bi bi-trash" style="font-size: 2.5rem; color: var(--danger-color);"></i>
-                                    <p class="mt-3">¿Estás seguro de que deseas eliminar al proveedor <strong th:text="${proveedor.nombre}"></strong>?</p>
-                                    <p class="text-danger small">Esta acción no se puede deshacer.</p>
+                                    <i class="bi bi-archive" style="font-size: 2.5rem; color: #e67e22;"></i>
+                                    <p class="mt-3">¿Estás seguro de que deseas archivar al proveedor <strong th:text="${proveedor.nombre}"></strong>?</p>
+                                    <p class="text-muted small">El proveedor será desactivado pero no eliminado. Podrás reactivarlo desde la vista de archivados.</p>
                                 </div>
                                 <div class="modal-footer border-0 justify-content-center gap-2">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                    <form th:action="@{/proveedores/eliminar/{id}(id=${proveedor.id})}" method="post" style="display: inline;">
-                                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                                    <form th:action="@{/proveedores/desactivar/{id}(id=${proveedor.id})}" method="post" style="display: inline;">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                        <button type="submit" class="btn btn-warning"><i class="bi bi-archive me-1"></i> Archivar</button>
                                     </form>
                                 </div>
                             </div>
@@ -146,11 +170,55 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Paginación -->
+            <div th:if="${totalPages > 1}" class="mt-4">
+                <nav>
+                    <ul class="pagination justify-content-center mb-2">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/proveedores(page=0, size=${pageSize}, search=${search}, estado=${estado}, categoria=${categoria})}"><i class="bi bi-chevron-double-left"></i></a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/proveedores(page=${currentPage - 1}, size=${pageSize}, search=${search}, estado=${estado}, categoria=${categoria})}"><i class="bi bi-chevron-left"></i></a>
+                        </li>
+                        <li th:each="i : ${#numbers.sequence(0, (totalPages > 0 ? totalPages - 1 : 0))}"
+                            th:if="${totalPages > 0 and i >= currentPage - 2 and i <= currentPage + 2}"
+                            th:classappend="${i == currentPage} ? 'active'" class="page-item">
+                            <a class="page-link" th:href="@{/proveedores(page=${i}, size=${pageSize}, search=${search}, estado=${estado}, categoria=${categoria})}" th:text="${i + 1}"></a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                            <a class="page-link" th:href="@{/proveedores(page=${currentPage + 1}, size=${pageSize}, search=${search}, estado=${estado}, categoria=${categoria})}"><i class="bi bi-chevron-right"></i></a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                            <a class="page-link" th:href="@{/proveedores(page=${totalPages - 1}, size=${pageSize}, search=${search}, estado=${estado}, categoria=${categoria})}"><i class="bi bi-chevron-double-right"></i></a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="text-center small text-muted">
+                    Mostrando <span th:text="${proveedores.size()}"></span> de <span th:text="${totalItems}"></span> proveedores
+                </div>
             </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/sidebar.js"></script>
-</body>
+    <script>
+        // Auto-dismiss alerts
+        setTimeout(function(){ document.querySelectorAll('.alert').forEach(a => a.style.display='none'); }, 5000);
 
+        // Limpieza automática en botón 'X' nativo de buscadores
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll('input[type="search"]').forEach(input => {
+                input.addEventListener('search', function() {
+                    if (this.value === '') {
+                        const form = this.closest('form');
+                        if (form) form.submit();
+                        else window.location.href = window.location.pathname;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
 </html>

@@ -19,11 +19,11 @@ public class EmailService {
     public void enviarCodigoVerificacion(String destinatario, String codigo) throws Exception {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-        
+
         helper.setTo(destinatario);
         helper.setSubject("🔐 Código de Autenticación - AdminFarma");
-        helper.setFrom("robertoamelendez15@gmail.com", "AdminFarma Seguridad");
-        
+        helper.setFrom("manuelfarmasis@gmail.com", "AdminFarma Seguridad");
+
         String htmlMsg = "<div style='font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px;'>"
                 + "<h2 style='color: #4a5568; text-align: center;'>Verificación de Seguridad</h2>"
                 + "<p style='color: #4a5568;'>Hola,</p>"
@@ -34,7 +34,7 @@ public class EmailService {
                 + "<p style='color: #718096; font-size: 14px;'>Este código expirará en 5 minutos.</p>"
                 + "<p style='color: #718096; font-size: 12px; margin-top: 30px; text-align: center;'>Si no solicitaste este código, puedes ignorar este mensaje de forma segura.</p>"
                 + "</div>";
-                
+
         helper.setText(htmlMsg, true); // true indica que es HTML
 
         mailSender.send(message);
@@ -178,6 +178,38 @@ public class EmailService {
             System.out.println("Correo de bienvenida a proveedor enviado exitosamente a: " + toEmail);
         } catch (jakarta.mail.MessagingException e) {
             System.err.println("Error al enviar el correo de bienvenida al proveedor: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @org.springframework.scheduling.annotation.Async
+    public void enviarCorreoActualizacionRolGenerico(String toEmail, String nombre, String nuevoRol) {
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "utf-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("Actualización de Rol - L-Farma");
+            helper.setFrom("manuelfarmasis@gmail.com", "L-Farma Seguridad");
+
+            String rolLimpio = nuevoRol.replace("ROLE_", "");
+            String htmlMsg = "<div style='font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 10px;'>"
+                    + "<h2 style='color: #1B4332; text-align: center;'>Actualización de Rol</h2>"
+                    + "<p style='color: #4a5568;'>Hola <strong>" + nombre + "</strong>,</p>"
+                    + "<p style='color: #4a5568;'>Te informamos que tu rol en el sistema ha sido actualizado.</p>"
+                    + "<div style='background-color: #f7fafc; border-left: 4px solid #1B4332; padding: 15px; margin: 20px 0;'>"
+                    + "<p style='margin: 0; color: #4a5568;'>Tu rol ha sido actualizado a <strong>" + rolLimpio + "</strong> en L-Farma.</p>"
+                    + "</div>"
+                    + "<p style='color: #718096; font-size: 14px;'>Si tienes alguna pregunta o si esta acción no fue autorizada, por favor contacta con el Owner o Administrador del sistema.</p>"
+                    + "<p style='color: #718096; font-size: 12px; margin-top: 30px; text-align: center;'>L-Farma - Gestión Inteligente</p>"
+                    + "</div>";
+
+            helper.setText(htmlMsg, true);
+
+            mailSender.send(mimeMessage);
+            System.out.println("Correo de actualización de rol genérico enviado exitosamente a: " + toEmail);
+        } catch (Exception e) {
+            System.err.println("Error al enviar el correo de actualización de rol genérico: " + e.getMessage());
             e.printStackTrace();
         }
     }

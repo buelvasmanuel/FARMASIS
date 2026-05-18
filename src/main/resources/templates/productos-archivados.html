@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archivados - L-Farma</title>
+    <!-- CSRF Meta Tags -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>(function () { try { if (localStorage.getItem('sidebarState') === 'closed') { document.documentElement.classList.add('sidebar-preload-collapsed'); } } catch (e) { } }());</script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-action {
+            padding: 5px 8px;
+            margin: 0 2px;
+        }
+
+        /* Estilo para filas archivadas */
+        .row-archivado {
+            opacity: 0.7;
+            background-color: #fcfcfc;
+        }
+        
+        .row-archivado td {
+            color: #6c757d !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{fragments/sidebar :: sidebar('productos')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
+
+    <div class="main-content no-transition" id="mainContent">
+
+        <div class="container-fluid px-4 py-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="bi bi-archive-fill"></i> Productos Archivados</h1>
+                <a href="/productos" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Volver a Productos
+                </a>
+            </div>
+
+            <!-- Alertas -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><span
+                    th:text="${success}"></span><button type="button" class="btn-close"
+                    data-bs-dismiss="alert"></button></div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><span
+                    th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Buscador -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-10"><input type="search" class="form-control" name="search"
+                                placeholder="Buscar en archivados..." th:value="${search}"></div>
+                        <div class="col-md-2"><button type="submit" class="btn btn-secondary w-100"><i
+                                     class="bi bi-search"></i> Buscar</button></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos Archivados -->
+            <div class="table-container shadow-sm border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-secondary text-dark">
+                            <tr>
+                                <th>Img</th>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${productos}" class="row-archivado">
+                                <td>
+                                    <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width: 40px; height: 40px; overflow: hidden; opacity: 0.6;">
+                                        <img th:if="${p.imagenUrl != null and !p.imagenUrl.empty}" th:src="${p.imagenUrl}" 
+                                             style="width: 100%; height: 100%; object-fit: cover;" class="rounded" alt="Prod" />
+                                        <i th:unless="${p.imagenUrl != null and !p.imagenUrl.empty}" class="bi bi-image text-muted"></i>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-light text-dark" th:text="${p.codigo}">-</span></td>
+                                <td><strong th:text="${p.nombre}">-</strong></td>
+                                <td th:text="${p.categoria != null ? p.categoria : '-'}">-</td>
+                                <td><span th:text="'$ ' + ${p.precio}">0</span></td>
+                                <td><span class="badge bg-light text-dark" th:text="${p.cantidad}">0</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-info btn-action ver-detalles" 
+                                        th:data-id="${p.id}" th:data-codigo="${p.codigo}" th:data-nombre="${p.nombre}"
+                                        th:data-precio="${p.precio}" th:data-cantidad="${p.cantidad}" 
+                                        th:data-categoria="${p.categoria}" th:data-descripcion="${p.descripcion}"
+                                        title="Ver Detalles"><i class="bi bi-info-circle"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-success btn-action restaurar-producto" 
+                                        th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Restaurar">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr th:if="${productos.empty}">
+                                <td colspan="7" class="text-center py-5 text-muted">No hay productos archivados.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="small text-muted">Archivados: <span th:text="${totalItems}"></span></span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/productos/archivados(page=${currentPage - 1}, search=${search})}"><i class="bi bi-chevron-left"></i></a>
+                            </li>
+                            <li class="page-item disabled"><span class="page-link" th:text="${currentPage + 1}">1</span></li>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/productos/archivados(page=${currentPage + 1}, search=${search})}"><i class="bi bi-chevron-right"></i></a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalles (Solo Lectura) -->
+    <div class="modal fade" id="detallesModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-info-circle"></i> Detalles del Producto Archivado</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre:</label>
+                        <p id="detNombre" class="form-control-plaintext border-bottom"></p>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Código:</label>
+                            <p id="detCodigo" class="form-control-plaintext border-bottom"></p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Categoría:</label>
+                            <p id="detCategoria" class="form-control-plaintext border-bottom"></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Precio:</label>
+                            <p id="detPrecio" class="form-control-plaintext border-bottom"></p>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label fw-bold">Stock:</label>
+                            <p id="detStock" class="form-control-plaintext border-bottom"></p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción:</label>
+                        <p id="detDescripcion" class="form-control-plaintext"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script>
+        $(document).ready(function () {
+            const detallesModal = new bootstrap.Modal(document.getElementById('detallesModal'));
+
+            // Ver Detalles
+            $(document).on('click', '.ver-detalles', function () {
+                const $btn = $(this);
+                $('#detNombre').text($btn.data('nombre'));
+                $('#detCodigo').text($btn.data('codigo'));
+                $('#detCategoria').text($btn.data('categoria') || 'N/A');
+                $('#detPrecio').text('$' + $btn.data('precio'));
+                $('#detStock').text($btn.data('cantidad'));
+                $('#detDescripcion').text($btn.data('descripcion') || 'Sin descripción');
+                detallesModal.show();
+            });
+
+            // Restaurar Producto
+            $(document).on('click', '.restaurar-producto', function () {
+                const $btn = $(this);
+                const id = $btn.data('id');
+                const nombre = $btn.data('nombre');
+
+                Swal.fire({
+                    title: '¿Restaurar producto?',
+                    text: `El producto "${nombre}" volverá a la lista de inventario activo.`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, restaurar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const actionUrl = '/productos/restaurar/' + id;
+                        const form = $('<form method="post" action="' + actionUrl + '"></form>');
+                        
+                        // Token CSRF
+                        const csrfToken = $("meta[name='_csrf']").attr("content");
+                        if (csrfToken) {
+                            form.append('<input type="hidden" name="_csrf" value="' + csrfToken + '">');
+                        }
+                        
+                        $('body').append(form);
+                        form.submit();
+                    }
+                });
+            });
+
+            // Limpieza automática en botón 'X' nativo de buscadores
+            document.querySelectorAll('input[type="search"]').forEach(input => {
+                input.addEventListener('search', function() {
+                    if (this.value === '') {
+                        const form = this.closest('form');
+                        if (form) form.submit();
+                        else window.location.href = window.location.pathname;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

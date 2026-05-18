@@ -9,10 +9,22 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/sidebar.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>(function () { try { if (localStorage.getItem('sidebarState') === 'closed') { document.documentElement.classList.add('sidebar-preload-collapsed'); } } catch (e) { } }());</script>
     <style>
         body {
             background-color: #ffffff;
+        }
+
+        .sticky-header-container {
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            background-color: #f4f7f6; /* Blends perfectly with body background */
+            padding-top: 15px;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         }
 
         .table-container {
@@ -22,9 +34,101 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-action {
-            padding: 5px 8px;
-            margin: 0 2px;
+        .btn-action { padding: 5px 8px; margin: 0 2px; }
+        /* Grid View (Original L-Farma) */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .product-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .product-item:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--card-hover-shadow);
+        }
+
+        .product-item .product-img {
+            width: 100%;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .product-item .product-code {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .product-item .product-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 6px 0;
+            color: var(--text-primary);
+        }
+
+        .product-item .product-price {
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .product-item .product-stock {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .product-item.out-of-stock {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .product-item .hover-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.55);
+            opacity: 0;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            z-index: 2;
+            border-radius: 12px;
+        }
+
+        .product-item:hover .hover-overlay {
+            opacity: 1;
+        }
+
+        .hover-overlay .btn {
+            backdrop-filter: blur(4px);
+        }
+
+        .toggle-view-btn { border-radius: 10px; padding: 6px 14px; }
+        .toggle-view-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        
+        html {
+            scroll-padding-top: 140px;
         }
     </style>
 </head>
@@ -37,76 +141,93 @@
     <div class="main-content no-transition" id="mainContent">
 
         <div class="container-fluid px-4 py-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1><i class="bi bi-box-seam"></i> Productos</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productoModal"
-                    id="btnNuevoProducto">
-                    <i class="bi bi-plus-circle"></i> Nuevo Producto
-                </button>
-            </div>
+            <!-- Contenedor Sticky para KPIs y Filtros -->
+            <div class="sticky-header-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="bi bi-box-seam"></i> Productos</h1>
+                    <div class="d-flex gap-2 align-items-center">
+                        <div class="d-flex align-items-center gap-1 me-2" style="font-size: 0.85rem;">
+                            <span class="text-muted text-nowrap"><i class="bi bi-eye"></i> Mostrar:</span>
+                            <select class="form-select form-select-sm bg-white border-secondary shadow-sm px-2 py-1" onchange="changePageSize(this)" style="cursor: pointer; font-weight: 500; border-radius: 8px;">
+                                <option value="10" th:selected="${pageSize == 10}">10</option>
+                                <option value="15" th:selected="${pageSize == 15}">15</option>
+                                <option value="25" th:selected="${pageSize == 25}">25</option>
+                                <option value="50" th:selected="${pageSize == 50}">50</option>
+                            </select>
+                        </div>
+                        <div class="btn-group me-2" role="group">
+                            <button type="button" class="btn btn-outline-secondary toggle-view-btn" th:classappend="${view == 'lista' ? 'active' : ''}" onclick="switchView('lista')" title="Vista Lista"><i class="bi bi-list-task"></i></button>
+                            <button type="button" class="btn btn-outline-secondary toggle-view-btn" th:classappend="${view == 'cuadricula' ? 'active' : ''}" onclick="switchView('cuadricula')" title="Vista Cuadrícula"><i class="bi bi-grid-3x3-gap"></i></button>
+                        </div>
+                        <a href="/productos/archivados" class="btn btn-secondary"><i class="bi bi-archive"></i> Ver Archivados</a>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productoModal" id="btnNuevoProducto"><i class="bi bi-plus-circle"></i> Nuevo Producto</button>
+                    </div>
+                </div>
 
-            <!-- Alertas -->
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><span
-                    th:text="${success}"></span><button type="button" class="btn-close"
-                    data-bs-dismiss="alert"></button></div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><span
-                    th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+                <!-- Alertas -->
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><span
+                        th:text="${success}"></span><button type="button" class="btn-close"
+                        data-bs-dismiss="alert"></button></div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><span
+                        th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
 
-            <!-- Estadísticas -->
-            <div class="row mb-4">
-                <div class="col-md-3 mb-3">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <h6>Total Productos</h6>
-                            <h3 th:text="${totalItems}">0</h3>
+                <!-- Estadísticas -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>Total Productos</h6>
+                                <h3 th:text="${totalItems}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6>Stock Bajo (&lt;5)</h6>
+                                <h3 id="stockBajoCount" th:text="${stockBajoCount}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h6>Página</h6>
+                                <h3 th:text="${currentPage + 1} + '/' + ${totalPages}">0/0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body">
+                                <h6>Por Página</h6>
+                                <h3 th:text="${pageSize}">15</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <h6>Stock Bajo (&lt;5)</h6>
-                            <h3 id="stockBajoCount">0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <h6>Página</h6>
-                            <h3 th:text="${currentPage + 1} + '/' + ${totalPages}">0/0</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card bg-secondary text-white">
-                        <div class="card-body">
-                            <h6>Por Página</h6>
-                            <h3 th:text="${pageSize}">15</h3>
-                        </div>
+
+                <!-- Buscador -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-10"><input type="search" class="form-control" name="search"
+                                    placeholder="Buscar por nombre o código..." th:value="${search}"></div>
+                            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100"><i
+                                        class="bi bi-search"></i> Buscar</button></div>
+                        </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Buscador -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-10"><input type="text" class="form-control" name="search"
-                                placeholder="Buscar por nombre o código..." th:value="${search}"></div>
-                        <div class="col-md-2"><button type="submit" class="btn btn-primary w-100"><i
-                                    class="bi bi-search"></i> Buscar</button></div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Tabla de Productos -->
-            <div class="table-container">
+            <!-- Vista Lista -->
+            <div class="table-container vista-lista" th:style="${view == 'cuadricula' ? 'display:none' : ''}">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-lfarma">
                             <tr>
+                                <th>Img</th>
                                 <th>Código</th>
                                 <th>Nombre</th>
                                 <th>Categoría</th>
@@ -118,6 +239,13 @@
                         </thead>
                         <tbody>
                             <tr th:each="p : ${productos}">
+                                <td>
+                                    <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width: 40px; height: 40px; overflow: hidden;">
+                                        <img th:if="${p.imagenUrl != null and !p.imagenUrl.empty}" th:src="${p.imagenUrl}" 
+                                             style="width: 100%; height: 100%; object-fit: cover;" class="rounded" alt="Prod" />
+                                        <i th:unless="${p.imagenUrl != null and !p.imagenUrl.empty}" class="bi bi-image text-muted"></i>
+                                    </div>
+                                </td>
                                 <td><span class="badge bg-secondary" th:text="${p.codigo}">-</span></td>
                                 <td><strong th:text="${p.nombre}">-</strong></td>
                                 <td th:text="${p.categoria != null ? p.categoria : '-'}">-</td>
@@ -125,12 +253,10 @@
                                         th:text="'$ ' + ${p.precio != null ? #numbers.formatDecimal(p.precio, 1, 'POINT', 0, 'COMMA') : '0'}">0</span>
                                 </td>
                                 <td>
-                                    <span th:if="${p.cantidad == null}">0</span>
-                                    <span th:if="${p.cantidad != null and p.cantidad < 5}" class="badge bg-danger"
+                                    <span th:if="${p.cantidad == null}" class="badge bg-danger">0</span>
+                                    <span th:if="${p.cantidad != null and p.cantidad <= 5}" class="badge bg-danger"
                                         th:text="${p.cantidad}">0</span>
-                                    <span th:if="${p.cantidad != null and p.cantidad >= 5 and p.cantidad < 15}"
-                                        class="badge bg-warning" th:text="${p.cantidad}">0</span>
-                                    <span th:if="${p.cantidad != null and p.cantidad >= 15}" class="badge bg-success"
+                                    <span th:if="${p.cantidad != null and p.cantidad > 5}" class="badge bg-success"
                                         th:text="${p.cantidad}">0</span>
                                 </td>
                                 <td th:text="${p.fechaVencimiento != null ? #temporals.format(p.fechaVencimiento, 'dd/MM/yyyy') : '-'}">-</td>
@@ -142,10 +268,11 @@
                                         th:data-presentacion="${p.presentacion}" th:data-concentracion="${p.concentracion}" 
                                         th:data-lote="${p.lote}" th:data-fecha="${p.fechaVencimiento}"
                                         th:data-principios="${p.principiosActivos}" th:data-descripcion="${p.descripcion}"
-                                        th:data-proveedorid="${p.proveedorId}" th:data-fechaingreso="${p.fechaIngreso}" 
+                                        th:data-proveedorid="${p.proveedorId}" th:data-fechaingreso="${p.fechaIngreso}"
+                                        th:data-stockminimo="${p.stockMinimo}"
                                         title="Editar"><i class="bi bi-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger btn-action eliminar-producto" th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Eliminar"><i class="bi bi-trash"></i></button>
+                                    <button class="btn btn-sm btn-warning btn-action archivar-producto" th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Archivar"><i class="bi bi-archive"></i></button>
                                 </td>
                             </tr>
                             <tr th:if="${productos.empty}">
@@ -158,50 +285,91 @@
                 </div>
 
                 <!-- Paginación -->
-                <div th:if="${totalPages > 1}" class="d-flex justify-content-between align-items-center mt-3">
-                    <span class="small text-muted">Mostrando <span th:text="${productos.size()}"></span> de <span
-                            th:text="${totalItems}"></span> productos</span>
+                <div th:if="${totalPages > 1}" class="mt-4">
                     <nav>
-                        <ul class="pagination mb-0">
-                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
-                                <a class="page-link"
-                                    th:href="@{/productos(page=0, size=${pageSize}, search=${search})}"><i
-                                        class="bi bi-chevron-double-left"></i></a>
+                        <ul class="pagination justify-content-center mb-2">
+                            <li class="page-item" th:classappend="${currentPage == 0 or totalPages == 0} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search})}"><i class="bi bi-chevron-double-left"></i></a>
                             </li>
-                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
-                                <a class="page-link"
-                                    th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search})}"><i
-                                        class="bi bi-chevron-left"></i></a>
+                            <li class="page-item" th:classappend="${currentPage == 0 or totalPages == 0} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search})}"><i class="bi bi-chevron-left"></i></a>
                             </li>
-                            <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            <li th:each="i : ${#numbers.sequence(0, (totalPages > 0 ? totalPages - 1 : 0))}"
                                 th:classappend="${i == currentPage} ? 'active' : ''"
-                                th:if="${i >= currentPage - 2 and i <= currentPage + 2}" class="page-item">
-                                <a class="page-link"
-                                    th:href="@{/productos(page=${i}, size=${pageSize}, search=${search})}"
-                                    th:text="${i + 1}"></a>
+                                th:if="${totalPages > 0 and i >= currentPage - 2 and i <= currentPage + 2}" class="page-item">
+                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search})}" th:text="${i + 1}"></a>
                             </li>
-                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
-                                <a class="page-link"
-                                    th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search})}"><i
-                                        class="bi bi-chevron-right"></i></a>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1 or totalPages == 0} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search})}"><i class="bi bi-chevron-right"></i></a>
                             </li>
-                            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
-                                <a class="page-link"
-                                    th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search})}"><i
-                                        class="bi bi-chevron-double-right"></i></a>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1 or totalPages == 0} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search})}"><i class="bi bi-chevron-double-right"></i></a>
                             </li>
                         </ul>
                     </nav>
-                    <select class="form-select w-auto" onchange="changePageSize(this)">
-                        <option value="10" th:selected="${pageSize == 10}">10</option>
-                        <option value="15" th:selected="${pageSize == 15}">15</option>
-                        <option value="25" th:selected="${pageSize == 25}">25</option>
-                        <option value="50" th:selected="${pageSize == 50}">50</option>
-                    </select>
+                    <div class="text-center small text-muted">
+                        Mostrando <span th:text="${productos.size()}"></span> de <span th:text="${totalItems}"></span> productos
+                    </div>
                 </div>
-                </main>
+            </div>
+
+            <!-- Vista Cuadrícula -->
+            <div class="vista-cuadricula" th:style="${view != 'cuadricula' ? 'display:none' : ''}">
+                <div class="product-grid">
+                    <div th:each="p : ${productos}" class="product-item">
+                        <!-- Actions hover overlay -->
+                        <div class="hover-overlay">
+                            <button class="btn btn-sm btn-light editar-producto"
+                                th:data-id="${p.id}" th:data-codigo="${p.codigo}" th:data-nombre="${p.nombre}"
+                                th:data-precio="${p.precio}" th:data-costo="${p.costoCompra}"
+                                th:data-cantidad="${p.cantidad}" th:data-categoria="${p.categoria}"
+                                th:data-presentacion="${p.presentacion}" th:data-concentracion="${p.concentracion}"
+                                th:data-lote="${p.lote}" th:data-fecha="${p.fechaVencimiento}"
+                                th:data-principios="${p.principiosActivos}" th:data-descripcion="${p.descripcion}"
+                                th:data-proveedorid="${p.proveedorId}" th:data-fechaingreso="${p.fechaIngreso}"
+                                th:data-stockminimo="${p.stockMinimo}"
+                                title="Editar"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-warning archivar-producto" th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Archivar"><i class="bi bi-archive"></i></button>
+                        </div>
+                        
+                        <img th:src="${p.imagenUrl != null and !p.imagenUrl.isEmpty() ? p.imagenUrl : 'https://via.placeholder.com/150?text=Sin+Imagen'}"
+                             class="product-img" alt="Imagen del producto">
+                        
+                        <span class="product-code" th:text="'Cod: ' + ${p.codigo}">Cod: -</span>
+                        <div class="product-name text-truncate" th:text="${p.nombre}">Producto</div>
+                        <div class="product-price"
+                             th:text="'$ ' + ${p.precio != null ? #numbers.formatDecimal(p.precio, 1, 'POINT', 0, 'COMMA') : '0'}">$ 0</div>
+                        
+                        <div class="product-stock mt-2">
+                            <span th:if="${p.cantidad != null and p.cantidad <= (p.stockMinimo != null ? p.stockMinimo : 5)}" class="badge bg-danger">
+                                <i class="bi bi-exclamation-triangle"></i> Bajo Stock: <span th:text="${p.cantidad}"></span>
+                            </span>
+                            <span th:if="${p.cantidad != null and p.cantidad > (p.stockMinimo != null ? p.stockMinimo : 5)}" class="badge bg-success">
+                                Stock: <span th:text="${p.cantidad}"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Grid Pagination (same as list) -->
+                <div th:if="${totalPages > 1}" class="mt-4">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-2">
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search}, view='cuadricula')}"><i class="bi bi-chevron-double-left"></i></a></li>
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search}, view='cuadricula')}"><i class="bi bi-chevron-left"></i></a></li>
+                            <li th:each="i : ${#numbers.sequence(0, (totalPages > 0 ? totalPages - 1 : 0))}" th:if="${totalPages > 0 and i >= currentPage - 2 and i <= currentPage + 2}" th:classappend="${i == currentPage} ? 'active'" class="page-item">
+                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search}, view='cuadricula')}" th:text="${i + 1}"></a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search}, view='cuadricula')}"><i class="bi bi-chevron-right"></i></a></li>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search}, view='cuadricula')}"><i class="bi bi-chevron-double-right"></i></a></li>
+                        </ul>
+                    </nav>
+                    <div class="text-center small text-muted">
+                        Mostrando <span th:text="${productos.size()}"></span> de <span th:text="${totalItems}"></span> productos
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 
         <!-- Modal Producto (Crear/Editar) -->
         <div class="modal fade" id="productoModal" tabindex="-1" data-bs-backdrop="static">
@@ -255,6 +423,12 @@
                                         onkeydown="if(['e', 'E', '+', '-'].includes(event.key)) event.preventDefault();">
                                 </div>
                                 <div class="col-md-3 mb-3">
+                                    <label class="form-label">Stock Mínimo</label>
+                                    <input type="number" class="form-control" id="stockMinimo" name="stockMinimo" min="0" value="5"
+                                        onkeydown="if(['e', 'E', '+', '-'].includes(event.key)) event.preventDefault();">
+                                    <small class="text-muted">Umbral de alerta</small>
+                                </div>
+                                <div class="col-md-3 mb-3">
                                     <label class="form-label">Categoría</label>
                                     <select class="form-control" id="categoria" name="categoria">
                                         <option value="">Seleccionar</option>
@@ -302,17 +476,13 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Imagen del Producto</label>
-                                    <input type="file" class="form-control" name="file" accept="image/*">
+                                    <input type="file" class="form-control" name="file" accept="image/*" id="imagenFile">
+                                    <small class="text-muted">Se recomienda una imagen cuadrada de 150x150px.</small>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Descripción</label>
                                     <textarea class="form-control" id="descripcion" name="descripcion"
                                         rows="2"></textarea>
-                                </div>
-                                <div class="col-12 mb-3">
-                                    <label class="form-label">Imagen del Producto</label>
-                                    <input type="file" class="form-control" name="file" accept="image/*" id="imagenFile">
-                                    <small class="text-muted">Se recomienda una imagen cuadrada de 150x150px.</small>
                                 </div>
                             </div>
                         </div>
@@ -412,6 +582,9 @@
                     if ($btn.data('fechaingreso')) {
                         $('#fechaIngreso').val($btn.data('fechaingreso'));
                     }
+                    if ($btn.data('stockminimo') !== undefined) {
+                        $('#stockMinimo').val($btn.data('stockminimo'));
+                    }
 
                     $('#modalTitle').text('Editar Producto');
                     $('#productoForm').attr('action', '/productos/actualizar/' + $btn.data('id'));
@@ -420,24 +593,39 @@
                     productModal.show();
                 });
 
-                // Evento para botones de eliminar
-                $(document).on('click', '.eliminar-producto', function () {
+                // Evento para botones de archivar
+                $(document).on('click', '.archivar-producto', function () {
                     const $btn = $(this);
                     const id = $btn.data('id');
                     const nombre = $btn.data('nombre');
 
-                    if (confirm('¿Eliminar producto "' + nombre + '"? Esta acción no se puede deshacer.')) {
-                        // Obtener parámetros actuales de la URL o del modelo de Thymeleaf
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const page = urlParams.get('page') || '0';
-                        const size = urlParams.get('size') || '15';
-                        const search = urlParams.get('search') || '';
-                        
-                        const actionUrl = '/productos/eliminar/' + id + '?page=' + page + '&size=' + size + '&search=' + encodeURIComponent(search);
-                        const form = $('<form method="post" action="' + actionUrl + '"></form>');
-                        $('body').append(form);
-                        form.submit();
-                    }
+                    Swal.fire({
+                        title: '¿Estás seguro?',
+                        text: `El producto "${nombre}" será movido a la bandeja de archivados.`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ffc107',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Sí, archivar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const page = urlParams.get('page') || '0';
+                            const size = urlParams.get('size') || '15';
+                            const search = urlParams.get('search') || '';
+                            
+                            const actionUrl = '/productos/archivar/' + id + '?page=' + page + '&size=' + size + '&search=' + encodeURIComponent(search);
+                            const form = $('<form method="post" action="' + actionUrl + '"></form>');
+                            
+                            // Agregar Token CSRF
+                            const csrfToken = $("meta[name='_csrf']").attr("content") || '[[${_csrf.token}]]';
+                            form.append('<input type="hidden" name="_csrf" value="' + csrfToken + '">');
+                            
+                            $('body').append(form);
+                            form.submit();
+                        }
+                    });
                 });
 
                 // Validación del formulario antes de enviar
@@ -494,29 +682,56 @@
 
                 // Función para cambiar tamaño de página
                 window.changePageSize = function (select) {
-                    window.location.href = '/productos?size=' + select.value + '&page=0';
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const view = urlParams.get('view') || 'lista';
+                    window.location.href = '/productos?size=' + select.value + '&page=0&view=' + view;
                 };
 
-                // Calcular stock bajo después de cargar la tabla
-                function calcularStockBajo() {
-                    let stockBajo = 0;
-                    $('tbody tr').each(function () {
-                        const $row = $(this);
-                        const stockText = $row.find('td:eq(4)').text().trim();
-                        const stock = parseInt(stockText);
-                        if (!isNaN(stock) && stock < 5 && stock >= 0) {
-                            stockBajo++;
-                        }
-                    });
-                    $('#stockBajoCount').text(stockBajo);
-                }
+                // Función para cambiar vista
+                window.switchView = function(view) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('view', view);
+                    urlParams.set('page', '0');
+                    window.location.href = '/productos?' + urlParams.toString();
+                };
 
-                setTimeout(calcularStockBajo, 500);
-
+                // Calcular stock bajo local desactivado para usar el del servidor
                 // Auto-cerrar alertas después de 5 segundos
                 setTimeout(function () {
                     $('.alert').fadeOut(500, function () { $(this).remove(); });
                 }, 5000);
+
+                // Desplazamiento inteligente al paginar
+                document.addEventListener("DOMContentLoaded", function () {
+                    // Si se hizo clic en un link de paginación, guardamos la bandera en sessionStorage
+                    document.querySelectorAll(".page-link, .pagination a").forEach(link => {
+                        link.addEventListener("click", function () {
+                            sessionStorage.setItem("didPaginate", "true");
+                        });
+                    });
+
+                    // Limpieza automática en botón 'X' nativo de buscadores
+                    document.querySelectorAll('input[type="search"]').forEach(input => {
+                        input.addEventListener('search', function() {
+                            if (this.value === '') {
+                                const form = this.closest('form');
+                                if (form) form.submit();
+                                else window.location.href = window.location.pathname;
+                            }
+                        });
+                    });
+
+                    // Al cargar, si venimos de paginación, hacemos scroll suave compensando con CSS
+                    if (sessionStorage.getItem("didPaginate") === "true") {
+                        sessionStorage.removeItem("didPaginate");
+                        const targetEl = document.querySelector('.vista-lista') || document.querySelector('.table-container') || document.querySelector('.product-grid');
+                        if (targetEl) {
+                            setTimeout(() => {
+                                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 100);
+                        }
+                    }
+                });
             });
         </script>
 </body>
