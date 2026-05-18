@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <meta charset="UTF-8">
@@ -159,7 +159,9 @@
                             <button type="button" class="btn btn-outline-secondary toggle-view-btn" th:classappend="${view == 'lista' ? 'active' : ''}" onclick="switchView('lista')" title="Vista Lista"><i class="bi bi-list-task"></i></button>
                             <button type="button" class="btn btn-outline-secondary toggle-view-btn" th:classappend="${view == 'cuadricula' ? 'active' : ''}" onclick="switchView('cuadricula')" title="Vista Cuadrícula"><i class="bi bi-grid-3x3-gap"></i></button>
                         </div>
-                        <a href="/productos/archivados" class="btn btn-secondary"><i class="bi bi-archive"></i> Ver Archivados</a>
+                        <th:block sec:authorize="hasAnyAuthority('OWNER', 'ROLE_OWNER')">
+                            <a href="/productos/archivados" class="btn btn-secondary"><i class="bi bi-archive"></i> Ver Archivados</a>
+                        </th:block>
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productoModal" id="btnNuevoProducto"><i class="bi bi-plus-circle"></i> Nuevo Producto</button>
                     </div>
                 </div>
@@ -211,11 +213,32 @@
                 <!-- Buscador -->
                 <div class="card mb-4">
                     <div class="card-body">
-                        <form method="get" class="row g-3">
-                            <div class="col-md-10"><input type="search" class="form-control" name="search"
-                                    placeholder="Buscar por nombre o código..." th:value="${search}"></div>
-                            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100"><i
-                                        class="bi bi-search"></i> Buscar</button></div>
+                        <form method="get" class="row g-3 align-items-center">
+                            <!-- Preservar vista y tamaño actual -->
+                            <input type="hidden" name="view" th:value="${view}">
+                            <input type="hidden" name="size" th:value="${pageSize != null ? pageSize : 15}">
+                            <div class="col-md-6">
+                                <input type="search" class="form-control" name="search"
+                                    placeholder="Buscar por nombre o código..." th:value="${search}">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" name="categoria">
+                                    <option value="">Todas las Categorías</option>
+                                    <option value="Cosmético" th:selected="${categoria == 'Cosmético'}">Cosmético</option>
+                                    <option value="Higiene" th:selected="${categoria == 'Higiene'}">Higiene</option>
+                                    <option value="Medicamento" th:selected="${categoria == 'Medicamento'}">Medicamento</option>
+                                    <option value="Otros" th:selected="${categoria == 'Otros'}">Otros</option>
+                                    <option value="Suplemento" th:selected="${categoria == 'Suplemento'}">Suplemento</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Buscar</button>
+                            </div>
+                            <div class="col-md-1">
+                                <a href="/productos" class="btn btn-outline-secondary w-100" title="Limpiar Filtros">
+                                    <i class="bi bi-eraser-fill"></i>
+                                </a>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -272,7 +295,9 @@
                                         th:data-stockminimo="${p.stockMinimo}"
                                         title="Editar"><i class="bi bi-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-warning btn-action archivar-producto" th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Archivar"><i class="bi bi-archive"></i></button>
+                                    <th:block th:if="${#authorization.expression('hasAuthority(''OWNER'')') or #authorization.expression('hasAuthority(''ROLE_OWNER'')')}">
+                                        <button class="btn btn-sm btn-warning btn-action archivar-producto" th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Archivar"><i class="bi bi-archive"></i></button>
+                                    </th:block>
                                 </td>
                             </tr>
                             <tr th:if="${productos.empty}">
@@ -289,21 +314,21 @@
                     <nav>
                         <ul class="pagination justify-content-center mb-2">
                             <li class="page-item" th:classappend="${currentPage == 0 or totalPages == 0} ? 'disabled' : ''">
-                                <a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search})}"><i class="bi bi-chevron-double-left"></i></a>
+                                <a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search}, categoria=${categoria})}"><i class="bi bi-chevron-double-left"></i></a>
                             </li>
                             <li class="page-item" th:classappend="${currentPage == 0 or totalPages == 0} ? 'disabled' : ''">
-                                <a class="page-link" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search})}"><i class="bi bi-chevron-left"></i></a>
+                                <a class="page-link page-prev" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search}, categoria=${categoria})}"><i class="bi bi-chevron-left"></i></a>
                             </li>
                             <li th:each="i : ${#numbers.sequence(0, (totalPages > 0 ? totalPages - 1 : 0))}"
                                 th:classappend="${i == currentPage} ? 'active' : ''"
                                 th:if="${totalPages > 0 and i >= currentPage - 2 and i <= currentPage + 2}" class="page-item">
-                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search})}" th:text="${i + 1}"></a>
+                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search}, categoria=${categoria})}" th:text="${i + 1}"></a>
                             </li>
                             <li class="page-item" th:classappend="${currentPage >= totalPages - 1 or totalPages == 0} ? 'disabled' : ''">
-                                <a class="page-link" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search})}"><i class="bi bi-chevron-right"></i></a>
+                                <a class="page-link page-next" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search}, categoria=${categoria})}"><i class="bi bi-chevron-right"></i></a>
                             </li>
                             <li class="page-item" th:classappend="${currentPage >= totalPages - 1 or totalPages == 0} ? 'disabled' : ''">
-                                <a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search})}"><i class="bi bi-chevron-double-right"></i></a>
+                                <a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search}, categoria=${categoria})}"><i class="bi bi-chevron-double-right"></i></a>
                             </li>
                         </ul>
                     </nav>
@@ -329,7 +354,9 @@
                                 th:data-proveedorid="${p.proveedorId}" th:data-fechaingreso="${p.fechaIngreso}"
                                 th:data-stockminimo="${p.stockMinimo}"
                                 title="Editar"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-sm btn-warning archivar-producto" th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Archivar"><i class="bi bi-archive"></i></button>
+                            <th:block th:if="${#authorization.expression('hasAuthority(''OWNER'')') or #authorization.expression('hasAuthority(''ROLE_OWNER'')')}">
+                                <button class="btn btn-sm btn-warning archivar-producto" th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Archivar"><i class="bi bi-archive"></i></button>
+                            </th:block>
                         </div>
                         
                         <img th:src="${p.imagenUrl != null and !p.imagenUrl.isEmpty() ? p.imagenUrl : 'https://via.placeholder.com/150?text=Sin+Imagen'}"
@@ -354,13 +381,13 @@
                 <div th:if="${totalPages > 1}" class="mt-4">
                     <nav>
                         <ul class="pagination justify-content-center mb-2">
-                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search}, view='cuadricula')}"><i class="bi bi-chevron-double-left"></i></a></li>
-                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search}, view='cuadricula')}"><i class="bi bi-chevron-left"></i></a></li>
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}"><i class="bi bi-chevron-double-left"></i></a></li>
+                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link page-prev" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}"><i class="bi bi-chevron-left"></i></a></li>
                             <li th:each="i : ${#numbers.sequence(0, (totalPages > 0 ? totalPages - 1 : 0))}" th:if="${totalPages > 0 and i >= currentPage - 2 and i <= currentPage + 2}" th:classappend="${i == currentPage} ? 'active'" class="page-item">
-                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search}, view='cuadricula')}" th:text="${i + 1}"></a>
+                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}" th:text="${i + 1}"></a>
                             </li>
-                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search}, view='cuadricula')}"><i class="bi bi-chevron-right"></i></a></li>
-                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search}, view='cuadricula')}"><i class="bi bi-chevron-double-right"></i></a></li>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'"><a class="page-link page-next" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}"><i class="bi bi-chevron-right"></i></a></li>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}"><i class="bi bi-chevron-double-right"></i></a></li>
                         </ul>
                     </nav>
                     <div class="text-center small text-muted">
@@ -386,7 +413,7 @@
                         <input type="hidden" id="productoId" name="id">
                         <!-- Campos ocultos para mantener la paginación y búsqueda -->
                         <input type="hidden" name="page" th:value="${currentPage}">
-                        <input type="hidden" name="size" th:value="${pageSize}">
+                        <input type="hidden" name="size" id="modalSizeInput">
                         <input type="hidden" name="search" th:value="${search}">
                         <div class="modal-body">
                             <div class="row">
@@ -549,6 +576,13 @@
 
                 $('#precio, #costoCompra').on('input', calcularMargen);
 
+                // Inyectar el parámetro size de la URL actual al abrir el modal
+                $('#productoModal').on('show.bs.modal', function () {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const size = urlParams.get('size') || '15';
+                    $('#modalSizeInput').val(size);
+                });
+
                 // Evento para botón Nuevo Producto
                 $('#btnNuevoProducto').on('click', function () {
                     console.log("Botón Nuevo Producto clickeado");
@@ -683,13 +717,52 @@
                 // Función para cambiar tamaño de página
                 window.changePageSize = function (select) {
                     const urlParams = new URLSearchParams(window.location.search);
-                    const view = urlParams.get('view') || 'lista';
-                    window.location.href = '/productos?size=' + select.value + '&page=0&view=' + view;
+                    
+                    // Capturar valores actuales desde los elementos del DOM (Filtros/Buscador)
+                    const searchVal = $('input[name="search"]').val();
+                    const catVal = $('select[name="categoria"]').val();
+                    const viewVal = $('input[name="view"]').val() || 'lista';
+                    
+                    if (searchVal) {
+                        urlParams.set('search', searchVal);
+                    } else {
+                        urlParams.delete('search');
+                    }
+                    
+                    if (catVal) {
+                        urlParams.set('categoria', catVal);
+                    } else {
+                        urlParams.delete('categoria');
+                    }
+                    
+                    urlParams.set('view', viewVal);
+                    urlParams.set('size', select.value);
+                    urlParams.set('page', '0');
+                    window.location.href = '/productos?' + urlParams.toString();
                 };
 
                 // Función para cambiar vista
                 window.switchView = function(view) {
                     const urlParams = new URLSearchParams(window.location.search);
+                    
+                    // Capturar valores actuales desde los elementos del DOM (Filtros/Buscador)
+                    const searchVal = $('input[name="search"]').val();
+                    const catVal = $('select[name="categoria"]').val();
+                    const sizeVal = $('input[name="size"]').val() || '15';
+                    
+                    if (searchVal) {
+                        urlParams.set('search', searchVal);
+                    } else {
+                        urlParams.delete('search');
+                    }
+                    
+                    if (catVal) {
+                        urlParams.set('categoria', catVal);
+                    } else {
+                        urlParams.delete('categoria');
+                    }
+                    
+                    urlParams.set('size', sizeVal);
                     urlParams.set('view', view);
                     urlParams.set('page', '0');
                     window.location.href = '/productos?' + urlParams.toString();
@@ -701,34 +774,64 @@
                     $('.alert').fadeOut(500, function () { $(this).remove(); });
                 }, 5000);
 
-                // Desplazamiento inteligente al paginar
+                // Desplazamiento inteligente y direccional al paginar
                 document.addEventListener("DOMContentLoaded", function () {
-                    // Si se hizo clic en un link de paginación, guardamos la bandera en sessionStorage
-                    document.querySelectorAll(".page-link, .pagination a").forEach(link => {
+                    // Siguiente: guarda scrollDir = 'top'
+                    document.querySelectorAll(".page-next").forEach(link => {
                         link.addEventListener("click", function () {
-                            sessionStorage.setItem("didPaginate", "true");
+                            sessionStorage.setItem("scrollDir", "top");
                         });
                     });
+
+                    // Anterior: guarda scrollDir = 'bottom'
+                    document.querySelectorAll(".page-prev").forEach(link => {
+                        link.addEventListener("click", function () {
+                            sessionStorage.setItem("scrollDir", "bottom");
+                        });
+                    });
+
+                    // Función para limpiar filtros preservando size y view
+                    window.clearAllFilters = function() {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        urlParams.delete('search');
+                        urlParams.delete('categoria');
+                        urlParams.set('page', '0');
+                        window.location.href = window.location.pathname + '?' + urlParams.toString();
+                    };
 
                     // Limpieza automática en botón 'X' nativo de buscadores
                     document.querySelectorAll('input[type="search"]').forEach(input => {
                         input.addEventListener('search', function() {
                             if (this.value === '') {
-                                const form = this.closest('form');
-                                if (form) form.submit();
-                                else window.location.href = window.location.pathname;
+                                window.clearAllFilters();
                             }
                         });
                     });
 
-                    // Al cargar, si venimos de paginación, hacemos scroll suave compensando con CSS
-                    if (sessionStorage.getItem("didPaginate") === "true") {
-                        sessionStorage.removeItem("didPaginate");
+                    // Interceptar el envío del formulario del modal de 'Nuevo Producto' y pegarle los parámetros actuales de la URL
+                    const formToIntercept = document.querySelector('#productoForm') || document.querySelector('#productoModal form') || document.querySelector('#nuevoProductoModal form');
+                    if (formToIntercept) {
+                        formToIntercept.addEventListener('submit', function(e) {
+                            const urlParams = window.location.search;
+                            if (urlParams) {
+                                this.action = this.action + urlParams;
+                            }
+                        });
+                    }
+
+                    // Al cargar, si venimos de paginación, hacemos scroll direccional
+                    const scrollDir = sessionStorage.getItem("scrollDir");
+                    if (scrollDir) {
+                        sessionStorage.removeItem("scrollDir");
                         const targetEl = document.querySelector('.vista-lista') || document.querySelector('.table-container') || document.querySelector('.product-grid');
                         if (targetEl) {
                             setTimeout(() => {
-                                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }, 100);
+                                if (scrollDir === 'top') {
+                                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                } else if (scrollDir === 'bottom') {
+                                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                                }
+                            }, 150);
                         }
                     }
                 });

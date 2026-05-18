@@ -66,38 +66,18 @@
     // 3. ACTIVE STATE — highlight current page
     // ==========================================
     function setActiveNavLink() {
-        var currentPath = window.location.pathname;
-        var navLinks = document.querySelectorAll('.sidebar .nav-link[href]');
-
-        // Remove all existing active classes first
-        navLinks.forEach(function (link) {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
             link.classList.remove('active');
         });
-
-        var bestMatch = null;
-        var bestMatchLength = 0;
-
-        navLinks.forEach(function (link) {
-            var href = link.getAttribute('href');
-            if (!href || href === '#') return;
-
-            // Exact match takes priority
-            if (currentPath === href) {
-                bestMatch = link;
-                bestMatchLength = Infinity;
-                return;
-            }
-
-            // Prefix match — longer prefix wins (e.g. /proveedores/nuevo matches /proveedores)
-            if (currentPath.startsWith(href) && href.length > bestMatchLength) {
-                bestMatch = link;
-                bestMatchLength = href.length;
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && href !== '#' && href !== '/' && currentPath.startsWith(href)) {
+                link.classList.add('active');
+            } else if (href === '/' && currentPath === '/') {
+                link.classList.add('active');
             }
         });
-
-        if (bestMatch) {
-            bestMatch.classList.add('active');
-        }
     }
 
     // ==========================================
@@ -172,6 +152,29 @@
     }
 
     // ==========================================
+    // 7. PERSIST SCROLL POSITION
+    // ==========================================
+    function setupScrollPersistence() {
+        var sidebar = document.getElementById('sidebar');
+        if (!sidebar) return;
+
+        // Restore scroll position from sessionStorage
+        try {
+            var savedScrollTop = sessionStorage.getItem('sidebarScrollTop');
+            if (savedScrollTop !== null) {
+                sidebar.scrollTop = parseInt(savedScrollTop, 10);
+            }
+        } catch (e) { }
+
+        // Save scroll position on scroll
+        sidebar.addEventListener('scroll', function () {
+            try {
+                sessionStorage.setItem('sidebarScrollTop', sidebar.scrollTop);
+            } catch (e) { }
+        });
+    }
+
+    // ==========================================
     // INIT
     // ==========================================
     function init() {
@@ -179,6 +182,7 @@
         setActiveNavLink();
         setupMobileToggle();
         setupLogoutModal();
+        setupScrollPersistence();
         enableTransitions();
     }
 

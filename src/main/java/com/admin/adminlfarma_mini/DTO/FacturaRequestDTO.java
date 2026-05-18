@@ -6,6 +6,7 @@ import java.util.List;
 @Data
 public class FacturaRequestDTO {
     private String clienteId;
+    private String clienteCC;
     private Double subtotal;
     private Double total;
     private String metodoPago;

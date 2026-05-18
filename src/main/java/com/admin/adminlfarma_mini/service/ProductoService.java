@@ -24,11 +24,19 @@ public class ProductoService {
         return productoRepository.findInactivos(pageable);
     }
 
-    public Page<Producto> buscarProductos(String search, Pageable pageable) {
-        if (search == null || search.trim().isEmpty()) {
+    public Page<Producto> buscarProductos(String search, String categoria, Pageable pageable) {
+        boolean hasSearch = (search != null && !search.trim().isEmpty());
+        boolean hasCategoria = (categoria != null && !categoria.trim().isEmpty());
+
+        if (hasSearch && hasCategoria) {
+            return productoRepository.searchByNombreOrCodigoAndCategoria(search, search, categoria, pageable);
+        } else if (hasSearch) {
+            return productoRepository.searchByNombreOrCodigo(search, search, pageable);
+        } else if (hasCategoria) {
+            return productoRepository.findProductosActivosPorCategoria(categoria, pageable);
+        } else {
             return listarProductos(pageable);
         }
-        return productoRepository.searchByNombreOrCodigo(search, search, pageable);
     }
 
     public Page<Producto> buscarProductosInactivos(String search, Pageable pageable) {

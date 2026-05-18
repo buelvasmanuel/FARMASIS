@@ -85,6 +85,7 @@ public class AsistenciaService {
             CellStyle headerStyle = wb.createCellStyle();
             Font headerFont = wb.createFont();
             headerFont.setBold(true);
+            headerFont.setColor(IndexedColors.WHITE.getIndex());
             headerStyle.setFont(headerFont);
             headerStyle.setFillForegroundColor(IndexedColors.DARK_GREEN.getIndex());
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);

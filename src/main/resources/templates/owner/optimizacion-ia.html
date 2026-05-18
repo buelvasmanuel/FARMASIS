@@ -138,28 +138,84 @@
     <div class="main-content no-transition" id="mainContent">
         <div class="container-fluid px-4 py-4">
             
-            <!-- IA Header -->
-            <div class="ia-header">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h1 class="display-6 fw-bold mb-2">
-                            <i class="bi bi-cpu-fill me-2"></i> Motor de Optimización
-                        </h1>
-                        <p class="lead mb-0 opacity-75">
-                            Optimización avanzada para maximizar la utilidad de tu inventario. Pre-filtra productos con stock bajo.
-                        </p>
-                        <small id="draftBadge" class="badge bg-light text-dark mt-2" style="display:none;"></small>
+            <!-- Contenedor Sticky Global -->
+            <div class="global-sticky-header mb-4">
+                <!-- IA Header -->
+                <div class="ia-header mb-0">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="display-6 fw-bold mb-2">
+                                <i class="bi bi-cpu-fill me-2"></i> Motor de Optimización
+                            </h1>
+                            <p class="lead mb-0 opacity-75">
+                                Optimización avanzada para maximizar la utilidad de tu inventario. Pre-filtra productos con stock bajo.
+                            </p>
+                            <small id="draftBadge" class="badge bg-light text-dark mt-2" style="display:none;"></small>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                            <button id="btnEjecutar" class="btn btn-ia">
+                                <i class="bi bi-play-circle-fill me-2"></i> Ejecutar Optimización
+                            </button>
+                        </div>
                     </div>
-                    <div class="col-md-4 text-md-end mt-4 mt-md-0">
-                        <button id="btnEjecutar" class="btn btn-ia">
-                            <i class="bi bi-play-circle-fill me-2"></i> Ejecutar Optimización
-                        </button>
+                </div>
+
+                <!-- Results Summary (Fijo arriba al optimizar) -->
+                <div id="resultsAreaSummary" style="display: none;" class="mt-4">
+                    <!-- Summary Cards -->
+                    <div class="row mb-3">
+                        <div class="col-md-4 mb-3">
+                            <div class="card result-card h-100 p-4 shadow-sm border-0">
+                                <div class="stat-icon-ia bg-primary-subtle text-primary">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+                                <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Presupuesto Usado</h6>
+                                <h3 id="resumenPresupuesto" class="fw-bold mb-0">$0.00</h3>
+                                <small id="resumenPresupuestoPct" class="text-muted mt-1">0% del presupuesto</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card result-card h-100 p-4 shadow-sm border-0">
+                                <div class="stat-icon-ia bg-success-subtle text-success">
+                                    <i class="bi bi-box-seam"></i>
+                                </div>
+                                <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Total Unidades a Pedir</h6>
+                                <h3 id="resumenUnidades" class="fw-bold mb-0">0</h3>
+                                <small class="text-muted mt-1">Unidades sugeridas por la IA</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card result-card h-100 p-4 shadow-sm border-0">
+                                <div class="stat-icon-ia bg-warning-subtle text-warning">
+                                    <i class="bi bi-graph-up-arrow"></i>
+                                </div>
+                                <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Utilidad Total Estimada</h6>
+                                <h3 id="resumenUtilidad" class="fw-bold mb-0 text-utility">$0.00</h3>
+                                <small class="text-muted mt-1">Ganancia proyectada optimizada</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fila de Título y Filtro de Categoría (Fijo arriba) -->
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 bg-white p-3 rounded-3 shadow-sm border border-secondary-subtle">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-list-stars me-2 text-success"></i> Propuestas de Pedido Optimizadas</h5>
+                        <div class="d-flex align-items-center" style="max-width: 250px;">
+                            <label for="filtroCategoria" class="me-2 text-muted fw-semibold small mb-0">Categoría:</label>
+                            <select id="filtroCategoria" class="form-select form-select-sm border-secondary-subtle rounded-3">
+                                <option value="Todos">Todos</option>
+                                <option value="Cosmético">Cosmético</option>
+                                <option value="Higiene">Higiene</option>
+                                <option value="Medicamento">Medicamento</option>
+                                <option value="Otros">Otros</option>
+                                <option value="Suplemento">Suplemento</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Loading State -->
-            <div id="loadingArea" class="loading-container">
+            <div id="loadingArea" class="loading-container mb-4">
                 <div class="spinner-border spinner-ia mb-3" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
@@ -167,47 +223,10 @@
                 <p class="text-muted">Esto tomará aproximadamente 5 segundos. El motor de Timefold está calculando el escenario más rentable.</p>
             </div>
 
-            <!-- Results Area -->
-            <div id="resultsArea">
-                <!-- Summary Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-4 mb-3">
-                        <div class="card result-card h-100 p-4">
-                            <div class="stat-icon-ia bg-primary-subtle text-primary">
-                                <i class="bi bi-cash-stack"></i>
-                            </div>
-                            <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Presupuesto Usado</h6>
-                            <h3 id="resumenPresupuesto" class="fw-bold mb-0">$0.00</h3>
-                            <small id="resumenPresupuestoPct" class="text-muted mt-1">0% del presupuesto</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card result-card h-100 p-4">
-                            <div class="stat-icon-ia bg-success-subtle text-success">
-                                <i class="bi bi-box-seam"></i>
-                            </div>
-                            <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Total Unidades a Pedir</h6>
-                            <h3 id="resumenUnidades" class="fw-bold mb-0">0</h3>
-                            <small class="text-muted mt-1">Unidades sugeridas por la IA</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card result-card h-100 p-4">
-                            <div class="stat-icon-ia bg-warning-subtle text-warning">
-                                <i class="bi bi-graph-up-arrow"></i>
-                            </div>
-                            <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Utilidad Total Estimada</h6>
-                            <h3 id="resumenUtilidad" class="fw-bold mb-0 text-utility">$0.00</h3>
-                            <small class="text-muted mt-1">Ganancia proyectada optimizada</small>
-                        </div>
-                    </div>
-                </div>
-
+            <!-- Results Table Area (Hace Scroll) -->
+            <div id="resultsAreaTable" style="display: none;">
                 <!-- Table -->
                 <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold"><i class="bi bi-list-stars me-2 text-success"></i> Propuestas de Pedido Optimizadas</h5>
-                    </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-premium mb-0">
@@ -239,12 +258,14 @@
         document.getElementById('btnEjecutar').addEventListener('click', function() {
             const btn = this;
             const loadingArea = document.getElementById('loadingArea');
-            const resultsArea = document.getElementById('resultsArea');
+            const summaryArea = document.getElementById('resultsAreaSummary');
+            const tableArea = document.getElementById('resultsAreaTable');
             const tabla = document.getElementById('tablaResultados');
 
             // 1. UI State: Loading
             btn.style.display = 'none';
-            resultsArea.style.display = 'none';
+            summaryArea.style.display = 'none';
+            tableArea.style.display = 'none';
             loadingArea.style.display = 'block';
 
             // 2. Fetch API
@@ -256,7 +277,8 @@
                 .then(data => {
                     // 3. UI State: Show Results
                     loadingArea.style.display = 'none';
-                    resultsArea.style.display = 'block';
+                    summaryArea.style.display = 'block';
+                    tableArea.style.display = 'block';
                     btn.style.display = 'inline-block';
                     btn.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i> Recalcular Optimización';
 
@@ -269,12 +291,15 @@
 
                     // 5. Fill Table
                     tabla.innerHTML = '';
+                    document.getElementById('filtroCategoria').value = 'Todos';
                     data.propuestas.forEach(p => {
                         const row = document.createElement('tr');
+                        row.setAttribute('data-categoria', p.productoCategoria || 'Otros');
                         row.innerHTML = `
                             <td>
                                 <div class="fw-bold">${p.productoNombre}</div>
                                 <small class="text-muted">Cód: ${p.productoCodigo}</small>
+                                <span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size: 0.7rem;">${p.productoCategoria || 'Otros'}</span>
                             </td>
                             <td class="text-center"><span class="badge badge-stock">${p.cantidadActual}</span></td>
                             <td class="text-center"><span class="badge bg-success text-white" style="font-size: 0.9rem;">+${p.cantidadAPedir}</span></td>
@@ -306,23 +331,41 @@
                         document.getElementById('draftBadge').innerHTML = '<i class="bi bi-clock-history me-1"></i> Último cálculo: ' + dt.toLocaleDateString('es') + ' ' + dt.toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
                         document.getElementById('btnEjecutar').innerHTML = '<i class="bi bi-arrow-repeat me-2"></i> Recalcular Optimización';
                         // Show saved results
-                        const resultsArea = document.getElementById('resultsArea');
+                        const summaryArea = document.getElementById('resultsAreaSummary');
+                        const tableArea = document.getElementById('resultsAreaTable');
                         const tabla = document.getElementById('tablaResultados');
-                        resultsArea.style.display = 'block';
+                        summaryArea.style.display = 'block';
+                        tableArea.style.display = 'block';
                         const resumen = data.resumen;
                         document.getElementById('resumenPresupuesto').innerText = '$' + Number(resumen.costoTotalPedidos).toLocaleString(undefined, {minimumFractionDigits: 2});
                         document.getElementById('resumenPresupuestoPct').innerText = resumen.presupuestoUsadoPorcentaje + ' del presupuesto máximo';
                         document.getElementById('resumenUnidades').innerText = Number(resumen.totalUnidadesAPedir).toLocaleString();
                         document.getElementById('resumenUtilidad').innerText = '$' + Number(resumen.utilidadTotalEstimada).toLocaleString(undefined, {minimumFractionDigits: 2});
                         tabla.innerHTML = '';
+                        document.getElementById('filtroCategoria').value = 'Todos';
                         data.propuestas.forEach(p => {
                             const row = document.createElement('tr');
-                            row.innerHTML = `<td><div class="fw-bold">${p.productoNombre}</div><small class="text-muted">Cód: ${p.productoCodigo}</small></td><td class="text-center"><span class="badge badge-stock">${p.cantidadActual}</span></td><td class="text-center"><span class="badge bg-success text-white" style="font-size:0.9rem;">+${p.cantidadAPedir}</span></td><td class="text-center fw-bold">${p.stockResultante}</td><td class="text-center"><span class="badge badge-discount">${p.descuentoPorcentaje}</span></td><td class="text-end text-utility">$${Number(p.utilidadEstimada).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>`;
+                            row.setAttribute('data-categoria', p.productoCategoria || 'Otros');
+                            row.innerHTML = `<td><div class="fw-bold">${p.productoNombre}</div><small class="text-muted">Cód: ${p.productoCodigo}</small><span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size:0.7rem;">${p.productoCategoria || 'Otros'}</span></td><td class="text-center"><span class="badge badge-stock">${p.cantidadActual}</span></td><td class="text-center"><span class="badge bg-success text-white" style="font-size:0.9rem;">+${p.cantidadAPedir}</span></td><td class="text-center fw-bold">${p.stockResultante}</td><td class="text-center"><span class="badge badge-discount">${p.descuentoPorcentaje}</span></td><td class="text-end text-utility">$${Number(p.utilidadEstimada).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>`;
                             tabla.appendChild(row);
                         });
                     }
                 }).catch(() => {});
         })();
+
+        // Listener para el filtro por categoría client-side
+        document.getElementById('filtroCategoria').addEventListener('change', function() {
+            const categoriaSeleccionada = this.value;
+            const filas = document.querySelectorAll('#tablaResultados tr');
+            filas.forEach(row => {
+                const rowCategoria = row.getAttribute('data-categoria') || 'Otros';
+                if (categoriaSeleccionada === 'Todos' || rowCategoria === categoriaSeleccionada) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
     </script>
 </body>
 

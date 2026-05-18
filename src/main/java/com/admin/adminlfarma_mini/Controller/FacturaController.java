@@ -19,11 +19,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @Controller
 @RequestMapping("/ventas")
@@ -34,6 +38,7 @@ public class FacturaController {
     private final ProductoService productoService;
     private final ClienteService clienteService;
     private final com.admin.adminlfarma_mini.service.ConfiguracionService configuracionService;
+    private final com.admin.adminlfarma_mini.service.UsuarioService usuarioService;
 
     @GetMapping
     public String listarVentas(
@@ -43,21 +48,41 @@ public class FacturaController {
             @RequestParam(required = false) String fechaHasta,
             @RequestParam(required = false) String metodoPago,
             @RequestParam(required = false) String factura,
-            Model model) {
+            @RequestParam(required = false) String vendedor,
+            Model model,
+            java.security.Principal principal) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("fecha").descending());
 
-        boolean tieneFiltreo = (fechaDesde != null && !fechaDesde.isEmpty())
-                || (fechaHasta != null && !fechaHasta.isEmpty())
-                || (metodoPago != null && !metodoPago.isEmpty())
-                || (factura != null && !factura.isEmpty());
-
-        Page<Factura> ventasPage;
-        if (tieneFiltreo) {
-            ventasPage = facturaService.buscarFacturas(fechaDesde, fechaHasta, metodoPago, factura, pageable);
-        } else {
-            ventasPage = facturaService.listarFacturas(pageable);
+        List<String> allowedVendedores = new java.util.ArrayList<>();
+        boolean isOwner = false;
+        if (principal != null) {
+            String loggedUserEmail = principal.getName();
+            com.admin.adminlfarma_mini.entity.Usuario loggedUser = usuarioService.buscarPorUsername(loggedUserEmail).orElse(null);
+            if (loggedUser != null) {
+                if ("ROLE_OWNER".equals(loggedUser.getRol())) {
+                    isOwner = true;
+                    if (vendedor != null && !vendedor.trim().isEmpty()) {
+                        allowedVendedores.add(vendedor.trim());
+                    }
+                } else if ("ROLE_ADMIN".equals(loggedUser.getRol())) {
+                    List<com.admin.adminlfarma_mini.entity.Usuario> allUsers = usuarioService.listarTodosIncluyendoInactivos();
+                    for (com.admin.adminlfarma_mini.entity.Usuario u : allUsers) {
+                        if (!"ROLE_OWNER".equals(u.getRol())) {
+                            allowedVendedores.add(u.getUsername());
+                        }
+                    }
+                } else {
+                    allowedVendedores.add(loggedUserEmail);
+                }
+            }
         }
+
+        if (!isOwner && allowedVendedores.isEmpty()) {
+            allowedVendedores.add("dummy_no_match");
+        }
+
+        Page<Factura> ventasPage = facturaService.buscarFacturas(fechaDesde, fechaHasta, metodoPago, factura, allowedVendedores, pageable);
 
         model.addAttribute("ventas", ventasPage.getContent());
         model.addAttribute("currentPage", page);
@@ -70,46 +95,102 @@ public class FacturaController {
         model.addAttribute("fechaHasta", fechaHasta);
         model.addAttribute("metodoPago", metodoPago);
         model.addAttribute("factura", factura);
+        model.addAttribute("vendedor", vendedor);
 
         return "ventas";
     }
 
     @GetMapping("/exportar")
     @ResponseBody
-    public ResponseEntity<byte[]> exportarCSV(
+    public ResponseEntity<byte[]> exportarExcel(
             @RequestParam(required = false) String fechaDesde,
             @RequestParam(required = false) String fechaHasta,
             @RequestParam(required = false) String metodoPago,
-            @RequestParam(required = false) String factura) {
+            @RequestParam(required = false) String factura,
+            @RequestParam(required = false) String vendedor,
+            java.security.Principal principal) throws IOException {
 
-        List<Factura> facturas = facturaService.exportarFacturas(fechaDesde, fechaHasta, metodoPago, factura);
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-
-        StringBuilder csv = new StringBuilder();
-        csv.append("# Factura,Fecha,Cliente,Subtotal,IVA,Total,Método de Pago,Observaciones\n");
-        for (Factura f : facturas) {
-            csv.append(String.format("\"%s\",\"%s\",\"%s\",%.2f,%.2f,%.2f,\"%s\",\"%s\"\n",
-                    f.getNumeroFactura(),
-                    f.getFecha() != null ? f.getFecha().format(fmt) : "",
-                    f.getClienteNombre() != null ? f.getClienteNombre() : "",
-                    f.getSubtotal() != null ? f.getSubtotal() : 0,
-                    f.getIva() != null ? f.getIva() : 0,
-                    f.getTotal() != null ? f.getTotal() : 0,
-                    f.getMetodoPago() != null ? f.getMetodoPago() : "",
-                    f.getObservaciones() != null ? f.getObservaciones().replace("\"", "'") : ""));
+        List<String> allowedVendedores = new java.util.ArrayList<>();
+        boolean isOwner = false;
+        if (principal != null) {
+            String loggedUserEmail = principal.getName();
+            com.admin.adminlfarma_mini.entity.Usuario loggedUser = usuarioService.buscarPorUsername(loggedUserEmail).orElse(null);
+            if (loggedUser != null) {
+                if ("ROLE_OWNER".equals(loggedUser.getRol())) {
+                    isOwner = true;
+                    if (vendedor != null && !vendedor.trim().isEmpty()) {
+                        allowedVendedores.add(vendedor.trim());
+                    }
+                } else if ("ROLE_ADMIN".equals(loggedUser.getRol())) {
+                    List<com.admin.adminlfarma_mini.entity.Usuario> allUsers = usuarioService.listarTodosIncluyendoInactivos();
+                    for (com.admin.adminlfarma_mini.entity.Usuario u : allUsers) {
+                        if (!"ROLE_OWNER".equals(u.getRol())) {
+                            allowedVendedores.add(u.getUsername());
+                        }
+                    }
+                } else {
+                    allowedVendedores.add(loggedUserEmail);
+                }
+            }
         }
 
-        byte[] csvBytes = csv.toString().getBytes(StandardCharsets.UTF_8);
-        // Add BOM for Excel UTF-8 compatibility
-        byte[] bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
-        byte[] result = new byte[bom.length + csvBytes.length];
-        System.arraycopy(bom, 0, result, 0, bom.length);
-        System.arraycopy(csvBytes, 0, result, bom.length, csvBytes.length);
+        if (!isOwner && allowedVendedores.isEmpty()) {
+            allowedVendedores.add("dummy_no_match");
+        }
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ventas_lfarma.csv")
-                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
-                .body(result);
+        List<Factura> facturas = facturaService.exportarFacturas(fechaDesde, fechaHasta, metodoPago, factura, allowedVendedores);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = wb.createSheet("Ventas");
+
+            // Estilo de encabezado: verde oscuro con texto blanco
+            CellStyle headerStyle = wb.createCellStyle();
+            Font headerFont = wb.createFont();
+            headerFont.setBold(true);
+            headerFont.setColor(IndexedColors.WHITE.getIndex());
+            headerStyle.setFont(headerFont);
+            headerStyle.setFillForegroundColor(IndexedColors.DARK_GREEN.getIndex());
+            headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+            // Encabezados
+            Row header = sheet.createRow(0);
+            String[] cols = {"Factura", "Fecha", "Cliente", "Subtotal", "IVA", "Total", "Método de Pago", "Observaciones", "Vendedor"};
+            for (int i = 0; i < cols.length; i++) {
+                Cell cell = header.createCell(i);
+                cell.setCellValue(cols[i]);
+                cell.setCellStyle(headerStyle);
+                sheet.setColumnWidth(i, 5000);
+            }
+
+            // Datos
+            int rowNum = 1;
+            for (Factura f : facturas) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(f.getNumeroFactura() != null ? f.getNumeroFactura() : "");
+                row.createCell(1).setCellValue(f.getFecha() != null ? f.getFecha().format(fmt) : "");
+                row.createCell(2).setCellValue(f.getClienteNombre() != null ? f.getClienteNombre() : "");
+                row.createCell(3).setCellValue(f.getSubtotal() != null ? f.getSubtotal() : 0.0);
+                row.createCell(4).setCellValue(f.getIva() != null ? f.getIva() : 0.0);
+                row.createCell(5).setCellValue(f.getTotal() != null ? f.getTotal() : 0.0);
+                row.createCell(6).setCellValue(f.getMetodoPago() != null ? f.getMetodoPago() : "");
+                row.createCell(7).setCellValue(f.getObservaciones() != null ? f.getObservaciones() : "");
+                row.createCell(8).setCellValue(f.getVendedorEmail() != null ? f.getVendedorEmail() : "—");
+            }
+
+            wb.write(out);
+
+            // Nombre dinámico del archivo
+            String fDesde = (fechaDesde != null && !fechaDesde.trim().isEmpty()) ? fechaDesde.trim() : "Inicio";
+            String fHasta = (fechaHasta != null && !fechaHasta.trim().isEmpty()) ? fechaHasta.trim() : "Fin";
+            String mPago = (metodoPago != null && !metodoPago.trim().isEmpty()) ? metodoPago.trim() : "Todos";
+            String filename = String.format("Ventas_%s_%s_%s.xlsx", fDesde, fHasta, mPago);
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(out.toByteArray());
+        }
     }
 
     @GetMapping("/nueva")
@@ -156,10 +237,13 @@ public class FacturaController {
 
     @PostMapping("/guardar")
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> guardarVenta(@RequestBody FacturaRequestDTO request) {
+    public ResponseEntity<Map<String, Object>> guardarVenta(
+            @RequestBody FacturaRequestDTO request,
+            java.security.Principal principal) {
         Map<String, Object> response = new HashMap<>();
         try {
-            Factura factura = facturaService.crearFactura(request);
+            String vendedorEmail = (principal != null) ? principal.getName() : "Consumidor Final";
+            Factura factura = facturaService.crearFactura(request, vendedorEmail);
             response.put("success", true);
             response.put("message", "Venta registrada exitosamente");
             response.put("facturaId", factura.getId());

@@ -31,6 +31,7 @@ public class Factura {
     private Double total;
     private String metodoPago = "EFECTIVO";
     private String observaciones;
+    private String vendedorEmail;
 
     private List<DetalleFactura> detalles = new ArrayList<>();
 }

@@ -22,7 +22,7 @@ public class ClienteService {
     }
 
     private void crearConsumidorFinalSiNoExiste() {
-        if (clienteRepository.findByEsConsumidorFinalTrue().isEmpty()) {
+        if (clienteRepository.findFirstByEsConsumidorFinalTrue().isEmpty()) {
             Cliente consumidorFinal = new Cliente();
             consumidorFinal.setCodigo("CF-0001");
             consumidorFinal.setNombre("Consumidor Final");
@@ -34,7 +34,7 @@ public class ClienteService {
     }
 
     public Cliente getConsumidorFinal() {
-        return clienteRepository.findByEsConsumidorFinalTrue()
+        return clienteRepository.findFirstByEsConsumidorFinalTrue()
                 .orElseThrow(() -> new RuntimeException("No se encontró el cliente Consumidor Final"));
     }
 
@@ -56,6 +56,10 @@ public class ClienteService {
 
     public Optional<Cliente> obtenerPorId(String id) {
         return clienteRepository.findById(id);
+    }
+
+    public Optional<Cliente> obtenerPorIdentificacion(String identificacion) {
+        return clienteRepository.findByIdentificacion(identificacion);
     }
 
     public Optional<Cliente> obtenerPorCodigo(String codigo) {

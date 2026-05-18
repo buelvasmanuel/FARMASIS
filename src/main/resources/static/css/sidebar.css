@@ -70,7 +70,14 @@ html.sidebar-preload-collapsed .sidebar span { display: none !important; opacity
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
+
+.sidebar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+}
+
 
 
 
@@ -115,26 +122,27 @@ html.sidebar-preload-collapsed .sidebar span { display: none !important; opacity
 .sidebar .toggle-btn {
     position: absolute;
     top: 22px;
-    right: -15px;
+    right: 15px;
     width: 30px;
     height: 30px;
-    background: var(--secondary-color) !important;
+    background: transparent !important;
     border: none !important;
     border-radius: 50% !important;
-    color: white !important;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    box-shadow: none !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     z-index: 1001 !important;
     cursor: pointer !important;
-    transition: transform 0.3s ease, background-color 0.3s ease !important;
+    transition: transform 0.3s ease, color 0.3s ease !important;
     padding: 0 !important;
     font-size: 1.1rem;
 }
 
 .sidebar .toggle-btn:hover {
-    background: var(--accent-color) !important;
+    background: transparent !important;
+    color: white !important;
     transform: scale(1.1);
 }
 
@@ -538,7 +546,8 @@ html.sidebar-preload-collapsed .sidebar span { display: none !important; opacity
 .sidebar.collapsed {
     width: 70px !important;
     min-width: 70px !important;
-    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
 }
 
 .sidebar.collapsed .nav-text, 
@@ -599,5 +608,47 @@ body.sidebar-toggled .top-bar .brand-text {
     display: none !important;
 }
 
+/* ==========================================================================
+   HOTFIX: GLOBAL STICKY HEADERS & POS CART ANCHORING
+   ========================================================================== */
 
+/* 1. Desbloquear overflow en contenedores padres para permitir sticky */
+html, body {
+    overflow-y: visible !important;
+    overflow-x: clip !important;
+}
 
+.main-content, 
+.container-fluid, 
+.content-wrapper, 
+.pos-grid,
+main,
+section {
+    overflow: visible !important;
+}
+
+/* 2. Refuerzo de la clase global-sticky-header */
+.global-sticky-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1020 !important;
+    background-color: #f4f7f6 !important;
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
+    align-self: flex-start !important;
+    margin-top: -24px !important; /* Compensa el py-4 del contenedor */
+}
+
+/* 3. Caso especial del Carrito de Ventas (Punto de Venta - POS) */
+.pos-grid {
+    align-items: start !important; /* Evita que el contenedor estire el panel del carrito */
+}
+
+.cart-panel {
+    position: sticky !important;
+    top: 15px !important;
+    align-self: start !important;
+    height: calc(100vh - 30px) !important;
+    overflow-y: auto !important;
+}

@@ -16,7 +16,7 @@ public interface ClienteRepository extends MongoRepository<Cliente, String> {
 
     Optional<Cliente> findByIdentificacion(String identificacion);
 
-    Optional<Cliente> findByEsConsumidorFinalTrue();
+    Optional<Cliente> findFirstByEsConsumidorFinalTrue();
 
     Page<Cliente> findByNombreContainingIgnoreCaseOrCodigoContainingIgnoreCase(
             String nombre, String codigo, Pageable pageable);

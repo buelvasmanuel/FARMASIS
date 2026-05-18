@@ -106,9 +106,14 @@
     <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
 
     <div class="main-content no-transition" id="mainContent">
-        <div class="container-fluid py-3 no-print border-bottom bg-white d-flex align-items-center">
-            <a th:href="@{/ventas}" class="btn btn-outline-secondary btn-sm me-3">
-                <i class="bi bi-arrow-left"></i> Volver a Ventas
+        <div class="container-fluid py-3 no-print border-bottom bg-white d-flex align-items-center gap-2">
+            <th:block sec:authorize="hasAnyAuthority('OWNER', 'ROLE_OWNER', 'ADMIN', 'ROLE_ADMIN')">
+                <a th:href="@{/ventas}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Volver a Ventas
+                </a>
+            </th:block>
+            <a th:href="@{/ventas/nueva}" class="btn btn-success btn-sm">
+                <i class="bi bi-plus-lg"></i> Nueva Venta
             </a>
             <button class="btn btn-primary btn-sm" onclick="window.print()">
                 <i class="bi bi-printer"></i> Imprimir Ticket

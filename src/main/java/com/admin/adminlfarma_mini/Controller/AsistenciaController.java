@@ -135,7 +135,9 @@ public class AsistenciaController {
             @RequestParam(required = false) List<String> roles) throws IOException {
 
         byte[] excel = asistenciaService.exportarExcel(desde, hasta, roles);
-        String filename = "asistencia_" + desde + "_" + hasta + ".xlsx";
+        String mesStr = desde.getMonth().getDisplayName(java.time.format.TextStyle.FULL, new java.util.Locale("es"));
+        String capitalizedMes = mesStr.substring(0, 1).toUpperCase() + mesStr.substring(1).toLowerCase();
+        String filename = String.format("Asistencias_%s_%d.xlsx", capitalizedMes, desde.getYear());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)

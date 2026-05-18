@@ -32,7 +32,7 @@ public class FacturaService {
     }
 
     public Page<Factura> buscarFacturas(String fechaDesde, String fechaHasta,
-                                         String metodoPago, String numFactura, Pageable pageable) {
+                                         String metodoPago, String numFactura, List<String> vendedores, Pageable pageable) {
         Query query = new Query().with(pageable).with(Sort.by(Sort.Direction.DESC, "fecha"));
         List<Criteria> criterios = new ArrayList<>();
 
@@ -50,6 +50,9 @@ public class FacturaService {
         if (numFactura != null && !numFactura.isEmpty()) {
             criterios.add(Criteria.where("numeroFactura").regex(numFactura, "i"));
         }
+        if (vendedores != null && !vendedores.isEmpty()) {
+            criterios.add(Criteria.where("vendedorEmail").in(vendedores));
+        }
 
         if (!criterios.isEmpty()) {
             query.addCriteria(new Criteria().andOperator(criterios.toArray(new Criteria[0])));
@@ -63,7 +66,7 @@ public class FacturaService {
     }
 
     public List<Factura> exportarFacturas(String fechaDesde, String fechaHasta,
-                                           String metodoPago, String numFactura) {
+                                           String metodoPago, String numFactura, List<String> vendedores) {
         Query query = new Query().with(Sort.by(Sort.Direction.DESC, "fecha"));
         List<Criteria> criterios = new ArrayList<>();
 
@@ -78,6 +81,9 @@ public class FacturaService {
         }
         if (numFactura != null && !numFactura.isEmpty()) {
             criterios.add(Criteria.where("numeroFactura").regex(numFactura, "i"));
+        }
+        if (vendedores != null && !vendedores.isEmpty()) {
+            criterios.add(Criteria.where("vendedorEmail").in(vendedores));
         }
         if (!criterios.isEmpty()) {
             query.addCriteria(new Criteria().andOperator(criterios.toArray(new Criteria[0])));
@@ -98,13 +104,29 @@ public class FacturaService {
         return facturaRepository.countVentasDelDia(inicio, fin);
     }
     
-    public Factura crearFactura(FacturaRequestDTO request) {
+    public Factura crearFactura(FacturaRequestDTO request, String vendedorEmail) {
         Cliente cliente;
-        if (request.getClienteId() != null && !request.getClienteId().isEmpty()) {
-            cliente = clienteService.obtenerPorId(request.getClienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+        String cc = request.getClienteCC();
+        if (cc == null || cc.trim().isEmpty()) {
+            cc = "222222222222";
         } else {
-            cliente = clienteService.getConsumidorFinal();
+            cc = cc.trim();
+        }
+        
+        Optional<Cliente> clienteOpt = clienteService.obtenerPorIdentificacion(cc);
+        if (clienteOpt.isPresent()) {
+            cliente = clienteOpt.get();
+        } else {
+            cliente = new Cliente();
+            cliente.setIdentificacion(cc);
+            if ("222222222222".equals(cc)) {
+                cliente.setNombre("Consumidor Final");
+                cliente.setEsConsumidorFinal(true);
+            } else {
+                cliente.setNombre("Cliente CC " + cc);
+            }
+            cliente.setCodigo("C-" + cc);
+            cliente = clienteService.guardar(cliente);
         }
         
         Factura factura = new Factura();
@@ -114,6 +136,7 @@ public class FacturaService {
         factura.setFecha(LocalDateTime.now());
         factura.setMetodoPago(request.getMetodoPago() != null ? request.getMetodoPago() : "EFECTIVO");
         factura.setObservaciones(request.getObservaciones());
+        factura.setVendedorEmail(vendedorEmail);
         
         double subtotal = 0.0;
         

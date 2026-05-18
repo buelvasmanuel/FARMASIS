@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,11 +34,12 @@ public class ProductoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String categoria,
             @RequestParam(defaultValue = "lista") String view,
             Model model) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
-        var productosPage = productoService.buscarProductos(search, pageable);
+        var productosPage = productoService.buscarProductos(search, categoria, pageable);
 
         model.addAttribute("productos", productosPage.getContent());
         model.addAttribute("currentPage", page);
@@ -45,6 +47,7 @@ public class ProductoController {
         model.addAttribute("totalItems", productosPage.getTotalElements());
         model.addAttribute("pageSize", size);
         model.addAttribute("search", search);
+        model.addAttribute("categoria", categoria);
         model.addAttribute("view", view);
         model.addAttribute("proveedores", proveedorService.listarTodos());
         model.addAttribute("stockBajoCount", productoService.getProductosBajoStock().size());
@@ -66,7 +69,18 @@ public class ProductoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String categoria,
             RedirectAttributes redirectAttributes) {
+
+        redirectAttributes.addAttribute("page", page);
+        redirectAttributes.addAttribute("size", size);
+        if (search != null && !search.isEmpty()) {
+            redirectAttributes.addAttribute("search", search);
+        }
+        if (categoria != null && !categoria.isEmpty()) {
+            redirectAttributes.addAttribute("categoria", categoria);
+        }
+
         try {
             // Normalizar: el form envía "" (string vacío) cuando no hay id, no null
             if (producto.getId() != null && producto.getId().trim().isEmpty()) {
@@ -94,25 +108,21 @@ public class ProductoController {
             // Validar campos requeridos
             if (producto.getCodigo() == null || producto.getCodigo().trim().isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "El código es requerido");
-                return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
-                        (search != null && !search.isEmpty() ? "&search=" + search : ""));
+                return "redirect:/productos";
             }
             if (producto.getNombre() == null || producto.getNombre().trim().isEmpty()) {
                 redirectAttributes.addFlashAttribute("error", "El nombre es requerido");
-                return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
-                        (search != null && !search.isEmpty() ? "&search=" + search : ""));
+                return "redirect:/productos";
             }
             if (producto.getPrecio() == null || producto.getPrecio() <= 0) {
                 redirectAttributes.addFlashAttribute("error", "El precio debe ser mayor a 0");
-                return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
-                        (search != null && !search.isEmpty() ? "&search=" + search : ""));
+                return "redirect:/productos";
             }
 
             // Validar código único solo para nuevos productos
             if (producto.getId() == null && productoService.existeCodigo(producto.getCodigo())) {
                 redirectAttributes.addFlashAttribute("error", "Ya existe un producto registrado con este código");
-                return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
-                        (search != null && !search.isEmpty() ? "&search=" + search : ""));
+                return "redirect:/productos";
             }
 
             productoService.guardar(producto);
@@ -123,8 +133,7 @@ public class ProductoController {
             redirectAttributes.addFlashAttribute("error", "Error al guardar: " + e.getMessage());
             e.printStackTrace();
         }
-        return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
-                (search != null && !search.isEmpty() ? "&search=" + search : ""));
+        return "redirect:/productos";
     }
 
     @PostMapping("/actualizar/{id}")
@@ -134,6 +143,7 @@ public class ProductoController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String categoria,
             RedirectAttributes redirectAttributes) {
         try {
             // Preservar la imagen anterior si no se sube una nueva
@@ -158,11 +168,13 @@ public class ProductoController {
             redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
             e.printStackTrace();
         }
-        return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
-                (search != null && !search.isEmpty() ? "&search=" + search : ""));
+        return String.format("redirect:/productos?page=%d&size=%d%s%s", page, size,
+                (search != null && !search.isEmpty() ? "&search=" + search : ""),
+                (categoria != null && !categoria.isEmpty() ? "&categoria=" + categoria : ""));
     }
 
     @GetMapping("/archivados")
+    @PreAuthorize("hasAnyAuthority('OWNER', 'ROLE_OWNER')")
     public String listarProductosArchivados(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size,
@@ -185,10 +197,12 @@ public class ProductoController {
     }
 
     @PostMapping("/archivar/{id}")
+    @PreAuthorize("hasAnyAuthority('OWNER', 'ROLE_OWNER')")
     public String archivarProducto(@PathVariable String id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size,
             @RequestParam(required = false) String search,
+            @RequestParam(required = false) String categoria,
             RedirectAttributes redirectAttributes) {
         try {
             productoService.eliminar(id);
@@ -196,11 +210,13 @@ public class ProductoController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al archivar: " + e.getMessage());
         }
-        return String.format("redirect:/productos?page=%d&size=%d%s", page, size,
-                (search != null && !search.isEmpty() ? "&search=" + search : ""));
+        return String.format("redirect:/productos?page=%d&size=%d%s%s", page, size,
+                (search != null && !search.isEmpty() ? "&search=" + search : ""),
+                (categoria != null && !categoria.isEmpty() ? "&categoria=" + categoria : ""));
     }
 
     @PostMapping("/restaurar/{id}")
+    @PreAuthorize("hasAnyAuthority('OWNER', 'ROLE_OWNER')")
     public String restaurarProducto(@PathVariable String id,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "15") int size,

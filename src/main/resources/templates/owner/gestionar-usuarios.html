@@ -75,52 +75,55 @@
     <!-- Main Content -->
     <div class="main-content no-transition" id="mainContent">
         <div class="container-fluid px-4 py-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1><i class="bi bi-people-fill"></i> Gestión de Usuarios</h1>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal">
-                    <i class="bi bi-plus-circle"></i> Nuevo Usuario
-                </button>
-            </div>
+            <!-- Cabecera Pegajosa Global -->
+            <div class="global-sticky-header mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="mb-0"><i class="bi bi-people-fill"></i> Gestión de Usuarios</h1>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#crearUsuarioModal">
+                        <i class="bi bi-plus-circle"></i> Nuevo Usuario
+                    </button>
+                </div>
 
-            <!-- Stats -->
-            <div class="row mb-4">
-                <div class="col-md-3 mb-2">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <h6>Usuarios Activos</h6>
-                            <h3 th:text="${totalActivos}">0</h3>
+                <!-- Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-2">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6>Usuarios Activos</h6>
+                                <h3 th:text="${totalActivos}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body">
+                                <h6>Usuarios Inactivos</h6>
+                                <h3 th:text="${totalInactivos}">0</h3>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 mb-2">
-                    <div class="card bg-secondary text-white">
-                        <div class="card-body">
-                            <h6>Usuarios Inactivos</h6>
-                            <h3 th:text="${totalInactivos}">0</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Filtros -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Filtrar por Estado/Rol</label>
-                            <select name="filtro" class="form-select" onchange="this.form.submit()">
-                                <option value="">Todos los usuarios</option>
-                                <option value="ACTIVOS" th:selected="${filtroActual == 'ACTIVOS'}">Usuarios Activos
-                                </option>
-                                <option value="INACTIVOS" th:selected="${filtroActual == 'INACTIVOS'}">Usuarios
-                                    Inactivos</option>
-                                <option value="ROLE_ADMIN" th:selected="${filtroActual == 'ROLE_ADMIN'}">Administradores
-                                </option>
-                                <option value="ROLE_EMPLEADO" th:selected="${filtroActual == 'ROLE_EMPLEADO'}">Empleados
-                                </option>
-                            </select>
-                        </div>
-                    </form>
+                <!-- Filtros -->
+                <div class="card">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Filtrar por Estado/Rol</label>
+                                <select name="filtro" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Todos los usuarios</option>
+                                    <option value="ACTIVOS" th:selected="${filtroActual == 'ACTIVOS'}">Usuarios Activos
+                                    </option>
+                                    <option value="INACTIVOS" th:selected="${filtroActual == 'INACTIVOS'}">Usuarios
+                                        Inactivos</option>
+                                    <option value="ROLE_ADMIN" th:selected="${filtroActual == 'ROLE_ADMIN'}">Administradores
+                                    </option>
+                                    <option value="ROLE_EMPLEADO" th:selected="${filtroActual == 'ROLE_EMPLEADO'}">Empleados
+                                    </option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -146,7 +149,7 @@
                                     th:style="${user.activo != true} ? 'opacity: 0.6; cursor: not-allowed;' : ''"
                                     th:data-user-id="${user.id}" th:data-user-name="${user.username}"
                                     th:data-user-email="${user.email}" th:data-user-rol="${user.rol}"
-                                    th:data-user-activo="${user.activo}">
+                                    th:data-user-activo="${user.activo}" th:data-user-telefono="${user.telefono}">
                                     <td th:text="${user.id}"></td>
                                     <td>
                                         <i class="bi bi-person-circle"></i>
@@ -236,6 +239,11 @@
                             <div class="invalid-feedback">Formato de correo inválido</div>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="telefono" name="telefono" pattern="[0-9]+" title="Solo números" placeholder="Solo números">
+                            <div class="invalid-feedback">Solo números</div>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Rol *</label>
                             <select class="form-select" id="rol" name="rol" required>
                                 <option value="ADMIN">ADMIN</option>
@@ -270,6 +278,10 @@
                         <div class="mb-3">
                             <label class="form-label">Email (Solo lectura)</label>
                             <input type="email" class="form-control bg-light" id="editEmail" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Teléfono (Solo lectura)</label>
+                            <input type="tel" class="form-control bg-light" id="editTelefono" readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Rol</label>
@@ -311,6 +323,7 @@
                 const userId = row.data('user-id');
                 const userName = row.data('user-name');
                 const userEmail = row.data('user-email');
+                const userTelefono = row.data('user-telefono');
                 const userRol = row.data('user-rol');
                 const userActivo = row.data('user-activo');
 
@@ -318,6 +331,7 @@
                 $('#editUserId').val(userId);
                 $('#editUsername').val(userName);
                 $('#editEmail').val(userEmail || '-');
+                $('#editTelefono').val(userTelefono || '-');
                 let rolSinPrefijo = userRol ? userRol.replace('ROLE_', '') : 'EMPLEADO';
                 $('#editRol').val(rolSinPrefijo);
 
@@ -340,6 +354,7 @@
                         if (response.success) {
                             $('#editUsername').val(response.username);
                             $('#editEmail').val(response.email || '-');
+                            $('#editTelefono').val(response.telefono || '-');
                             $('#editRol').val(response.rol);
                         }
                     }
@@ -424,6 +439,7 @@
             const username = $('#username').val();
             const password = $('#password').val();
             const email = $('#email').val();
+            const telefono = $('#telefono').val();
             const rol = $('#rol').val();
 
             if (!nombre || !apellido || !username || !password || !email) {
@@ -449,7 +465,7 @@
             $.ajax({
                 url: '/owner/crear-usuario',
                 method: 'POST',
-                data: { nombre: nombre, apellido: apellido, username: username, password: password, email: email, rol: rol },
+                data: { nombre: nombre, apellido: apellido, username: username, password: password, email: email, rol: rol, telefono: telefono },
                 success: function (response) {
                     btnCrear.html(originalText);
                     btnCrear.prop('disabled', false);

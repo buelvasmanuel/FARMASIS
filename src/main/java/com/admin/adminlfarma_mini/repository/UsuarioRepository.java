@@ -31,4 +31,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Buscar usuarios por rol ignorando mayúsculas
     @Query("SELECT u FROM Usuario u WHERE UPPER(u.rol) LIKE UPPER(CONCAT('%', :rol, '%')) AND u.activo = true")
     List<Usuario> findUsuariosByRolContaining(@Param("rol") String rol);
+
+    @Query("SELECT u.rol FROM Usuario u WHERE u.id = :id")
+    String findRolById(@Param("id") Long id);
 }

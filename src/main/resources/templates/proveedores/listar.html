@@ -26,64 +26,72 @@
 
     <div class="main-content no-transition" id="mainContent">
         <div class="container-fluid px-4 py-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="fw-bold"><i class="bi bi-truck me-2" style="color: var(--secondary-color);"></i> Proveedores</h1>
-                <a th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}" href="/proveedores/nuevo" class="btn btn-lfarma"><i class="bi bi-plus-circle me-1"></i> Nuevo Proveedor</a>
-            </div>
+            <!-- Cabecera Pegajosa Global -->
+            <div class="global-sticky-header mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1 class="fw-bold mb-0"><i class="bi bi-truck me-2" style="color: var(--secondary-color);"></i> Proveedores</h1>
+                    <a th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}" href="/proveedores/nuevo" class="btn btn-lfarma"><i class="bi bi-plus-circle me-1"></i> Nuevo Proveedor</a>
+                </div>
 
-            <!-- Alertas -->
-            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" style="border-radius: 12px;">
-                <i class="bi bi-check-circle me-1"></i> <span th:text="${success}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" style="border-radius: 12px;">
-                <i class="bi bi-exclamation-triangle me-1"></i> <span th:text="${error}"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+                <!-- Alertas -->
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show mb-3" style="border-radius: 12px;">
+                    <i class="bi bi-check-circle me-1"></i> <span th:text="${success}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show mb-3" style="border-radius: 12px;">
+                    <i class="bi bi-exclamation-triangle me-1"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
 
-            <!-- Barra de Filtros -->
-            <div class="filter-bar">
-                <form method="get" class="row g-2 align-items-end">
-                    <div class="col-md-5 position-relative">
-                        <label class="form-label small fw-bold text-muted">Buscar</label>
-                        <input type="search" class="form-control" name="search" id="searchInput"
-                            placeholder="Nombre, empresa o tipo..." th:value="${search}"
-                            style="border-radius: 10px;">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold text-muted">Estado</label>
-                        <select class="form-select" name="estado" style="border-radius: 10px;">
-                            <option value="ACTIVOS" th:selected="${estado == null || estado == 'ACTIVOS'}">Activos</option>
-                            <option value="ARCHIVADOS" th:selected="${estado == 'ARCHIVADOS'}">Archivados</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small fw-bold text-muted">Categoría</label>
-                        <select class="form-select" name="categoria" style="border-radius: 10px;">
-                            <option value="">Todas</option>
-                            <option value="Cosmético" th:selected="${categoria == 'Cosmético'}">Cosmético</option>
-                            <option value="Higiene" th:selected="${categoria == 'Higiene'}">Higiene</option>
-                            <option value="Medicamento" th:selected="${categoria == 'Medicamento'}">Medicamento</option>
-                            <option value="Otros" th:selected="${categoria == 'Otros'}">Otros</option>
-                            <option value="Suplemento" th:selected="${categoria == 'Suplemento'}">Suplemento</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100" style="border-radius: 10px; padding: 9px;">
-                            <i class="bi bi-funnel"></i> Filtrar
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <!-- Barra de Filtros -->
+                <div class="filter-bar mb-3">
+                    <form method="get" class="row g-2 align-items-end">
+                        <div class="col-md-4 position-relative">
+                            <label class="form-label small fw-bold text-muted">Buscar</label>
+                            <input type="search" class="form-control" name="search" id="searchInput"
+                                placeholder="Nombre, empresa o tipo..." th:value="${search}"
+                                style="border-radius: 10px;">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted">Estado</label>
+                            <select class="form-select" name="estado" style="border-radius: 10px;">
+                                <option value="ACTIVOS" th:selected="${estado == null || estado == 'ACTIVOS'}">Activos</option>
+                                <option value="ARCHIVADOS" th:selected="${estado == 'ARCHIVADOS'}">Archivados</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-muted">Categoría</label>
+                            <select class="form-select" name="categoria" style="border-radius: 10px;">
+                                <option value="">Todas</option>
+                                <option value="Cosmético" th:selected="${categoria == 'Cosmético'}">Cosmético</option>
+                                <option value="Higiene" th:selected="${categoria == 'Higiene'}">Higiene</option>
+                                <option value="Medicamento" th:selected="${categoria == 'Medicamento'}">Medicamento</option>
+                                <option value="Otros" th:selected="${categoria == 'Otros'}">Otros</option>
+                                <option value="Suplemento" th:selected="${categoria == 'Suplemento'}">Suplemento</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex gap-1">
+                                <button type="submit" class="btn btn-primary w-100" style="border-radius: 10px; padding: 9px;">
+                                    <i class="bi bi-funnel"></i> Filtrar
+                                </button>
+                                <a href="/proveedores" class="btn btn-outline-secondary" style="border-radius: 10px; padding: 9px;" title="Limpiar Filtros">
+                                    <i class="bi bi-x-lg"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
 
-            <!-- Estadísticas -->
-            <div class="stat-card mb-4 d-flex align-items-center gap-3" style="padding: 16px 22px;">
-                <i class="bi bi-info-circle" style="color: var(--secondary-color); font-size: 1.3rem;"></i>
-                <span>
-                    <span th:if="${estado == null || estado == 'ACTIVOS'}">Proveedores activos: </span>
-                    <span th:if="${estado == 'ARCHIVADOS'}">Proveedores archivados: </span>
-                    <strong th:text="${totalProveedores}">0</strong>
-                </span>
+                <!-- Estadísticas -->
+                <div class="stat-card mb-0 d-flex align-items-center gap-3" style="padding: 16px 22px;">
+                    <i class="bi bi-info-circle" style="color: var(--secondary-color); font-size: 1.3rem;"></i>
+                    <span>
+                        <span th:if="${estado == null || estado == 'ACTIVOS'}">Proveedores activos: </span>
+                        <span th:if="${estado == 'ARCHIVADOS'}">Proveedores archivados: </span>
+                        <strong th:text="${totalProveedores}">0</strong>
+                    </span>
+                </div>
             </div>
 
             <!-- Grid de Proveedores -->
@@ -122,31 +130,34 @@
                                 <div><span class="badge" style="background: var(--accent-color); color: var(--primary-color);" th:text="${proveedor.tipoProductos}"></span></div>
                             </div>
                         </div>
-                        <!-- Actions: Only OWNER can modify -->
-                        <div class="card-footer bg-transparent border-0 pb-3" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}">
+                        <div class="card-footer bg-transparent border-0 pb-3" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">
                             <div class="btn-group w-100" th:if="${estado == null || estado == 'ACTIVOS'}">
                                 <a th:href="@{/proveedores/editar/{id}(id=${proveedor.id})}" class="btn btn-outline-lfarma btn-sm">
                                     <i class="bi bi-pencil"></i> Editar
                                 </a>
-                                <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal"
-                                    th:data-bs-target="'#archivarModal' + ${proveedor.id}">
-                                    <i class="bi bi-archive"></i> Archivar
-                                </button>
-                            </div>
-                            <div th:if="${estado == 'ARCHIVADOS'}">
-                                <form th:action="@{/proveedores/reactivar/{id}(id=${proveedor.id})}" method="post" class="d-grid">
-                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                                    <button type="submit" class="btn btn-outline-success btn-sm">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Reactivar
+                                <th:block th:if="${#authorization.expression('hasAuthority(''OWNER'')') or #authorization.expression('hasAuthority(''ROLE_OWNER'')')}">
+                                    <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal"
+                                        th:data-bs-target="'#archivarModal' + ${proveedor.id}">
+                                        <i class="bi bi-archive"></i> Archivar
                                     </button>
-                                </form>
+                                </th:block>
                             </div>
+                            <th:block th:if="${#authorization.expression('hasAuthority(''OWNER'')') or #authorization.expression('hasAuthority(''ROLE_OWNER'')')}">
+                                <div th:if="${estado == 'ARCHIVADOS'}">
+                                    <form th:action="@{/proveedores/reactivar/{id}(id=${proveedor.id})}" method="post" class="d-grid">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Reactivar
+                                        </button>
+                                    </form>
+                                </div>
+                            </th:block>
                         </div>
                     </div>
 
                     <!-- Modal Archivar -->
                     <div class="modal fade" th:id="'archivarModal' + ${proveedor.id}" tabindex="-1"
-                         th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}">
+                         th:if="${#authorization.expression('hasAuthority(''OWNER'')') or #authorization.expression('hasAuthority(''ROLE_OWNER'')')}">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
                                 <div class="modal-header" style="background: linear-gradient(135deg, var(--dark-bg) 0%, #e67e22 100%); color: white;">

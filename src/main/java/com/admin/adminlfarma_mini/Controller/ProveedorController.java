@@ -56,7 +56,7 @@ public class ProveedorController {
     }
 
     @GetMapping("/nuevo")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public String mostrarFormNuevo(Model model) {
         model.addAttribute("proveedor", new Proveedor());
         model.addAttribute("titulo", "Nuevo Proveedor");
@@ -65,7 +65,7 @@ public class ProveedorController {
     }
 
     @PostMapping("/guardar")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public String guardarProveedor(@Valid @ModelAttribute Proveedor proveedor,
             BindingResult result, Authentication auth,
             RedirectAttributes redirectAttributes, Model model) {
@@ -86,7 +86,7 @@ public class ProveedorController {
     }
 
     @GetMapping("/editar/{id}")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public String mostrarFormEditar(@PathVariable String id, Model model, RedirectAttributes redirectAttributes) {
         try {
             Proveedor proveedor = proveedorService.buscarPorId(id)
@@ -102,7 +102,7 @@ public class ProveedorController {
     }
 
     @PostMapping("/actualizar/{id}")
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public String actualizarProveedor(@PathVariable String id,
             @Valid @ModelAttribute Proveedor proveedor, BindingResult result,
             Model model, RedirectAttributes redirectAttributes) {

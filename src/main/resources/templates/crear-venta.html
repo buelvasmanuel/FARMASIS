@@ -95,7 +95,7 @@
         .pill.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
 
         /* Cart */
-        .cart-panel { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; max-height: calc(100vh - 100px); position: sticky; top: 80px; }
+        .cart-panel { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; position: sticky; top: 15px; height: calc(100vh - 30px); overflow-y: auto; }
         .cart-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid #f1f3f5; }
         .cart-body { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
         .cart-footer { padding: 1.2rem 1.5rem; border-top: 1px solid #f1f3f5; background: #fafafa; border-radius: 0 0 16px 16px; }
@@ -122,25 +122,28 @@
             <div class="pos-grid">
                 <!-- LEFT: Products -->
                 <div>
-                    <!-- Search Input -->
-                    <div class="mb-3">
-                        <form th:action="@{/ventas/nueva}" method="get" id="searchForm" class="d-flex gap-2">
-                            <input type="hidden" name="categoria" th:value="${categoriaActual}">
-                            <input type="hidden" name="size" th:value="${pageSize}">
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px;"><i class="bi bi-search text-muted"></i></span>
-                                <input type="search" class="form-control border-start-0 border-end-0" id="searchProducts" name="search"
-                                       th:value="${search}" placeholder="Buscar producto por nombre o código..." autocomplete="off">
-                                <button th:if="${search != null and !search.isEmpty()}" type="button" class="btn btn-outline-secondary border-start-0 border-end-0" onclick="clearSearch()"><i class="bi bi-x-lg"></i></button>
-                                <button type="submit" class="btn btn-primary" style="border-radius: 0 10px 10px 0;"><i class="bi bi-search"></i> Buscar</button>
-                            </div>
-                        </form>
-                    </div>
+                    <!-- Contenedor Sticky para Buscador y Categorías -->
+                    <div style="position: sticky; top: 0; z-index: 1020; background: #f4f7f6; padding-bottom: 10px; padding-top: 10px;">
+                        <!-- Search Input -->
+                        <div class="mb-3">
+                            <form th:action="@{/ventas/nueva}" method="get" id="searchForm" class="d-flex gap-2">
+                                <input type="hidden" name="categoria" th:value="${categoriaActual}">
+                                <input type="hidden" name="size" th:value="${pageSize}">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px;"><i class="bi bi-search text-muted"></i></span>
+                                    <input type="search" class="form-control border-start-0 border-end-0" id="searchProducts" name="search"
+                                           th:value="${search}" placeholder="Buscar producto por nombre o código..." autocomplete="off">
+                                    <button th:if="${search != null and !search.isEmpty()}" type="button" class="btn btn-outline-secondary border-start-0 border-end-0" onclick="clearSearch()"><i class="bi bi-x-lg"></i></button>
+                                    <button type="submit" class="btn btn-primary" style="border-radius: 0 10px 10px 0;"><i class="bi bi-search"></i> Buscar</button>
+                                </div>
+                            </form>
+                        </div>
 
-                    <!-- Category Pills -->
-                    <div class="pill-container">
-                        <a class="pill" th:classappend="${categoriaActual == null || categoriaActual.isEmpty()} ? 'active'" th:href="@{/ventas/nueva(search=${search})}">Todos</a>
-                        <a class="pill" th:each="cat : ${categorias}" th:classappend="${categoriaActual == cat} ? 'active'" th:href="@{/ventas/nueva(categoria=${cat}, search=${search})}" th:text="${cat}"></a>
+                        <!-- Category Pills -->
+                        <div class="pill-container mb-0">
+                            <a class="pill" th:classappend="${categoriaActual == null || categoriaActual.isEmpty()} ? 'active'" th:href="@{/ventas/nueva(search=${search})}">Todos</a>
+                            <a class="pill" th:each="cat : ${categorias}" th:classappend="${categoriaActual == cat} ? 'active'" th:href="@{/ventas/nueva(categoria=${cat}, search=${search})}" th:text="${cat}"></a>
+                        </div>
                     </div>
 
                     <!-- Product Grid (Original L-Farma Layout) -->
@@ -214,11 +217,8 @@
                     </div>
                     <div class="cart-footer">
                         <div class="mb-2">
-                            <label class="form-label small fw-bold text-muted">Cliente</label>
-                            <select class="form-select form-select-sm" id="clienteSelect">
-                                <option th:value="${consumidorFinal.id}" th:text="${consumidorFinal.nombre}" selected></option>
-                                <option th:each="c : ${clientes}" th:if="${c.id != consumidorFinal.id}" th:value="${c.id}" th:text="${c.nombre}"></option>
-                            </select>
+                            <label class="form-label small fw-bold text-muted">Cédula del Cliente (CC)</label>
+                            <input type="text" class="form-control form-control-sm" id="clienteCC" placeholder="Vacío para Consumidor Final" inputmode="numeric" maxlength="13" pattern="[0-9]{1,13}" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-bold text-muted">Método de Pago</label>
@@ -391,7 +391,7 @@
                     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Procesando...';
 
                     const body = {
-                        clienteId: document.getElementById('clienteSelect').value,
+                        clienteCC: document.getElementById('clienteCC').value,
                         metodoPago: document.getElementById('metodoPago').value,
                         detalles: cart.map(i => ({ productoId: i.id, cantidad: i.qty, precioUnitario: i.precio }))
                     };

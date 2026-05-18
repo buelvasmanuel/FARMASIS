@@ -17,6 +17,8 @@ public class UsuarioRegistroDTO {
     @Pattern(regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$", message = "Formato de correo inválido")
     private String email;
 
+    private String telefono;
+
     @NotBlank(message = "El rol es obligatorio")
     private String rol;
 
@@ -49,6 +51,14 @@ public class UsuarioRegistroDTO {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
 
     public String getRol() {

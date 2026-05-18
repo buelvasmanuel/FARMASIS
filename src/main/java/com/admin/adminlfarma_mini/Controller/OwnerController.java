@@ -113,6 +113,7 @@ public class OwnerController {
             nuevoUsuario.setRol(dto.getRol());
             nuevoUsuario.setNombre(dto.getNombre());
             nuevoUsuario.setApellido(dto.getApellido());
+            nuevoUsuario.setTelefono(dto.getTelefono());
 
             usuarioService.registrar(nuevoUsuario);
             
@@ -182,25 +183,7 @@ public class OwnerController {
                 return response;
             }
 
-            String rolAnterior = usuarioActual.getRol();
-            Usuario usuarioActualizado = usuarioService.actualizarRol(id, nuevoRol);
-            
-            String rolNuevoCompleto = usuarioActualizado.getRol();
-
-            if (usuarioActualizado.getEmail() != null && !usuarioActualizado.getEmail().isEmpty()) {
-                String nombreCompleto = (usuarioActualizado.getNombre() != null ? usuarioActualizado.getNombre() : "") + " " + (usuarioActualizado.getApellido() != null ? usuarioActualizado.getApellido() : "");
-                nombreCompleto = nombreCompleto.trim();
-                if (nombreCompleto.isEmpty()) {
-                    nombreCompleto = usuarioActualizado.getUsername();
-                }
-
-                if (rolAnterior.contains("EMPLEADO") && rolNuevoCompleto.contains("ADMIN")) {
-                    emailService.enviarCorreoAscenso(usuarioActualizado.getEmail(), nombreCompleto);
-                } else if (rolAnterior.contains("ADMIN") && rolNuevoCompleto.contains("EMPLEADO")) {
-                    emailService.enviarCorreoAjusteRol(usuarioActualizado.getEmail(), nombreCompleto);
-                }
-            }
-
+            usuarioService.actualizarRol(id, nuevoRol);
             response.put("success", true);
             response.put("message", "Rol actualizado exitosamente");
         } catch (Exception e) {
@@ -271,6 +254,7 @@ public class OwnerController {
             response.put("id", usuario.getId());
             response.put("username", usuario.getUsername());
             response.put("email", usuario.getEmail());
+            response.put("telefono", usuario.getTelefono());
             response.put("rol", usuario.getRol().replace("ROLE_", ""));
             response.put("activo", usuario.getActivo());
         } catch (Exception e) {
