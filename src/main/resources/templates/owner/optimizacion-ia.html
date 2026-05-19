@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente IA - Panel Owner | L-Farma</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <script>/* Anti-flicker */
+    (function(){try{if(localStorage.getItem('sidebarState')==='closed'){document.documentElement.classList.add('sidebar-preload-collapsed');}}catch(e){}}());
+    </script>
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
+        .main-content { background-color: #f8f9fa; min-height: 100vh; }
+        
+        .ia-header {
+            background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(27, 67, 50, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .ia-header::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+
+        .btn-ia {
+            background-color: #52B788;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(82, 183, 136, 0.3);
+        }
+        .btn-ia:hover {
+            background-color: #40916C;
+            transform: translateY(-2px);
+            color: white;
+            box-shadow: 0 6px 20px rgba(82, 183, 136, 0.4);
+        }
+
+        .loading-container {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        .result-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon-ia {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        #resultsArea {
+            display: none;
+        }
+
+        .table-premium thead {
+            background-color: #f1f3f5;
+        }
+        .table-premium th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            border: none;
+            padding: 1rem;
+        }
+        .table-premium td {
+            vertical-align: middle;
+            padding: 1rem;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .badge-discount {
+            background-color: #d8f3dc;
+            color: #1b4332;
+            font-weight: 600;
+        }
+        .badge-stock {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        .text-utility {
+            color: #2d6a4f;
+            font-weight: 700;
+        }
+
+        /* Spinner custom */
+        .spinner-ia {
+            width: 3rem;
+            height: 3rem;
+            color: #52B788;
+        }
+    </style>
+</head>
+
+<body>
+    <div th:replace="~{fragments/sidebar :: sidebar('optimizacion-ia')}"></div>
+    <div th:replace="~{fragments/sidebar :: topbar}"></div>
+    <div th:replace="~{fragments/sidebar :: logoutModal}"></div>
+
+    <div class="main-content no-transition" id="mainContent">
+        <div class="container-fluid px-4 py-4">
+            
+            <!-- IA Header -->
+            <div class="ia-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">
+                            <i class="bi bi-cpu-fill me-2"></i> Asistente de Compras IA
+                        </h1>
+                        <p class="lead mb-0 opacity-75">
+                            Optimización avanzada mediante Inteligencia Artificial para maximizar la utilidad de tu inventario.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-4 mt-md-0">
+                        <button id="btnEjecutar" class="btn btn-ia">
+                            <i class="bi bi-play-circle-fill me-2"></i> Ejecutar Optimización
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingArea" class="loading-container">
+                <div class="spinner-border spinner-ia mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h4 class="fw-bold">Analizando miles de combinaciones...</h4>
+                <p class="text-muted">Esto tomará aproximadamente 30 segundos. El motor de Timefold está calculando el escenario más rentable para tu farmacia.</p>
+            </div>
+
+            <!-- Results Area -->
+            <div id="resultsArea">
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card result-card h-100 p-4">
+                            <div class="stat-icon-ia bg-primary-subtle text-primary">
+                                <i class="bi bi-cash-stack"></i>
+                            </div>
+                            <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Presupuesto Usado</h6>
+                            <h3 id="resumenPresupuesto" class="fw-bold mb-0">$0.00</h3>
+                            <small id="resumenPresupuestoPct" class="text-muted mt-1">0% del presupuesto</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card result-card h-100 p-4">
+                            <div class="stat-icon-ia bg-success-subtle text-success">
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+                            <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Total Unidades a Pedir</h6>
+                            <h3 id="resumenUnidades" class="fw-bold mb-0">0</h3>
+                            <small class="text-muted mt-1">Unidades sugeridas por la IA</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card result-card h-100 p-4">
+                            <div class="stat-icon-ia bg-warning-subtle text-warning">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Utilidad Total Estimada</h6>
+                            <h3 id="resumenUtilidad" class="fw-bold mb-0 text-utility">$0.00</h3>
+                            <small class="text-muted mt-1">Ganancia proyectada optimizada</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <h5 class="fw-bold"><i class="bi bi-list-stars me-2 text-success"></i> Propuestas de Pedido Optimizadas</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-premium mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-center">Stock Actual</th>
+                                        <th class="text-center">Sugerencia Pedido</th>
+                                        <th class="text-center">Stock Final</th>
+                                        <th class="text-center">Desc. Proximidad</th>
+                                        <th class="text-end">Utilidad Est.</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaResultados">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/sidebar.js"></script>
+    <script>
+        document.getElementById('btnEjecutar').addEventListener('click', function() {
+            const btn = this;
+            const loadingArea = document.getElementById('loadingArea');
+            const resultsArea = document.getElementById('resultsArea');
+            const tabla = document.getElementById('tablaResultados');
+
+            // 1. UI State: Loading
+            btn.style.display = 'none';
+            resultsArea.style.display = 'none';
+            loadingArea.style.display = 'block';
+
+            // 2. Fetch API
+            fetch('/api/optimizar')
+                .then(response => {
+                    if (!response.ok) throw new Error('Error en el motor de optimización');
+                    return response.json();
+                })
+                .then(data => {
+                    // 3. UI State: Show Results
+                    loadingArea.style.display = 'none';
+                    resultsArea.style.display = 'block';
+                    btn.style.display = 'inline-block';
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat me-2"></i> Recalcular Optimización';
+
+                    // 4. Fill Summary
+                    const resumen = data.resumen;
+                    document.getElementById('resumenPresupuesto').innerText = '$' + resumen.costoTotalPedidos.toLocaleString(undefined, {minimumFractionDigits: 2});
+                    document.getElementById('resumenPresupuestoPct').innerText = resumen.presupuestoUsadoPorcentaje + ' del presupuesto máximo';
+                    document.getElementById('resumenUnidades').innerText = resumen.totalUnidadesAPedir.toLocaleString();
+                    document.getElementById('resumenUtilidad').innerText = '$' + resumen.utilidadTotalEstimada.toLocaleString(undefined, {minimumFractionDigits: 2});
+
+                    // 5. Fill Table
+                    tabla.innerHTML = '';
+                    data.propuestas.forEach(p => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>
+                                <div class="fw-bold">${p.productoNombre}</div>
+                                <small class="text-muted">Cód: ${p.productoCodigo}</small>
+                            </td>
+                            <td class="text-center"><span class="badge badge-stock">${p.cantidadActual}</span></td>
+                            <td class="text-center"><span class="badge bg-success text-white" style="font-size: 0.9rem;">+${p.cantidadAPedir}</span></td>
+                            <td class="text-center fw-bold">${p.stockResultante}</td>
+                            <td class="text-center">
+                                <span class="badge badge-discount">${p.descuentoPorcentaje}</span>
+                            </td>
+                            <td class="text-end text-utility">$${p.utilidadEstimada.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        `;
+                        tabla.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingArea.style.display = 'none';
+                    btn.style.display = 'inline-block';
+                    alert('Ocurrió un error al ejecutar la optimización: ' + error.message);
+                });
+        });
+    </script>
+</body>
+
+</html>

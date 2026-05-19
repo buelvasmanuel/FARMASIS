@@ -30,6 +30,14 @@
                 </a>
             </li>
 
+            <!-- BI — OWNER y ADMIN -->
+            <li class="nav-item" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">
+                <a href="/bi" class="nav-link" th:classappend="${activePage == 'bi' ? 'active' : ''}">
+                    <i class="bi bi-bar-chart-fill"></i>
+                    <span class="nav-text">BI</span>
+                </a>
+            </li>
+
             <!-- LABEL: Gestión (OWNER & ADMIN) -->
             <li class="nav-label nav-text" th:if="${#authorization.expression('hasAnyRole(''ROLE_OWNER'', ''ROLE_ADMIN'')')}">Gestión</li>
 
@@ -38,6 +46,14 @@
                 <a href="/owner/gestionar-usuarios" class="nav-link" th:classappend="${activePage == 'usuarios' ? 'active' : ''}">
                     <i class="bi bi-people"></i>
                     <span class="nav-text">Gestión de Usuarios</span>
+                </a>
+            </li>
+
+            <!-- Asistente IA — SOLO OWNER -->
+            <li class="nav-item" th:if="${#authorization.expression('hasRole(''ROLE_OWNER'')')}">
+                <a href="/owner/optimizacion-ia" class="nav-link" th:classappend="${activePage == 'optimizacion-ia' ? 'active' : ''}">
+                    <i class="bi bi-cpu"></i>
+                    <span class="nav-text">Asistente de Compras IA</span>
                 </a>
             </li>
 

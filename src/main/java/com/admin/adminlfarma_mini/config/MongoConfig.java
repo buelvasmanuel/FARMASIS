@@ -25,6 +25,9 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 @Configuration
 public class MongoConfig {
 
+    @Value("${spring.data.mongodb.uri:#{null}}")
+    private String uri;
+
     @Value("${spring.data.mongodb.host:localhost}")
     private String host;
 
@@ -36,9 +39,14 @@ public class MongoConfig {
 
     @Bean
     public MongoClient mongoClient() {
-        ConnectionString connectionString = new ConnectionString(
-                "mongodb://" + host + ":" + port + "/" + database
-        );
+        ConnectionString connectionString;
+        if (uri != null && !uri.isEmpty()) {
+            connectionString = new ConnectionString(uri);
+        } else {
+            connectionString = new ConnectionString(
+                    "mongodb://" + host + ":" + port + "/" + database
+            );
+        }
         MongoClientSettings settings = MongoClientSettings.builder()
                 .applyConnectionString(connectionString)
                 .build();
@@ -47,7 +55,14 @@ public class MongoConfig {
 
     @Bean
     public MongoDatabaseFactory mongoDatabaseFactory(MongoClient mongoClient) {
-        return new SimpleMongoClientDatabaseFactory(mongoClient, database);
+        String dbName = database;
+        if (uri != null && !uri.isEmpty()) {
+            ConnectionString connectionString = new ConnectionString(uri);
+            if (connectionString.getDatabase() != null) {
+                dbName = connectionString.getDatabase();
+            }
+        }
+        return new SimpleMongoClientDatabaseFactory(mongoClient, dbName);
     }
 
     @Bean

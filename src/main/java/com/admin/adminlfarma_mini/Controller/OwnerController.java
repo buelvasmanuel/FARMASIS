@@ -35,6 +35,12 @@ public class OwnerController {
         return "owner/dashboard";
     }
 
+    @GetMapping("/optimizacion-ia")
+    public String mostrarOptimizacionIA(Model model) {
+        model.addAttribute("titulo", "Asistente de Compras IA");
+        return "owner/optimizacion-ia";
+    }
+
     @GetMapping("/gestionar-usuarios")
     public String gestionarUsuarios(
             @RequestParam(value = "filtro", required = false) String filtro,
