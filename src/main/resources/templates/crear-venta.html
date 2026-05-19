@@ -126,7 +126,7 @@
                     <div style="position: sticky; top: 0; z-index: 1020; background: #f4f7f6; padding-bottom: 10px; padding-top: 10px;">
                         <!-- Search Input -->
                         <div class="mb-3">
-                            <form th:action="@{/ventas/nueva}" method="get" id="searchForm" class="d-flex gap-2">
+                            <form th:action="@{/ventas/nueva}" method="get" id="searchForm" class="d-flex gap-2" onsubmit="cleanFormSubmit(event, this)">
                                 <input type="hidden" name="categoria" th:value="${categoriaActual}">
                                 <input type="hidden" name="size" th:value="${pageSize}">
                                 <div class="input-group">
@@ -248,11 +248,25 @@
         const csrf = document.querySelector('meta[name="_csrf"]').content;
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
 
+        function cleanFormSubmit(event, form) {
+            if (event) event.preventDefault();
+            const search = form.querySelector('input[name="search"]').value.trim();
+            const categoria = form.querySelector('input[name="categoria"]').value.trim();
+            const size = form.querySelector('input[name="size"]').value.trim();
+            
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (categoria) params.set('categoria', categoria);
+            if (size && size !== '24') params.set('size', size);
+            
+            window.location.href = '/ventas/nueva?' + params.toString();
+        }
+
         // Clear search input and submit
         function clearSearch() {
             const form = document.getElementById('searchForm');
             form.querySelector('input[name="search"]').value = '';
-            form.submit();
+            cleanFormSubmit(null, form);
         }
 
         // Desplazamiento inteligente al paginar o filtrar

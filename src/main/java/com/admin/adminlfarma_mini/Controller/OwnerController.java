@@ -155,10 +155,16 @@ public class OwnerController {
             }
 
             // REGLA DE AUDITORÍA: Ignorar username y email enviados, mantener inmutabilidad
+            String rolAnterior = usuario.getRol();
             String rolConPrefijo = rol.startsWith("ROLE_") ? rol : "ROLE_" + rol;
             usuario.setRol(rolConPrefijo);
 
             usuarioService.actualizar(usuario);
+
+            // Enviar correo de notificación del cambio de rol DESPUÉS de guardar en la BD
+            if (rolAnterior != null && !rolAnterior.equals(rolConPrefijo)) {
+                usuarioService.enviarCorreoPorCambioRol(usuario, rolAnterior, rolConPrefijo);
+            }
             response.put("success", true);
             response.put("message", "Rol actualizado exitosamente. Los datos de identidad (Username/Email) permanecen inmutables.");
         } catch (Exception e) {

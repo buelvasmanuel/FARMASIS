@@ -87,28 +87,39 @@ public class ProveedorController {
 
     @GetMapping("/editar/{id}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
-    public String mostrarFormEditar(@PathVariable String id, Model model, RedirectAttributes redirectAttributes) {
+    public String mostrarFormEditar(@PathVariable String id,
+            @RequestParam(required = false) String estado,
+            Model model, RedirectAttributes redirectAttributes) {
         try {
             Proveedor proveedor = proveedorService.buscarPorId(id)
                     .orElseThrow(() -> new RuntimeException("Proveedor no encontrado"));
             model.addAttribute("proveedor", proveedor);
             model.addAttribute("titulo", "Editar Proveedor");
-            model.addAttribute("formAction", "/proveedores/actualizar/" + id);
+            String formAction = "/proveedores/actualizar/" + id;
+            if (estado != null && !estado.isEmpty()) {
+                formAction += "?estado=" + estado;
+            }
+            model.addAttribute("formAction", formAction);
             return "proveedores/form";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Proveedor no encontrado");
-            return "redirect:/proveedores";
+            return "redirect:/proveedores" + (estado != null && !estado.isEmpty() ? "?estado=" + estado : "");
         }
     }
 
     @PostMapping("/actualizar/{id}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public String actualizarProveedor(@PathVariable String id,
+            @RequestParam(required = false) String estado,
             @Valid @ModelAttribute Proveedor proveedor, BindingResult result,
             Model model, RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
             model.addAttribute("titulo", "Editar Proveedor");
-            model.addAttribute("formAction", "/proveedores/actualizar/" + id);
+            String formAction = "/proveedores/actualizar/" + id;
+            if (estado != null && !estado.isEmpty()) {
+                formAction += "?estado=" + estado;
+            }
+            model.addAttribute("formAction", formAction);
             return "proveedores/form";
         }
         try {
@@ -117,7 +128,7 @@ public class ProveedorController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al actualizar: " + e.getMessage());
         }
-        return "redirect:/proveedores";
+        return "redirect:/proveedores" + (estado != null && !estado.isEmpty() ? "?estado=" + estado : "");
     }
 
     // Desactivar proveedor (soft delete) — NO envía email

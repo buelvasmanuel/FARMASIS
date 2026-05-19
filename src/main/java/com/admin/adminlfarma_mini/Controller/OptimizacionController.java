@@ -86,6 +86,7 @@ public class OptimizacionController {
     private Map<String, Object> mapearPropuesta(PropuestaPedido p) {
         Map<String, Object> propuesta = new HashMap<>();
         propuesta.put("productoNombre", p.getNombreProducto());
+        propuesta.put("productoId", p.getProducto() != null ? p.getProducto().getId() : null);
         propuesta.put("productoCodigo", p.getProducto() != null ? p.getProducto().getCodigo() : "N/A");
         propuesta.put("productoCategoria", p.getProducto() != null ? p.getProducto().getCategoria() : "Otros");
         propuesta.put("precioBase", p.getPrecioBase());

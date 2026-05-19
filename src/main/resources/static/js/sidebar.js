@@ -67,17 +67,28 @@
     // ==========================================
     function setActiveNavLink() {
         const currentPath = window.location.pathname;
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+        let matchedLink = null;
+        let maxMatchLength = -1;
+
+        const links = document.querySelectorAll('.sidebar .nav-link');
+        links.forEach(link => {
             link.classList.remove('active');
-        });
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
             const href = link.getAttribute('href');
-            if (href && href !== '#' && href !== '/' && currentPath.startsWith(href)) {
-                link.classList.add('active');
+            if (href && href !== '#' && href !== '/') {
+                if (currentPath === href || currentPath.startsWith(href + '/')) {
+                    if (href.length > maxMatchLength) {
+                        maxMatchLength = href.length;
+                        matchedLink = link;
+                    }
+                }
             } else if (href === '/' && currentPath === '/') {
-                link.classList.add('active');
+                matchedLink = link;
             }
         });
+
+        if (matchedLink) {
+            matchedLink.classList.add('active');
+        }
     }
 
     // ==========================================

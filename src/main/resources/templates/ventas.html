@@ -91,8 +91,8 @@
                         </div>
                         <th:block sec:authorize="hasAnyAuthority('OWNER', 'ROLE_OWNER')">
                             <div class="col-md-2">
-                                <label class="form-label small fw-bold text-muted">Vendedor</label>
-                                <input type="search" class="form-control" name="vendedor" placeholder="Email..." th:value="${vendedor}" style="border-radius:10px;">
+                                <label class="form-label small fw-bold text-muted">Nombre de usuario</label>
+                                <input type="search" class="form-control" name="vendedor" placeholder="Nombre o usuario..." th:value="${vendedor}" style="border-radius:10px;">
                             </div>
                         </th:block>
                         <div class="col-md-2">
@@ -130,7 +130,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="v : ${ventas}">
+                            <tr th:each="v : ${ventas}" th:classappend="${v.vendedorEmail == loggedUser.email ? 'table-primary' : ''}">
                                 <td><span class="badge bg-secondary" th:text="${v.numeroFactura}">-</span></td>
                                 <td th:text="${#temporals.format(v.fecha, 'dd/MM/yyyy HH:mm')}">-</td>
                                 <td th:text="${v.clienteNombre}">-</td>
@@ -138,7 +138,7 @@
                                 <td><strong><span th:text="'$ ' + ${#numbers.formatDecimal(v.total, 1, 'POINT', 0, 'COMMA')}">0</span></strong>
                                 </td>
                                 <td><span class="badge bg-info" th:text="${v.metodoPago}">-</span></td>
-                                <td><span th:text="${v.vendedorEmail != null ? v.vendedorEmail : '—'}">—</span></td>
+                                <td th:text="${v.vendedorEmail == loggedUser.email ? 'Tú' : v.vendedorEmail}"></td>
                                 <td>
                                     <a th:href="@{/ventas/{id}/factura(id=${v.id})}" class="btn btn-sm btn-outline-primary" title="Ver Factura">
                                         <i class="bi bi-printer"></i>

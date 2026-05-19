@@ -24,18 +24,31 @@ public class ProductoService {
         return productoRepository.findInactivos(pageable);
     }
 
-    public Page<Producto> buscarProductos(String search, String categoria, Pageable pageable) {
+    public Page<Producto> buscarProductos(String search, String categoria, Boolean stockBajo, Pageable pageable) {
         boolean hasSearch = (search != null && !search.trim().isEmpty());
         boolean hasCategoria = (categoria != null && !categoria.trim().isEmpty());
+        boolean isStockBajo = (stockBajo != null && stockBajo);
 
-        if (hasSearch && hasCategoria) {
-            return productoRepository.searchByNombreOrCodigoAndCategoria(search, search, categoria, pageable);
-        } else if (hasSearch) {
-            return productoRepository.searchByNombreOrCodigo(search, search, pageable);
-        } else if (hasCategoria) {
-            return productoRepository.findProductosActivosPorCategoria(categoria, pageable);
+        if (isStockBajo) {
+            if (hasSearch && hasCategoria) {
+                return productoRepository.searchBajoStockAndCategoria(search, search, categoria, pageable);
+            } else if (hasSearch) {
+                return productoRepository.searchBajoStock(search, search, pageable);
+            } else if (hasCategoria) {
+                return productoRepository.findBajoStockPorCategoria(categoria, pageable);
+            } else {
+                return productoRepository.findBajoStock(pageable);
+            }
         } else {
-            return listarProductos(pageable);
+            if (hasSearch && hasCategoria) {
+                return productoRepository.searchByNombreOrCodigoAndCategoria(search, search, categoria, pageable);
+            } else if (hasSearch) {
+                return productoRepository.searchByNombreOrCodigo(search, search, pageable);
+            } else if (hasCategoria) {
+                return productoRepository.findProductosActivosPorCategoria(categoria, pageable);
+            } else {
+                return listarProductos(pageable);
+            }
         }
     }
 

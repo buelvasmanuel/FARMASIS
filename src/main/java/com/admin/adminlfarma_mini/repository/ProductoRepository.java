@@ -54,6 +54,18 @@ public interface ProductoRepository extends MongoRepository<Producto, String> {
     @Query("{ 'activo': true, $expr: { $lte: [ '$cantidad', { $ifNull: [ '$stockMinimo', 5 ] } ] } }")
     List<Producto> findProductosBajoStock();
 
+    @Query("{ 'activo': true, $expr: { $lte: [ '$cantidad', { $ifNull: [ '$stockMinimo', 5 ] } ] } }")
+    Page<Producto> findBajoStock(Pageable pageable);
+
+    @Query("{ 'activo': true, 'categoria': ?0, $expr: { $lte: [ '$cantidad', { $ifNull: [ '$stockMinimo', 5 ] } ] } }")
+    Page<Producto> findBajoStockPorCategoria(String categoria, Pageable pageable);
+
+    @Query("{ $or: [ { 'nombre': { $regex: ?0, $options: 'i' } }, { 'codigo': { $regex: ?1, $options: 'i' } } ], 'activo': true, $expr: { $lte: [ '$cantidad', { $ifNull: [ '$stockMinimo', 5 ] } ] } }")
+    Page<Producto> searchBajoStock(String nombre, String codigo, Pageable pageable);
+
+    @Query("{ $or: [ { 'nombre': { $regex: ?0, $options: 'i' } }, { 'codigo': { $regex: ?1, $options: 'i' } } ], 'categoria': ?2, 'activo': true, $expr: { $lte: [ '$cantidad', { $ifNull: [ '$stockMinimo', 5 ] } ] } }")
+    Page<Producto> searchBajoStockAndCategoria(String nombre, String codigo, String categoria, Pageable pageable);
+
     // Búsqueda en POS filtrada por categoría y término (nombre/código)
     @Query("{ $or: [ { 'nombre': { $regex: ?0, $options: 'i' } }, { 'codigo': { $regex: ?1, $options: 'i' } } ], 'categoria': ?2, 'activo': true }")
     Page<Producto> searchByNombreOrCodigoAndCategoria(String nombre, String codigo, String categoria, Pageable pageable);

@@ -63,7 +63,17 @@ public class FacturaController {
                 if ("ROLE_OWNER".equals(loggedUser.getRol())) {
                     isOwner = true;
                     if (vendedor != null && !vendedor.trim().isEmpty()) {
-                        allowedVendedores.add(vendedor.trim());
+                        List<com.admin.adminlfarma_mini.entity.Usuario> matchedUsers = usuarioService.listarTodosIncluyendoInactivos().stream()
+                            .filter(u -> (u.getNombre() != null && u.getNombre().toLowerCase().contains(vendedor.toLowerCase().trim())) ||
+                                         (u.getApellido() != null && u.getApellido().toLowerCase().contains(vendedor.toLowerCase().trim())) ||
+                                         (u.getUsername() != null && u.getUsername().toLowerCase().contains(vendedor.toLowerCase().trim())))
+                            .toList();
+                        for (com.admin.adminlfarma_mini.entity.Usuario u : matchedUsers) {
+                            allowedVendedores.add(u.getUsername());
+                        }
+                        if (allowedVendedores.isEmpty()) {
+                            allowedVendedores.add("dummy_no_match");
+                        }
                     }
                 } else if ("ROLE_ADMIN".equals(loggedUser.getRol())) {
                     List<com.admin.adminlfarma_mini.entity.Usuario> allUsers = usuarioService.listarTodosIncluyendoInactivos();
@@ -119,7 +129,17 @@ public class FacturaController {
                 if ("ROLE_OWNER".equals(loggedUser.getRol())) {
                     isOwner = true;
                     if (vendedor != null && !vendedor.trim().isEmpty()) {
-                        allowedVendedores.add(vendedor.trim());
+                        List<com.admin.adminlfarma_mini.entity.Usuario> matchedUsers = usuarioService.listarTodosIncluyendoInactivos().stream()
+                            .filter(u -> (u.getNombre() != null && u.getNombre().toLowerCase().contains(vendedor.toLowerCase().trim())) ||
+                                         (u.getApellido() != null && u.getApellido().toLowerCase().contains(vendedor.toLowerCase().trim())) ||
+                                         (u.getUsername() != null && u.getUsername().toLowerCase().contains(vendedor.toLowerCase().trim())))
+                            .toList();
+                        for (com.admin.adminlfarma_mini.entity.Usuario u : matchedUsers) {
+                            allowedVendedores.add(u.getUsername());
+                        }
+                        if (allowedVendedores.isEmpty()) {
+                            allowedVendedores.add("dummy_no_match");
+                        }
                     }
                 } else if ("ROLE_ADMIN".equals(loggedUser.getRol())) {
                     List<com.admin.adminlfarma_mini.entity.Usuario> allUsers = usuarioService.listarTodosIncluyendoInactivos();

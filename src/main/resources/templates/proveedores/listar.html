@@ -45,7 +45,7 @@
 
                 <!-- Barra de Filtros -->
                 <div class="filter-bar mb-3">
-                    <form method="get" class="row g-2 align-items-end">
+                    <form method="get" class="row g-2 align-items-end" onsubmit="cleanFormSubmit(event, this)">
                         <div class="col-md-4 position-relative">
                             <label class="form-label small fw-bold text-muted">Buscar</label>
                             <input type="search" class="form-control" name="search" id="searchInput"
@@ -132,7 +132,7 @@
                         </div>
                         <div class="card-footer bg-transparent border-0 pb-3" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">
                             <div class="btn-group w-100" th:if="${estado == null || estado == 'ACTIVOS'}">
-                                <a th:href="@{/proveedores/editar/{id}(id=${proveedor.id})}" class="btn btn-outline-lfarma btn-sm">
+                                <a th:href="@{/proveedores/editar/{id}(id=${proveedor.id}, estado=${estado})}" class="btn btn-outline-lfarma btn-sm">
                                     <i class="bi bi-pencil"></i> Editar
                                 </a>
                                 <th:block th:if="${#authorization.expression('hasAuthority(''OWNER'')') or #authorization.expression('hasAuthority(''ROLE_OWNER'')')}">
@@ -217,6 +217,20 @@
     <script>
         // Auto-dismiss alerts
         setTimeout(function(){ document.querySelectorAll('.alert').forEach(a => a.style.display='none'); }, 5000);
+
+        function cleanFormSubmit(event, form) {
+            event.preventDefault();
+            const search = form.querySelector('input[name="search"]').value.trim();
+            const estado = form.querySelector('select[name="estado"]').value.trim();
+            const categoria = form.querySelector('select[name="categoria"]').value.trim();
+            
+            const params = new URLSearchParams();
+            if (search) params.set('search', search);
+            if (estado && estado !== 'ACTIVOS') params.set('estado', estado);
+            if (categoria) params.set('categoria', categoria);
+            
+            window.location.href = '/proveedores?' + params.toString();
+        }
 
         // Limpieza automática en botón 'X' nativo de buscadores
         document.addEventListener("DOMContentLoaded", function() {

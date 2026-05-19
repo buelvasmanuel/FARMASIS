@@ -128,7 +128,7 @@ public class UsuarioService {
         return usuarioGuardado;
     }
 
-    private void enviarCorreoPorCambioRol(Usuario usuarioGuardado, String rolAnterior, String rolNuevo) {
+    public void enviarCorreoPorCambioRol(Usuario usuarioGuardado, String rolAnterior, String rolNuevo) {
         if (usuarioGuardado.getEmail() != null && !usuarioGuardado.getEmail().isEmpty()) {
             String nombreCompleto = (usuarioGuardado.getNombre() != null ? usuarioGuardado.getNombre() : "") + " " + (usuarioGuardado.getApellido() != null ? usuarioGuardado.getApellido() : "");
             nombreCompleto = nombreCompleto.trim();

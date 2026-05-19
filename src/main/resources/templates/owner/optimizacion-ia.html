@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motor de Optimización - Panel Owner | L-Farma</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -182,6 +184,7 @@
                                 <h6 class="text-muted text-uppercase mb-1" style="font-size: 0.8rem;">Total Unidades a Pedir</h6>
                                 <h3 id="resumenUnidades" class="fw-bold mb-0">0</h3>
                                 <small class="text-muted mt-1">Unidades sugeridas por la IA</small>
+                                <div class="mt-2"><span id="productosAOptimizarBadge" class="badge bg-info text-white" style="font-size: 0.8rem;">Productos a Optimizar: 0</span></div>
                             </div>
                         </div>
                         <div class="col-md-4 mb-3">
@@ -238,6 +241,7 @@
                                         <th class="text-center">Stock Final</th>
                                         <th class="text-center">Desc. Proximidad</th>
                                         <th class="text-end">Utilidad Est.</th>
+                                        <th class="text-center">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tablaResultados">
@@ -253,6 +257,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/js/sidebar.js"></script>
     <script>
         document.getElementById('btnEjecutar').addEventListener('click', function() {
@@ -288,6 +294,9 @@
                     document.getElementById('resumenPresupuestoPct').innerText = resumen.presupuestoUsadoPorcentaje + ' del presupuesto máximo';
                     document.getElementById('resumenUnidades').innerText = resumen.totalUnidadesAPedir.toLocaleString();
                     document.getElementById('resumenUtilidad').innerText = '$' + resumen.utilidadTotalEstimada.toLocaleString(undefined, {minimumFractionDigits: 2});
+                    if (data.propuestas) {
+                        document.getElementById('productosAOptimizarBadge').innerText = 'Productos a Optimizar: ' + data.propuestas.length;
+                    }
 
                     // 5. Fill Table
                     tabla.innerHTML = '';
@@ -308,6 +317,16 @@
                                 <span class="badge badge-discount">${p.descuentoPorcentaje}</span>
                             </td>
                             <td class="text-end text-utility">$${p.utilidadEstimada.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td class="text-center">
+                                ${p.productoId && parseFloat(p.descuentoPorcentaje) > 0 ? `
+                                    <button class="btn btn-sm btn-outline-success aplicar-descuento-btn" 
+                                            data-id="${p.productoId}" 
+                                            data-nombre="${p.productoNombre}" 
+                                            data-pct="${parseFloat(p.descuentoPorcentaje)}">
+                                        <i class="bi bi-tag-fill me-1"></i> Aplicar
+                                    </button>
+                                ` : `<span class="text-muted small">Sin Descuento</span>`}
+                            </td>
                         `;
                         tabla.appendChild(row);
                     });
@@ -341,17 +360,70 @@
                         document.getElementById('resumenPresupuestoPct').innerText = resumen.presupuestoUsadoPorcentaje + ' del presupuesto máximo';
                         document.getElementById('resumenUnidades').innerText = Number(resumen.totalUnidadesAPedir).toLocaleString();
                         document.getElementById('resumenUtilidad').innerText = '$' + Number(resumen.utilidadTotalEstimada).toLocaleString(undefined, {minimumFractionDigits: 2});
+                        if (data.propuestas) {
+                            document.getElementById('productosAOptimizarBadge').innerText = 'Productos a Optimizar: ' + data.propuestas.length;
+                        }
                         tabla.innerHTML = '';
                         document.getElementById('filtroCategoria').value = 'Todos';
                         data.propuestas.forEach(p => {
                             const row = document.createElement('tr');
                             row.setAttribute('data-categoria', p.productoCategoria || 'Otros');
-                            row.innerHTML = `<td><div class="fw-bold">${p.productoNombre}</div><small class="text-muted">Cód: ${p.productoCodigo}</small><span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size:0.7rem;">${p.productoCategoria || 'Otros'}</span></td><td class="text-center"><span class="badge badge-stock">${p.cantidadActual}</span></td><td class="text-center"><span class="badge bg-success text-white" style="font-size:0.9rem;">+${p.cantidadAPedir}</span></td><td class="text-center fw-bold">${p.stockResultante}</td><td class="text-center"><span class="badge badge-discount">${p.descuentoPorcentaje}</span></td><td class="text-end text-utility">$${Number(p.utilidadEstimada).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>`;
+                            row.innerHTML = `<td><div class="fw-bold">${p.productoNombre}</div><small class="text-muted">Cód: ${p.productoCodigo}</small><span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size:0.7rem;">${p.productoCategoria || 'Otros'}</span></td><td class="text-center"><span class="badge badge-stock">${p.cantidadActual}</span></td><td class="text-center"><span class="badge bg-success text-white" style="font-size:0.9rem;">+${p.cantidadAPedir}</span></td><td class="text-center fw-bold">${p.stockResultante}</td><td class="text-center"><span class="badge badge-discount">${p.descuentoPorcentaje}</span></td><td class="text-end text-utility">$${Number(p.utilidadEstimada).toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td class="text-center">${p.productoId && parseFloat(p.descuentoPorcentaje) > 0 ? `<button class="btn btn-sm btn-outline-success aplicar-descuento-btn" data-id="${p.productoId}" data-nombre="${p.productoNombre}" data-pct="${parseFloat(p.descuentoPorcentaje)}"><i class="bi bi-tag-fill me-1"></i> Aplicar</button>` : `<span class="text-muted small">Sin Descuento</span>`}</td>`;
                             tabla.appendChild(row);
                         });
                     }
                 }).catch(() => {});
         })();
+
+        $(document).on('click', '.aplicar-descuento-btn', function () {
+            const id = $(this).data('id');
+            const nombre = $(this).data('nombre');
+            const pct = $(this).data('pct');
+            
+            Swal.fire({
+                title: '¿Aplicar descuento?',
+                text: `Se aplicará un descuento del ${pct}% al producto "${nombre}".`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, aplicar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const csrfToken = $("meta[name='_csrf']").attr("content") || '';
+                    const csrfHeader = $("meta[name='_csrf_header']").attr("content") || '';
+                    
+                    const headers = {};
+                    if (csrfToken && csrfHeader) {
+                        headers[csrfHeader] = csrfToken;
+                    }
+                    
+                    fetch('/productos/aplicar-descuento/' + encodeURIComponent(id) + '?porcentaje=' + encodeURIComponent(pct), {
+                        method: 'POST',
+                        headers: headers
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Descuento Aplicado',
+                                text: `El nuevo precio es $${data.nuevoPrecio.toLocaleString(undefined, {minimumFractionDigits: 2})}`,
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire('Error', data.message || 'No se pudo aplicar el descuento.', 'error');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Error', 'Ocurrió un error en el servidor.', 'error');
+                    });
+                }
+            });
+        });
 
         // Listener para el filtro por categoría client-side
         document.getElementById('filtroCategoria').addEventListener('change', function() {

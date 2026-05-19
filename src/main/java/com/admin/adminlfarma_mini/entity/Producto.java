@@ -23,6 +23,7 @@ public class Producto {
 
     private String nombre;
     private Double precio;
+    private Double precioOriginal;
     private Double costoCompra;
     private Integer cantidad;
     private String categoria;

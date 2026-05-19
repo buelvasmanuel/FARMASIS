@@ -35,11 +35,12 @@ public class ProductoController {
             @RequestParam(defaultValue = "15") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) Boolean stockBajo,
             @RequestParam(defaultValue = "lista") String view,
             Model model) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
-        var productosPage = productoService.buscarProductos(search, categoria, pageable);
+        var productosPage = productoService.buscarProductos(search, categoria, stockBajo, pageable);
 
         model.addAttribute("productos", productosPage.getContent());
         model.addAttribute("currentPage", page);
@@ -48,6 +49,7 @@ public class ProductoController {
         model.addAttribute("pageSize", size);
         model.addAttribute("search", search);
         model.addAttribute("categoria", categoria);
+        model.addAttribute("stockBajo", stockBajo);
         model.addAttribute("view", view);
         model.addAttribute("proveedores", proveedorService.listarTodos());
         model.addAttribute("stockBajoCount", productoService.getProductosBajoStock().size());
@@ -238,5 +240,65 @@ public class ProductoController {
         Map<String, Boolean> response = new HashMap<>();
         response.put("exists", productoService.existeCodigo(codigo));
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/aplicar-descuento/{id}")
+    @ResponseBody
+    @PreAuthorize("hasAnyAuthority('OWNER', 'ROLE_OWNER')")
+    public ResponseEntity<Map<String, Object>> aplicarDescuento(@PathVariable String id, @RequestParam Double porcentaje) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            java.util.Optional<Producto> opt = productoService.obtenerPorId(id);
+            if (opt.isPresent()) {
+                Producto p = opt.get();
+                if (p.getPrecioOriginal() == null) {
+                    p.setPrecioOriginal(p.getPrecio());
+                }
+                double nuevoPrecio = p.getPrecioOriginal() * (1.0 - (porcentaje / 100.0));
+                nuevoPrecio = Math.round(nuevoPrecio * 100.0) / 100.0;
+                p.setPrecio(nuevoPrecio);
+                productoService.actualizar(id, p);
+                
+                response.put("success", true);
+                response.put("nuevoPrecio", nuevoPrecio);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Producto no encontrado");
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al aplicar descuento: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
+    @PostMapping("/revertir-descuento")
+    @ResponseBody
+    @PreAuthorize("hasAnyAuthority('OWNER', 'ROLE_OWNER')")
+    public ResponseEntity<Map<String, Object>> revertirDescuento(@RequestParam String id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            java.util.Optional<Producto> opt = productoService.obtenerPorId(id);
+            if (opt.isPresent()) {
+                Producto p = opt.get();
+                if (p.getPrecioOriginal() != null) {
+                    p.setPrecio(p.getPrecioOriginal());
+                    p.setPrecioOriginal(null);
+                    productoService.actualizar(id, p);
+                }
+                response.put("success", true);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "Producto no encontrado");
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al revertir descuento: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(response);
+        }
     }
 }
