@@ -74,27 +74,43 @@ public class PropuestaPedido {
     }
 
     /**
-     * Calcula la utilidad individual de esta propuesta.
-     * Fórmula: Ingresos - Costos - CostoAlmacenamiento
+     * Calcula el descuento aplicable garantizando al menos un 1% de ganancia mínima.
+     */
+    public double getDescuentoAplicable() {
+        if (descuentoProximidad == null) return 0.0;
+        double precio = getPrecioBase();
+        double costo = getCostoCompraProducto();
+        if (precio == 0.0 || precio <= costo) return 0.0; // Evitar descuentos si ya no hay margen
+
+        // maxDescuento en decimal (ej. 0.20 para 20%)
+        double maxDescuento = (precio - costo) / precio;
+
+        // Si el descuento sugerido es mayor o igual al máximo, lo reducimos para garantizar 1% (0.01) de ganancia
+        if (descuentoProximidad >= maxDescuento) {
+            return Math.max(0.0, maxDescuento - 0.01);
+        }
+        return descuentoProximidad;
+    }
+
+    /**
+     * Calcula la utilidad estimada de la propuesta.
+     * Utilidad = (PrecioConDescuento - CostoCompra) * StockFinal
+     * Esta utilidad jamás debe ser negativa.
      */
     public double calcularUtilidad() {
-        if (cantidadAPedir == null || descuentoProximidad == null) return 0.0;
+        if (cantidadAPedir == null) return 0.0;
 
         int cantActual = getCantidadActual();
         double precio = getPrecioBase();
         double costoCompra = getCostoCompraProducto();
-        int demanda = (demandaEstimada != null) ? demandaEstimada : 0;
+        
+        double descuentoFinal = getDescuentoAplicable();
+        double precioConDescuento = precio * (1.0 - descuentoFinal);
+        
+        int stockFinal = cantActual + cantidadAPedir;
+        
+        double utilidad = (precioConDescuento - costoCompra) * stockFinal;
 
-        // Ingresos = PrecioBase * (1 - descuento) * MIN(demanda, cantActual + cantAPedir)
-        double ingresos = precio * (1 - descuentoProximidad)
-                * Math.min(demanda, cantActual + cantidadAPedir);
-
-        // Costos = costoCompra * cantidadAPedir
-        double costos = costoCompra * cantidadAPedir;
-
-        // Costo Almacenamiento (Cuadrático) = 0.05 * (cantActual + cantAPedir)²
-        double costoAlmacenamiento = 0.05 * Math.pow(cantActual + cantidadAPedir, 2);
-
-        return ingresos - costos - costoAlmacenamiento;
+        return Math.max(0.0, utilidad);
     }
 }

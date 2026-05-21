@@ -88,7 +88,16 @@ public class FacturaService {
         if (!criterios.isEmpty()) {
             query.addCriteria(new Criteria().andOperator(criterios.toArray(new Criteria[0])));
         }
-        return mongoTemplate.find(query, Factura.class);
+        List<Factura> facturas = mongoTemplate.find(query, Factura.class);
+        if (facturas != null) {
+            facturas.sort((f1, f2) -> {
+                if (f1.getFecha() == null && f2.getFecha() == null) return 0;
+                if (f1.getFecha() == null) return 1;
+                if (f2.getFecha() == null) return -1;
+                return f2.getFecha().compareTo(f1.getFecha());
+            });
+        }
+        return facturas;
     }
     
     public Double getVentasDelDia() {

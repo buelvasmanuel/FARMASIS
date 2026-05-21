@@ -36,6 +36,7 @@ public class OptimizacionController {
             response.put("softScore", solucion.getScore() != null ? solucion.getScore().softScore() : 0);
 
             List<Map<String, Object>> propuestasJson = solucion.getPropuestas().stream()
+                    .filter(p -> p.getCantidadAPedir() != null && (p.getCantidadAPedir() > 0 || p.getDescuentoAplicable() > 0.0))
                     .map(this::mapearPropuesta)
                     .collect(Collectors.toList());
             response.put("propuestas", propuestasJson);
@@ -68,12 +69,23 @@ public class OptimizacionController {
         Optional<ResultadoOptimizacion> resultado = optimizacionService.obtenerUltimoResultado();
         if (resultado.isPresent()) {
             ResultadoOptimizacion r = resultado.get();
+            
+            List<Map<String, Object>> propuestasFiltradas = r.getPropuestas().stream()
+                    .filter(map -> {
+                        Object cant = map.get("cantidadAPedir");
+                        Object desc = map.get("descuentoProximidad");
+                        int c = cant instanceof Number ? ((Number) cant).intValue() : 0;
+                        double d = desc instanceof Number ? ((Number) desc).doubleValue() : 0.0;
+                        return c > 0 || d > 0.0;
+                    })
+                    .collect(Collectors.toList());
+            
             Map<String, Object> response = new HashMap<>();
             response.put("status", "OK");
             response.put("score", r.getScore());
             response.put("hardScore", r.getHardScore());
             response.put("softScore", r.getSoftScore());
-            response.put("propuestas", r.getPropuestas());
+            response.put("propuestas", propuestasFiltradas);
             response.put("resumen", r.getResumen());
             response.put("fechaCalculo", r.getFechaCalculo().toString());
             return ResponseEntity.ok(response);
@@ -90,16 +102,14 @@ public class OptimizacionController {
         propuesta.put("productoCodigo", p.getProducto() != null ? p.getProducto().getCodigo() : "N/A");
         propuesta.put("productoCategoria", p.getProducto() != null ? p.getProducto().getCategoria() : "Otros");
         propuesta.put("precioBase", p.getPrecioBase());
+        propuesta.put("precioOriginal", p.getProducto() != null ? p.getProducto().getPrecioOriginal() : null);
         propuesta.put("costoCompra", p.getCostoCompraProducto());
         propuesta.put("cantidadActual", p.getCantidadActual());
         propuesta.put("demandaEstimada", p.getDemandaEstimada());
         propuesta.put("espacioUnidad", p.getEspacioUnidad());
         propuesta.put("cantidadAPedir", p.getCantidadAPedir());
-        propuesta.put("descuentoProximidad", p.getDescuentoProximidad());
-        propuesta.put("descuentoPorcentaje",
-                p.getDescuentoProximidad() != null
-                        ? String.format("%.0f%%", p.getDescuentoProximidad() * 100)
-                        : "0%");
+        propuesta.put("descuentoProximidad", p.getDescuentoAplicable());
+        propuesta.put("descuentoPorcentaje", String.format("%.0f%%", p.getDescuentoAplicable() * 100));
         propuesta.put("utilidadEstimada", Math.round(p.calcularUtilidad() * 100.0) / 100.0);
         propuesta.put("costoTotalPedido",
                 Math.round(p.getCostoCompraProducto() * p.getCantidadAPedir() * 100.0) / 100.0);

@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Productos - L-Farma</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -141,7 +143,8 @@
     <div class="main-content no-transition" id="mainContent">
 
         <div class="container-fluid px-4 py-4">
-            <!-- Contenedor Sticky para KPIs y Filtros -->
+            <div id="productosContainer">
+                <!-- Contenedor Sticky para KPIs y Filtros -->
             <div class="sticky-header-container">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1><i class="bi bi-box-seam"></i> Productos</h1>
@@ -165,18 +168,30 @@
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevoProductoModal" id="btnNuevoProducto"><i class="bi bi-plus-circle"></i> Nuevo Producto</button>
                     </div>
                 </div>
-
                 <!-- Alertas -->
                 <div th:if="${success}" class="alert alert-success alert-dismissible fade show"><span
                         th:text="${success}"></span><button type="button" class="btn-close"
                         data-bs-dismiss="alert"></button></div>
                 <div th:if="${error}" class="alert alert-danger alert-dismissible fade show"><span
-                        th:text="${error}"></span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        th:text="${error}"></span><button type="button" class="btn-close"
+                        data-bs-dismiss="alert"></button></div>
+
+                <div th:if="${#lists.isEmpty(productos)}" class="text-center py-5 text-muted card shadow-sm border border-light" style="border-radius: 16px; background-color: #fafafa;">
+                    <div class="card-body">
+                        <i class="bi bi-search text-danger mb-3" style="font-size: 3rem; display: block;"></i>
+                        <h5 class="fw-bold text-dark">No se encontraron productos con los criterios seleccionados</h5>
+                        <button type="button" class="btn btn-secondary px-4 mt-3" onclick="window.loadProducts('/productos')" style="border-radius: 10px; font-weight: 500;">
+                            <i class="bi bi-x-circle me-1"></i> Limpiar Búsqueda
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Tabla de Productos -->
+                <div th:if="${not #lists.isEmpty(productos) and view == 'lista'}" class="card border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
 
                 <!-- Estadísticas -->
                 <div class="row mb-4">
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-2 mb-3">
                         <div class="card bg-primary text-white">
                             <div class="card-body">
                                 <h6>Total Productos</h6>
@@ -184,12 +199,22 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-2 mb-3">
                         <a th:href="@{/productos(stockBajo=true)}" class="text-decoration-none">
                             <div class="card bg-success text-white" style="cursor: pointer;">
                                 <div class="card-body">
                                     <h6>Stock Bajo (&lt;5)</h6>
                                     <h3 id="stockBajoCount" th:text="${stockBajoCount}">0</h3>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a th:href="@{/productos(enOferta=true)}" class="text-decoration-none">
+                            <div class="card bg-warning text-dark" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <h6>En Oferta</h6>
+                                    <h3><i class="bi bi-tag-fill"></i></h3>
                                 </div>
                             </div>
                         </a>
@@ -237,7 +262,7 @@
                                 <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Buscar</button>
                             </div>
                             <div class="col-md-1">
-                                <button type="button" onclick="const s = new URLSearchParams(window.location.search).get('size') || 15; window.location.href='/productos?size=' + s;" class="btn btn-outline-secondary w-100" title="Limpiar Filtros">
+                                <button type="button" onclick="const s = new URLSearchParams(window.location.search).get('size') || 15; window.loadProducts('/productos?size=' + s);" class="btn btn-outline-secondary w-100" title="Limpiar Filtros">
                                     <i class="bi bi-eraser-fill"></i>
                                 </button>
                             </div>
@@ -293,7 +318,7 @@
                                         th:data-presentacion="${p.presentacion}" th:data-concentracion="${p.concentracion}" 
                                         th:data-lote="${p.lote}" th:data-fecha="${p.fechaVencimiento}"
                                         th:data-principios="${p.principiosActivos}" th:data-descripcion="${p.descripcion}"
-                                        th:data-proveedorid="${p.proveedorId}" th:data-fechaingreso="${p.fechaIngreso}"
+                                        th:data-proveedor="${p.proveedorId}" th:data-fechaingreso="${p.fechaIngreso}"
                                         th:data-stockminimo="${p.stockMinimo}"
                                         title="Editar"><i class="bi bi-pencil"></i>
                                     </button>
@@ -301,11 +326,6 @@
                                         <button class="btn btn-sm btn-warning btn-action archivar-producto" th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Archivar"><i class="bi bi-archive"></i></button>
                                     </th:block>
                                 </td>
-                            </tr>
-                            <tr th:if="${productos.empty}">
-                                <td colspan="7" class="text-center py-5">No hay productos registrados. <button
-                                        class="btn btn-link" data-bs-toggle="modal" data-bs-target="#productoModal">Crear primer
-                                        producto</button></td>
                             </tr>
                         </tbody>
                     </table>
@@ -316,21 +336,21 @@
                     <nav>
                         <ul class="pagination justify-content-center mb-2">
                             <li class="page-item" th:classappend="${currentPage == 0 or totalPages == 0} ? 'disabled' : ''">
-                                <a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search}, categoria=${categoria})}"><i class="bi bi-chevron-double-left"></i></a>
+                                <a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}"><i class="bi bi-chevron-double-left"></i></a>
                             </li>
                             <li class="page-item" th:classappend="${currentPage == 0 or totalPages == 0} ? 'disabled' : ''">
-                                <a class="page-link page-prev" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search}, categoria=${categoria})}"><i class="bi bi-chevron-left"></i></a>
+                                <a class="page-link page-prev" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}"><i class="bi bi-chevron-left"></i></a>
                             </li>
                             <li th:each="i : ${#numbers.sequence(0, (totalPages > 0 ? totalPages - 1 : 0))}"
                                 th:classappend="${i == currentPage} ? 'active' : ''"
                                 th:if="${totalPages > 0 and i >= currentPage - 2 and i <= currentPage + 2}" class="page-item">
-                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search}, categoria=${categoria})}" th:text="${i + 1}"></a>
+                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}" th:text="${i + 1}"></a>
                             </li>
                             <li class="page-item" th:classappend="${currentPage >= totalPages - 1 or totalPages == 0} ? 'disabled' : ''">
-                                <a class="page-link page-next" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search}, categoria=${categoria})}"><i class="bi bi-chevron-right"></i></a>
+                                <a class="page-link page-next" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}"><i class="bi bi-chevron-right"></i></a>
                             </li>
                             <li class="page-item" th:classappend="${currentPage >= totalPages - 1 or totalPages == 0} ? 'disabled' : ''">
-                                <a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search}, categoria=${categoria})}"><i class="bi bi-chevron-double-right"></i></a>
+                                <a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}"><i class="bi bi-chevron-double-right"></i></a>
                             </li>
                         </ul>
                     </nav>
@@ -353,7 +373,7 @@
                                 th:data-presentacion="${p.presentacion}" th:data-concentracion="${p.concentracion}"
                                 th:data-lote="${p.lote}" th:data-fecha="${p.fechaVencimiento}"
                                 th:data-principios="${p.principiosActivos}" th:data-descripcion="${p.descripcion}"
-                                th:data-proveedorid="${p.proveedorId}" th:data-fechaingreso="${p.fechaIngreso}"
+                                th:data-proveedor="${p.proveedorId}" th:data-fechaingreso="${p.fechaIngreso}"
                                 th:data-stockminimo="${p.stockMinimo}"
                                 title="Editar"><i class="bi bi-pencil"></i></button>
                             <th:block th:if="${p.precioOriginal != null}"><button class="btn btn-sm btn-danger revertir-descuento-btn" th:data-id="${p.id}" th:data-nombre="${p.nombre}" title="Revertir Descuento"><i class="bi bi-arrow-counterclockwise"></i></button></th:block><th:block th:if="${#authorization.expression('hasAuthority(''OWNER'')') or #authorization.expression('hasAuthority(''ROLE_OWNER'')')}">
@@ -383,20 +403,30 @@
                 <div th:if="${totalPages > 1}" class="mt-4">
                     <nav>
                         <ul class="pagination justify-content-center mb-2">
-                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}"><i class="bi bi-chevron-double-left"></i></a></li>
-                            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'"><a class="page-link page-prev" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}"><i class="bi bi-chevron-left"></i></a></li>
-                            <li th:each="i : ${#numbers.sequence(0, (totalPages > 0 ? totalPages - 1 : 0))}" th:if="${totalPages > 0 and i >= currentPage - 2 and i <= currentPage + 2}" th:classappend="${i == currentPage} ? 'active'" class="page-item">
-                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}" th:text="${i + 1}"></a>
+                            <li class="page-item" th:classappend="${currentPage == 0 or totalPages == 0} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/productos(page=0, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}"><i class="bi bi-chevron-double-left"></i></a>
                             </li>
-                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'"><a class="page-link page-next" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}"><i class="bi bi-chevron-right"></i></a></li>
-                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'"><a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search}, categoria=${categoria}, view='cuadricula')}"><i class="bi bi-chevron-double-right"></i></a></li>
+                            <li class="page-item" th:classappend="${currentPage == 0 or totalPages == 0} ? 'disabled' : ''">
+                                <a class="page-link page-prev" th:href="@{/productos(page=${currentPage - 1}, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}"><i class="bi bi-chevron-left"></i></a>
+                            </li>
+                            <li th:each="i : ${#numbers.sequence(0, (totalPages > 0 ? totalPages - 1 : 0))}"
+                                th:classappend="${i == currentPage} ? 'active' : ''"
+                                th:if="${totalPages > 0 and i >= currentPage - 2 and i <= currentPage + 2}" class="page-item">
+                                <a class="page-link" th:href="@{/productos(page=${i}, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}" th:text="${i + 1}"></a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1 or totalPages == 0} ? 'disabled' : ''">
+                                <a class="page-link page-next" th:href="@{/productos(page=${currentPage + 1}, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}"><i class="bi bi-chevron-right"></i></a>
+                            </li>
+                            <li class="page-item" th:classappend="${currentPage >= totalPages - 1 or totalPages == 0} ? 'disabled' : ''">
+                                <a class="page-link" th:href="@{/productos(page=${totalPages - 1}, size=${pageSize}, search=${search}, categoria=${categoria}, stockBajo=${stockBajo}, enOferta=${enOferta})}"><i class="bi bi-chevron-double-right"></i></a>
+                            </li>
                         </ul>
                     </nav>
                     <div class="text-center small text-muted">
                         Mostrando <span th:text="${productos.size()}"></span> de <span th:text="${totalItems}"></span> productos
                     </div>
                 </div>
-            </div>
+            </div> <!-- End of #productosContainer -->
         </div>
     </div>
 
@@ -415,6 +445,10 @@
                         <input type="hidden" name="page" th:value="${currentPage}">
                         <input type="hidden" name="size" id="modalSizeInput">
                         <input type="hidden" name="search" th:value="${search}">
+                        <input type="hidden" name="categoria" th:value="${categoria}">
+                        <input type="hidden" name="stockBajo" th:value="${stockBajo}">
+                        <input type="hidden" name="enOferta" th:value="${enOferta}">
+                        <input type="hidden" name="view" th:value="${view}">
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -537,6 +571,9 @@
                         <input type="hidden" name="page" th:value="${currentPage}">
                         <input type="hidden" name="size" id="editModalSizeInput">
                         <input type="hidden" name="search" th:value="${search}">
+                        <input type="hidden" name="stockBajo" th:value="${stockBajo}">
+                        <input type="hidden" name="enOferta" th:value="${enOferta}">
+                        <input type="hidden" name="view" th:value="${view}">
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -577,7 +614,7 @@
                                 </div>
                                 <div class="col-md-3 mb-3">
                                     <label class="form-label">Categoría</label>
-                                    <select class="form-control bg-light" id="editCategoria" name="categoria" style="pointer-events: none; touch-action: none;" tabindex="-1">
+                                    <select class="form-control bg-light" id="editCategoria" disabled style="pointer-events: none; touch-action: none;" tabindex="-1">
                                         <option value="">Seleccionar</option>
                                         <option>Medicamento</option>
                                         <option>Higiene</option>
@@ -585,6 +622,7 @@
                                         <option>Suplemento</option>
                                         <option>Otros</option>
                                     </select>
+                                    <input type="hidden" name="categoria" id="editCategoriaHidden">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Presentación</label>
@@ -600,8 +638,8 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Fecha Vencimiento *</label>
-                                    <input type="date" class="form-control bg-light" id="editFechaVencimiento"
-                                        name="fechaVencimiento" readonly required>
+                                    <input type="date" class="form-control" id="editFechaVencimiento"
+                                        name="fechaVencimiento" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Principios Activos</label>
@@ -741,13 +779,18 @@
                         $('#editPrecio').val($btn.data('precio'));
                         $('#editCostoCompra').val($btn.data('costo') || '');
                         $('#editCantidad').val($btn.data('cantidad'));
-                        $('#editCategoria').val($btn.data('categoria') || '');
+                        
+                        const categoria = $btn.data('categoria') || '';
+                        const proveedorId = $btn.data('proveedor') || '';
+                        
+                        $('#editCategoria').val(categoria);
+                        $('#editCategoriaHidden').val(categoria);
                         $('#editPresentacion').val($btn.data('presentacion') || '');
                         $('#editConcentracion').val($btn.data('concentracion') || '');
                         $('#editLote').val($btn.data('lote') || '');
                         $('#editPrincipiosActivos').val($btn.data('principios') || '');
                         $('#editDescripcion').val($btn.data('descripcion') || '');
-                        $('#editProveedorId').val($btn.data('proveedorid') || '');
+                        $('#editProveedorId').val(proveedorId);
 
                         if ($btn.data('fecha')) {
                             $('#editFechaVencimiento').val($btn.data('fecha'));
@@ -759,7 +802,8 @@
                             $('#editStockMinimo').val($btn.data('stockminimo'));
                         }
 
-                        // Action remains /productos/guardar for automatic update via hidden id field
+                        // Dynamically set form action to /productos/actualizar/{id}
+                        $('#editProductoForm').attr('action', '/productos/actualizar/' + $btn.data('id'));
                         calcularMargenEditar();
                         editProductModal.show();
                     });
@@ -801,6 +845,8 @@
 
                     // Validación del formulario nuevo antes de enviar
                     $('#productoForm').on('submit', function (e) {
+                        e.preventDefault(); // Siempre prevenimos el envío estándar para manejarlo por AJAX
+
                         const codigo = $('#codigo').val().trim();
                         const nombre = $('#nombre').val().trim();
                         const precio = parseFloat($('#precio').val());
@@ -819,7 +865,6 @@
                         if (!fechaVencimiento) { errorMsg += 'La fecha de vencimiento es requerida\n'; isValid = false; }
 
                         if (!isValid) {
-                            e.preventDefault();
                             alert(errorMsg);
                             return false;
                         }
@@ -837,16 +882,74 @@
                                 }
                             });
                             if (exists) {
-                                e.preventDefault();
                                 alert('El código "' + codigo + '" ya existe. Por favor use otro.');
                                 $('#codigo').addClass('is-invalid');
                                 return false;
                             }
                         }
+
+                        const form = this;
+                        const formData = new FormData(form);
+                        
+                        const csrfToken = $("meta[name='_csrf']").attr("content") || '';
+                        const csrfHeader = $("meta[name='_csrf_header']").attr("content") || '';
+                        
+                        const headers = {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        };
+                        if (csrfToken && csrfHeader) {
+                            headers[csrfHeader] = csrfToken;
+                        }
+
+                        Swal.fire({
+                            title: 'Guardando...',
+                            text: 'Por favor espere',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: headers
+                        })
+                        .then(response => {
+                            if (!response.ok) throw new Error('Ocurrió un error al guardar el producto');
+                            return response.text();
+                        })
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const newContent = doc.getElementById('productosContainer');
+                            if (newContent) {
+                                document.getElementById('productosContainer').innerHTML = newContent.innerHTML;
+                                const currentViewMode = localStorage.getItem('viewMode') || 'table';
+                                window.applyViewMode(currentViewMode);
+                            }
+                            
+                            nuevoProductModal.hide();
+                            window.resetForm();
+
+                            Swal.fire({
+                                title: '¡Éxito!',
+                                text: 'Producto guardado correctamente',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            Swal.fire('Error', err.message || 'Error al guardar el producto', 'error');
+                        });
                     });
 
                     // Validación del formulario editar antes de enviar
                     $('#editProductoForm').on('submit', function (e) {
+                        e.preventDefault(); // Siempre prevenimos el envío estándar para manejarlo por AJAX
+
                         const nombre = $('#editNombre').val().trim();
                         const precio = parseFloat($('#editPrecio').val());
                         const costoCompra = parseFloat($('#editCostoCompra').val());
@@ -863,10 +966,65 @@
                         if (!fechaVencimiento) { errorMsg += 'La fecha de vencimiento es requerida\n'; isValid = false; }
 
                         if (!isValid) {
-                            e.preventDefault();
                             alert(errorMsg);
                             return false;
                         }
+
+                        const form = this;
+                        const formData = new FormData(form);
+                        
+                        const csrfToken = $("meta[name='_csrf']").attr("content") || '';
+                        const csrfHeader = $("meta[name='_csrf_header']").attr("content") || '';
+                        
+                        const headers = {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        };
+                        if (csrfToken && csrfHeader) {
+                            headers[csrfHeader] = csrfToken;
+                        }
+
+                        Swal.fire({
+                            title: 'Actualizando...',
+                            text: 'Por favor espere',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: headers
+                        })
+                        .then(response => {
+                            if (!response.ok) throw new Error('Ocurrió un error al actualizar el producto');
+                            return response.text();
+                        })
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const newContent = doc.getElementById('productosContainer');
+                            if (newContent) {
+                                document.getElementById('productosContainer').innerHTML = newContent.innerHTML;
+                                const currentViewMode = localStorage.getItem('viewMode') || 'table';
+                                window.applyViewMode(currentViewMode);
+                            }
+                            
+                            editProductModal.hide();
+
+                            Swal.fire({
+                                title: '¡Éxito!',
+                                text: 'Producto actualizado correctamente',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            Swal.fire('Error', err.message || 'Error al actualizar el producto', 'error');
+                        });
                     });
 
                     // Evento para revertir descuento
@@ -906,7 +1064,7 @@
                                             timer: 1500,
                                             showConfirmButton: false
                                         }).then(() => {
-                                            location.reload();
+                                            loadProducts(window.location.href);
                                         });
                                     } else {
                                         Swal.fire('Error', data.message || 'No se pudo revertir el descuento.', 'error');
@@ -929,12 +1087,141 @@
                         document.getElementById('editFechaVencimiento').min = today;
                     }
 
+                    // Helper to apply the view mode style & active button class
+                    window.applyViewMode = function(mode) {
+                        const isTable = (mode === 'table' || mode === 'lista');
+                        const activeMode = isTable ? 'table' : 'grid';
+                        
+                        const tableContainer = document.querySelector('.vista-lista');
+                        const gridContainer = document.querySelector('.vista-cuadricula');
+                        
+                        if (tableContainer) {
+                            tableContainer.style.setProperty('display', isTable ? 'block' : 'none', 'important');
+                        }
+                        if (gridContainer) {
+                            gridContainer.style.setProperty('display', isTable ? 'none' : 'block', 'important');
+                        }
+                        
+                        // Update toggle view buttons active state
+                        const btnList = document.querySelector('button[onclick*="switchView(\'lista\')"]');
+                        const btnGrid = document.querySelector('button[onclick*="switchView(\'cuadricula\')"]');
+                        
+                        if (btnList) {
+                            if (isTable) btnList.classList.add('active');
+                            else btnList.classList.remove('active');
+                        }
+                        if (btnGrid) {
+                            if (!isTable) btnGrid.classList.add('active');
+                            else btnGrid.classList.remove('active');
+                        }
+                    };
+
+                    // Pure client-side view switcher
+                    window.switchView = function(view) {
+                        const mode = (view === 'lista' || view === 'table') ? 'table' : 'grid';
+                        localStorage.setItem('viewMode', mode);
+                        window.applyViewMode(mode);
+                    };
+
+                    // Initialiser to read viewMode on document load
+                    $(function() {
+                        let viewMode = localStorage.getItem('viewMode');
+                        if (!viewMode) {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const urlView = urlParams.get('view');
+                            if (urlView === 'cuadricula' || urlView === 'grid') {
+                                viewMode = 'grid';
+                            } else {
+                                viewMode = 'table';
+                            }
+                            localStorage.setItem('viewMode', viewMode);
+                        }
+                        window.applyViewMode(viewMode);
+                    });
+
+                    // AJAX loading function for partial rendering
+                    window.loadProducts = function(url) {
+                        // Strip 'view' parameter to isolate it entirely
+                        let cleanUrl = url;
+                        try {
+                            const cleanUrlObj = new URL(url, window.location.origin);
+                            cleanUrlObj.searchParams.delete('view');
+                            cleanUrl = cleanUrlObj.pathname + cleanUrlObj.search;
+                        } catch(e) {
+                            console.error(e);
+                        }
+
+                        fetch(cleanUrl, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) throw new Error('Response error');
+                            return response.text();
+                        })
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const newContent = doc.getElementById('productosContainer');
+                            if (newContent) {
+                                document.getElementById('productosContainer').innerHTML = newContent.innerHTML;
+                                history.pushState(null, '', cleanUrl);
+                                
+                                // Re-apply persistent view mode from localStorage
+                                const currentViewMode = localStorage.getItem('viewMode') || 'table';
+                                window.applyViewMode(currentViewMode);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('AJAX Error:', error);
+                            window.location.href = cleanUrl;
+                        });
+                    };
+
+                    // Handle back/forward browser buttons
+                    window.addEventListener('popstate', function() {
+                        fetch(window.location.href, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const newContent = doc.getElementById('productosContainer');
+                            if (newContent) {
+                                document.getElementById('productosContainer').innerHTML = newContent.innerHTML;
+                                
+                                // Re-apply persistent view mode from localStorage
+                                const currentViewMode = localStorage.getItem('viewMode') || 'table';
+                                window.applyViewMode(currentViewMode);
+                            }
+                        });
+                    });
+
+                    // Intercept any link clicks that refresh the catalog (pagination, KPIs, empty reset)
+                    $(document).on('click', '#productosContainer a.text-decoration-none, #productosContainer a.page-link', function(e) {
+                        const url = $(this).attr('href');
+                        if (url && (url.startsWith('/productos') || url.startsWith('productos'))) {
+                            e.preventDefault();
+                            loadProducts(url);
+                        }
+                    });
+
+                    // Intercept filter and search form submissions
+                    $(document).on('submit', '#productosContainer form', function(e) {
+                        e.preventDefault();
+                        const form = $(this);
+                        const url = form.attr('action') || window.location.pathname;
+                        const params = form.serialize();
+                        loadProducts(url + '?' + params);
+                    });
+
                     // Función para cambiar tamaño de página
                     window.changePageSize = function (select) {
                         const urlParams = new URLSearchParams(window.location.search);
                         const searchVal = $('input[name="search"]').val();
                         const catVal = $('select[name="categoria"]').val();
-                        const viewVal = $('input[name="view"]').val() || 'lista';
                         
                         if (searchVal) {
                             urlParams.set('search', searchVal);
@@ -948,35 +1235,10 @@
                             urlParams.delete('categoria');
                         }
                         
-                        urlParams.set('view', viewVal);
+                        urlParams.delete('view'); // view is purely client-side
                         urlParams.set('size', select.value);
                         urlParams.set('page', '0');
-                        window.location.href = '/productos?' + urlParams.toString();
-                    };
-
-                    // Función para cambiar vista
-                    window.switchView = function(view) {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const searchVal = $('input[name="search"]').val();
-                        const catVal = $('select[name="categoria"]').val();
-                        const sizeVal = $('input[name="size"]').val() || '15';
-                        
-                        if (searchVal) {
-                            urlParams.set('search', searchVal);
-                        } else {
-                            urlParams.delete('search');
-                        }
-                        
-                        if (catVal) {
-                            urlParams.set('categoria', catVal);
-                        } else {
-                            urlParams.delete('categoria');
-                        }
-                        
-                        urlParams.set('size', sizeVal);
-                        urlParams.set('view', view);
-                        urlParams.set('page', '0');
-                        window.location.href = '/productos?' + urlParams.toString();
+                        loadProducts('/productos?' + urlParams.toString());
                     };
 
                     // Auto-cerrar alertas después de 5 segundos
@@ -984,33 +1246,34 @@
                         $('.alert').fadeOut(500, function () { $(this).remove(); });
                     }, 5000);
 
-                    // Desplazamiento inteligente al paginar
-                    document.querySelectorAll(".page-next").forEach(link => {
-                        link.addEventListener("click", function () {
-                            sessionStorage.setItem("scrollDir", "top");
-                        });
-                    });
-                    document.querySelectorAll(".page-prev").forEach(link => {
-                        link.addEventListener("click", function () {
-                            sessionStorage.setItem("scrollDir", "bottom");
-                        });
-                    });
-
                     // Limpiar filtros
                     window.clearAllFilters = function() {
                         const urlParams = new URLSearchParams(window.location.search);
                         urlParams.delete('search');
                         urlParams.delete('categoria');
+                        urlParams.delete('stockBajo');
+                        urlParams.delete('enOferta');
                         urlParams.set('page', '0');
-                        window.location.href = window.location.pathname + '?' + urlParams.toString();
+                        loadProducts(window.location.pathname + '?' + urlParams.toString());
                     };
 
                     // Interceptar formularios modales para evitar codificación corrupta en URL params
                     document.querySelectorAll('#nuevoProductoModal form, #editProductoModal form').forEach(form => {
                         form.addEventListener('submit', function(e) {
+                            // Creamos una URL base limpia
                             const url = new URL(this.action, window.location.origin);
                             const currentParams = new URLSearchParams(window.location.search);
-                            currentParams.forEach((val, key) => url.searchParams.set(key, val));
+                            
+                            // SOLO transferimos la paginación y el filtro de stock bajo
+                            const allowedParams = ['size', 'page', 'stockBajo'];
+                            
+                            allowedParams.forEach(param => {
+                                if(currentParams.has(param)) {
+                                    url.searchParams.set(param, currentParams.get(param));
+                                }
+                            });
+                            
+                            // Asignamos la URL limpia y dejamos que el POST maneje los datos del producto internamente
                             this.action = url.toString();
                         });
                     });

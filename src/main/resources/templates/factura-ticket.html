@@ -107,11 +107,7 @@
 
     <div class="main-content no-transition" id="mainContent">
         <div class="container-fluid py-3 no-print border-bottom bg-white d-flex align-items-center gap-2">
-            <th:block sec:authorize="hasAnyAuthority('OWNER', 'ROLE_OWNER', 'ADMIN', 'ROLE_ADMIN')">
-                <a th:href="@{/ventas}" class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-arrow-left"></i> Volver a Ventas
-                </a>
-            </th:block>
+            <button type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/ventas';" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Volver a Ventas</button>
             <a th:href="@{/ventas/nueva}" class="btn btn-success btn-sm">
                 <i class="bi bi-plus-lg"></i> Nueva Venta
             </a>

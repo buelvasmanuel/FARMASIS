@@ -10,11 +10,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.domain.PageImpl;
+import java.util.ArrayList;
+
 @Service
 @RequiredArgsConstructor
 public class ProductoService {
 
     private final ProductoRepository productoRepository;
+    private final MongoTemplate mongoTemplate;
 
     public Page<Producto> listarProductos(Pageable pageable) {
         return productoRepository.findActivos(pageable);
@@ -24,32 +31,44 @@ public class ProductoService {
         return productoRepository.findInactivos(pageable);
     }
 
-    public Page<Producto> buscarProductos(String search, String categoria, Boolean stockBajo, Pageable pageable) {
+    public Page<Producto> buscarProductos(String search, String categoria, Boolean stockBajo, Boolean enOferta, Pageable pageable) {
         boolean hasSearch = (search != null && !search.trim().isEmpty());
         boolean hasCategoria = (categoria != null && !categoria.trim().isEmpty());
         boolean isStockBajo = (stockBajo != null && stockBajo);
+        boolean isEnOferta = (enOferta != null && enOferta);
+
+        Query query = new Query().with(pageable);
+        List<Criteria> criterios = new ArrayList<>();
+
+        // Siempre filtrar por activos
+        criterios.add(Criteria.where("activo").is(true));
+
+        if (hasSearch) {
+            String regexSearch = search.trim();
+            criterios.add(new Criteria().orOperator(
+                Criteria.where("nombre").regex(regexSearch, "i"),
+                Criteria.where("codigo").regex(regexSearch, "i")
+            ));
+        }
+
+        if (hasCategoria) {
+            criterios.add(Criteria.where("categoria").is(categoria.trim()));
+        }
 
         if (isStockBajo) {
-            if (hasSearch && hasCategoria) {
-                return productoRepository.searchBajoStockAndCategoria(search, search, categoria, pageable);
-            } else if (hasSearch) {
-                return productoRepository.searchBajoStock(search, search, pageable);
-            } else if (hasCategoria) {
-                return productoRepository.findBajoStockPorCategoria(categoria, pageable);
-            } else {
-                return productoRepository.findBajoStock(pageable);
-            }
-        } else {
-            if (hasSearch && hasCategoria) {
-                return productoRepository.searchByNombreOrCodigoAndCategoria(search, search, categoria, pageable);
-            } else if (hasSearch) {
-                return productoRepository.searchByNombreOrCodigo(search, search, pageable);
-            } else if (hasCategoria) {
-                return productoRepository.findProductosActivosPorCategoria(categoria, pageable);
-            } else {
-                return listarProductos(pageable);
-            }
+            criterios.add(Criteria.where("$expr").is(new org.bson.Document("$lte", java.util.Arrays.asList("$cantidad", new org.bson.Document("$ifNull", java.util.Arrays.asList("$stockMinimo", 5))))));
         }
+
+        if (isEnOferta) {
+            criterios.add(Criteria.where("precioOriginal").ne(null));
+        }
+
+        query.addCriteria(new Criteria().andOperator(criterios.toArray(new Criteria[0])));
+
+        List<Producto> productos = mongoTemplate.find(query, Producto.class);
+        long total = mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Producto.class);
+
+        return new PageImpl<>(productos, pageable, total);
     }
 
     public Page<Producto> buscarProductosInactivos(String search, Pageable pageable) {

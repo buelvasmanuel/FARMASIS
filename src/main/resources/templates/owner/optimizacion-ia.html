@@ -290,10 +290,10 @@
 
                     // 4. Fill Summary
                     const resumen = data.resumen;
-                    document.getElementById('resumenPresupuesto').innerText = '$' + resumen.costoTotalPedidos.toLocaleString(undefined, {minimumFractionDigits: 2});
+                    document.getElementById('resumenPresupuesto').innerText = '$' + resumen.costoTotalPedidos.toLocaleString('es-CO', {maximumFractionDigits: 0});
                     document.getElementById('resumenPresupuestoPct').innerText = resumen.presupuestoUsadoPorcentaje + ' del presupuesto máximo';
-                    document.getElementById('resumenUnidades').innerText = resumen.totalUnidadesAPedir.toLocaleString();
-                    document.getElementById('resumenUtilidad').innerText = '$' + resumen.utilidadTotalEstimada.toLocaleString(undefined, {minimumFractionDigits: 2});
+                    document.getElementById('resumenUnidades').innerText = resumen.totalUnidadesAPedir.toLocaleString('es-CO');
+                    document.getElementById('resumenUtilidad').innerText = '$' + resumen.utilidadTotalEstimada.toLocaleString('es-CO', {maximumFractionDigits: 0});
                     if (data.propuestas) {
                         document.getElementById('productosAOptimizarBadge').innerText = 'Productos a Optimizar: ' + data.propuestas.length;
                     }
@@ -302,6 +302,8 @@
                     tabla.innerHTML = '';
                     document.getElementById('filtroCategoria').value = 'Todos';
                     data.propuestas.forEach(p => {
+                        if (p.cantidadAPedir === 0 && p.descuentoProximidad === 0) return;
+                        
                         const row = document.createElement('tr');
                         row.setAttribute('data-categoria', p.productoCategoria || 'Otros');
                         row.innerHTML = `
@@ -316,16 +318,18 @@
                             <td class="text-center">
                                 <span class="badge badge-discount">${p.descuentoPorcentaje}</span>
                             </td>
-                            <td class="text-end text-utility">$${p.utilidadEstimada.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                            <td class="text-end text-utility">$${Number(p.utilidadEstimada).toLocaleString('es-CO', {maximumFractionDigits: 0})}</td>
                             <td class="text-center">
-                                ${p.productoId && parseFloat(p.descuentoPorcentaje) > 0 ? `
-                                    <button class="btn btn-sm btn-outline-success aplicar-descuento-btn" 
+                                ${p.productoId && parseFloat(p.descuentoPorcentaje) > 0 ? (
+                                    p.precioOriginal != null ? 
+                                    `<button class="btn btn-sm btn-secondary" disabled><i class="bi bi-check2"></i> Aplicado</button>` :
+                                    `<button class="btn btn-sm btn-outline-success aplicar-descuento-btn" 
                                             data-id="${p.productoId}" 
                                             data-nombre="${p.productoNombre}" 
                                             data-pct="${parseFloat(p.descuentoPorcentaje)}">
                                         <i class="bi bi-tag-fill me-1"></i> Aplicar
-                                    </button>
-                                ` : `<span class="text-muted small">Sin Descuento</span>`}
+                                    </button>`
+                                ) : `<span class="text-muted small">Sin Descuento</span>`}
                             </td>
                         `;
                         tabla.appendChild(row);
@@ -356,19 +360,21 @@
                         summaryArea.style.display = 'block';
                         tableArea.style.display = 'block';
                         const resumen = data.resumen;
-                        document.getElementById('resumenPresupuesto').innerText = '$' + Number(resumen.costoTotalPedidos).toLocaleString(undefined, {minimumFractionDigits: 2});
+                        document.getElementById('resumenPresupuesto').innerText = '$' + Number(resumen.costoTotalPedidos).toLocaleString('es-CO', {maximumFractionDigits: 0});
                         document.getElementById('resumenPresupuestoPct').innerText = resumen.presupuestoUsadoPorcentaje + ' del presupuesto máximo';
-                        document.getElementById('resumenUnidades').innerText = Number(resumen.totalUnidadesAPedir).toLocaleString();
-                        document.getElementById('resumenUtilidad').innerText = '$' + Number(resumen.utilidadTotalEstimada).toLocaleString(undefined, {minimumFractionDigits: 2});
+                        document.getElementById('resumenUnidades').innerText = Number(resumen.totalUnidadesAPedir).toLocaleString('es-CO');
+                        document.getElementById('resumenUtilidad').innerText = '$' + Number(resumen.utilidadTotalEstimada).toLocaleString('es-CO', {maximumFractionDigits: 0});
                         if (data.propuestas) {
                             document.getElementById('productosAOptimizarBadge').innerText = 'Productos a Optimizar: ' + data.propuestas.length;
                         }
                         tabla.innerHTML = '';
                         document.getElementById('filtroCategoria').value = 'Todos';
                         data.propuestas.forEach(p => {
+                            if (p.cantidadAPedir === 0 && p.descuentoProximidad === 0) return;
+                            
                             const row = document.createElement('tr');
                             row.setAttribute('data-categoria', p.productoCategoria || 'Otros');
-                            row.innerHTML = `<td><div class="fw-bold">${p.productoNombre}</div><small class="text-muted">Cód: ${p.productoCodigo}</small><span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size:0.7rem;">${p.productoCategoria || 'Otros'}</span></td><td class="text-center"><span class="badge badge-stock">${p.cantidadActual}</span></td><td class="text-center"><span class="badge bg-success text-white" style="font-size:0.9rem;">+${p.cantidadAPedir}</span></td><td class="text-center fw-bold">${p.stockResultante}</td><td class="text-center"><span class="badge badge-discount">${p.descuentoPorcentaje}</span></td><td class="text-end text-utility">$${Number(p.utilidadEstimada).toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td class="text-center">${p.productoId && parseFloat(p.descuentoPorcentaje) > 0 ? `<button class="btn btn-sm btn-outline-success aplicar-descuento-btn" data-id="${p.productoId}" data-nombre="${p.productoNombre}" data-pct="${parseFloat(p.descuentoPorcentaje)}"><i class="bi bi-tag-fill me-1"></i> Aplicar</button>` : `<span class="text-muted small">Sin Descuento</span>`}</td>`;
+                            row.innerHTML = `<td><div class="fw-bold">${p.productoNombre}</div><small class="text-muted">Cód: ${p.productoCodigo}</small><span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size:0.7rem;">${p.productoCategoria || 'Otros'}</span></td><td class="text-center"><span class="badge badge-stock">${p.cantidadActual}</span></td><td class="text-center"><span class="badge bg-success text-white" style="font-size:0.9rem;">+${p.cantidadAPedir}</span></td><td class="text-center fw-bold">${p.stockResultante}</td><td class="text-center"><span class="badge badge-discount">${p.descuentoPorcentaje}</span></td><td class="text-end text-utility">$${Number(p.utilidadEstimada).toLocaleString('es-CO', {maximumFractionDigits: 0})}</td><td class="text-center">${p.productoId && parseFloat(p.descuentoPorcentaje) > 0 ? (p.precioOriginal != null ? `<button class="btn btn-sm btn-secondary" disabled><i class="bi bi-check2"></i> Aplicado</button>` : `<button class="btn btn-sm btn-outline-success aplicar-descuento-btn" data-id="${p.productoId}" data-nombre="${p.productoNombre}" data-pct="${parseFloat(p.descuentoPorcentaje)}"><i class="bi bi-tag-fill me-1"></i> Aplicar</button>`) : `<span class="text-muted small">Sin Descuento</span>`}</td>`;
                             tabla.appendChild(row);
                         });
                     }

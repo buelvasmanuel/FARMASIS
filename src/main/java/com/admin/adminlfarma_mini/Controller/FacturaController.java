@@ -28,6 +28,10 @@ import java.util.List;
 import java.util.Map;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("/ventas")
@@ -111,14 +115,59 @@ public class FacturaController {
     }
 
     @GetMapping("/exportar")
-    @ResponseBody
-    public ResponseEntity<byte[]> exportarExcel(
+    public Object exportarExcel(
             @RequestParam(required = false) String fechaDesde,
             @RequestParam(required = false) String fechaHasta,
             @RequestParam(required = false) String metodoPago,
             @RequestParam(required = false) String factura,
             @RequestParam(required = false) String vendedor,
+            RedirectAttributes redirectAttributes,
             java.security.Principal principal) throws IOException {
+
+        if (fechaDesde == null || fechaDesde.trim().isEmpty() || fechaHasta == null || fechaHasta.trim().isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Los parámetros de fecha (Desde / Hasta) son obligatorios para exportar.");
+            if (fechaDesde != null) redirectAttributes.addAttribute("fechaDesde", fechaDesde);
+            if (fechaHasta != null) redirectAttributes.addAttribute("fechaHasta", fechaHasta);
+            if (metodoPago != null) redirectAttributes.addAttribute("metodoPago", metodoPago);
+            if (factura != null) redirectAttributes.addAttribute("factura", factura);
+            if (vendedor != null) redirectAttributes.addAttribute("vendedor", vendedor);
+            return "redirect:/ventas";
+        }
+
+        java.time.LocalDate desde;
+        java.time.LocalDate hasta;
+        try {
+            desde = java.time.LocalDate.parse(fechaDesde.trim());
+            hasta = java.time.LocalDate.parse(fechaHasta.trim());
+        } catch (java.time.format.DateTimeParseException e) {
+            redirectAttributes.addFlashAttribute("error", "El formato de las fechas no es válido. Use el selector de fechas.");
+            redirectAttributes.addAttribute("fechaDesde", fechaDesde);
+            redirectAttributes.addAttribute("fechaHasta", fechaHasta);
+            if (metodoPago != null) redirectAttributes.addAttribute("metodoPago", metodoPago);
+            if (factura != null) redirectAttributes.addAttribute("factura", factura);
+            if (vendedor != null) redirectAttributes.addAttribute("vendedor", vendedor);
+            return "redirect:/ventas";
+        }
+
+        if (desde.isAfter(hasta)) {
+            redirectAttributes.addFlashAttribute("error", "La fecha de inicio (Desde) no puede ser posterior a la fecha de fin (Hasta).");
+            redirectAttributes.addAttribute("fechaDesde", fechaDesde);
+            redirectAttributes.addAttribute("fechaHasta", fechaHasta);
+            if (metodoPago != null) redirectAttributes.addAttribute("metodoPago", metodoPago);
+            if (factura != null) redirectAttributes.addAttribute("factura", factura);
+            if (vendedor != null) redirectAttributes.addAttribute("vendedor", vendedor);
+            return "redirect:/ventas";
+        }
+
+        if (java.time.temporal.ChronoUnit.MONTHS.between(desde, hasta) > 6 || (java.time.temporal.ChronoUnit.MONTHS.between(desde, hasta) == 6 && desde.plusMonths(6).isBefore(hasta))) {
+            redirectAttributes.addFlashAttribute("error", "El rango de fechas no puede ser superior a 6 meses para proteger el rendimiento del sistema.");
+            redirectAttributes.addAttribute("fechaDesde", fechaDesde);
+            redirectAttributes.addAttribute("fechaHasta", fechaHasta);
+            if (metodoPago != null) redirectAttributes.addAttribute("metodoPago", metodoPago);
+            if (factura != null) redirectAttributes.addAttribute("factura", factura);
+            if (vendedor != null) redirectAttributes.addAttribute("vendedor", vendedor);
+            return "redirect:/ventas";
+        }
 
         List<String> allowedVendedores = new java.util.ArrayList<>();
         boolean isOwner = false;
@@ -161,7 +210,7 @@ public class FacturaController {
         List<Factura> facturas = facturaService.exportarFacturas(fechaDesde, fechaHasta, metodoPago, factura, allowedVendedores);
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        try (SXSSFWorkbook wb = new SXSSFWorkbook(100); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = wb.createSheet("Ventas");
 
             // Estilo de encabezado: verde oscuro con texto blanco
@@ -199,6 +248,7 @@ public class FacturaController {
             }
 
             wb.write(out);
+            wb.dispose();
 
             // Nombre dinámico del archivo
             String fDesde = (fechaDesde != null && !fechaDesde.trim().isEmpty()) ? fechaDesde.trim() : "Inicio";
@@ -220,7 +270,8 @@ public class FacturaController {
             @RequestParam(defaultValue = "24") int size,
             @RequestParam(required = false) String categoria,
             @RequestParam(required = false) String search,
-            Model model) {
+            Model model,
+            HttpServletRequest request) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("nombre").ascending());
         Page<Producto> productosPage;
@@ -251,6 +302,10 @@ public class FacturaController {
 
         List<String> categorias = productoService.obtenerCategorias();
         model.addAttribute("categorias", categorias);
+
+        if ("XMLHttpRequest".equalsIgnoreCase(request.getHeader("X-Requested-With"))) {
+            return "crear-venta :: #productosContainer";
+        }
 
         return "crear-venta";
     }

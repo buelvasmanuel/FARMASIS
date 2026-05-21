@@ -18,11 +18,15 @@ function toggleChat() {
 
 function handleEnter(event) {
     if (event.key === 'Enter') {
-        sendMessage();
+        event.preventDefault();
+        sendMessage(event);
     }
 }
 
-async function sendMessage() {
+async function sendMessage(event) {
+    if (event) {
+        event.preventDefault();
+    }
     const inputField = document.getElementById('farma-input');
     const message = inputField.value.trim();
     

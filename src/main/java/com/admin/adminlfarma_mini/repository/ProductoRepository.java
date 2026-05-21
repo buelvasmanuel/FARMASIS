@@ -24,6 +24,19 @@ public interface ProductoRepository extends MongoRepository<Producto, String> {
     @Query("{ 'activo': false }")
     Page<Producto> findInactivos(Pageable pageable);
 
+    // Buscar productos en oferta (precioOriginal != null)
+    @Query("{ 'precioOriginal': { $ne: null }, 'activo': true }")
+    Page<Producto> findEnOferta(Pageable pageable);
+
+    @Query("{ $or: [ { 'nombre': { $regex: ?0, $options: 'i' } }, { 'codigo': { $regex: ?0, $options: 'i' } } ], 'precioOriginal': { $ne: null }, 'activo': true }")
+    Page<Producto> searchEnOferta(String search, Pageable pageable);
+
+    @Query("{ 'categoria': ?0, 'precioOriginal': { $ne: null }, 'activo': true }")
+    Page<Producto> findEnOfertaPorCategoria(String categoria, Pageable pageable);
+
+    @Query("{ $or: [ { 'nombre': { $regex: ?0, $options: 'i' } }, { 'codigo': { $regex: ?0, $options: 'i' } } ], 'categoria': ?1, 'precioOriginal': { $ne: null }, 'activo': true }")
+    Page<Producto> searchEnOfertaAndCategoria(String search, String categoria, Pageable pageable);
+
     // Método para búsqueda por nombre o código (Activos)
     @Query("{ $or: [ { 'nombre': { $regex: ?0, $options: 'i' } }, { 'codigo': { $regex: ?1, $options: 'i' } } ], 'activo': true }")
     Page<Producto> searchByNombreOrCodigo(String nombre, String codigo, Pageable pageable);
@@ -74,8 +87,18 @@ public interface ProductoRepository extends MongoRepository<Producto, String> {
     @Query(value = "{ 'activo': true }", count = true)
     long countActivos();
 
+    @Query(value = "{ 'categoria': ?0, 'activo': true }", count = true)
+    long countByCategoriaAndActivoTrue(String categoria);
+
+    @Query(value = "{ 'activo': true, $expr: { $lte: [ '$cantidad', { $ifNull: [ '$stockMinimo', 5 ] } ] } }", count = true)
+    long countBajoStock();
+
     // Método agregado para el Chatbot: buscar productos por aproximación de nombre
     List<Producto> findByNombreContainingIgnoreCaseAndActivoTrue(String nombre);
+
+    List<Producto> findByNombreContainingIgnoreCaseOrCodigoContainingIgnoreCase(String nombre, String codigo);
+
+    List<Producto> findByPrecioOriginalNotNullAndActivoTrue();
 
     // Módulo 4 — POS Categorías: filtrar por categoría
     @Query("{ 'categoria': ?0, 'activo': true, 'cantidad': { $gt: 0 } }")

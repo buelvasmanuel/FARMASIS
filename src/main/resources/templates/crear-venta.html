@@ -121,7 +121,7 @@
 
             <div class="pos-grid">
                 <!-- LEFT: Products -->
-                <div>
+                <div id="productosContainer">
                     <!-- Contenedor Sticky para Buscador y Categorías -->
                     <div style="position: sticky; top: 0; z-index: 1020; background: #f4f7f6; padding-bottom: 10px; padding-top: 10px;">
                         <!-- Search Input -->
@@ -131,7 +131,7 @@
                                 <input type="hidden" name="size" th:value="${pageSize}">
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0" style="border-radius: 10px 0 0 10px;"><i class="bi bi-search text-muted"></i></span>
-                                    <input type="search" class="form-control border-start-0 border-end-0" id="searchProducts" name="search"
+                                    <input type="text" class="form-control border-start-0 border-end-0" id="searchProducts" name="search"
                                            th:value="${search}" placeholder="Buscar producto por nombre o código..." autocomplete="off">
                                     <button th:if="${search != null and !search.isEmpty()}" type="button" class="btn btn-outline-secondary border-start-0 border-end-0" onclick="clearSearch()"><i class="bi bi-x-lg"></i></button>
                                     <button type="submit" class="btn btn-primary" style="border-radius: 0 10px 10px 0;"><i class="bi bi-search"></i> Buscar</button>
@@ -157,6 +157,7 @@
                                  class="product-img" alt="Imagen del producto">
                             <span class="product-code" th:text="'Cod: ' + ${p.codigo}">Cod: -</span>
                             <div class="product-name" th:text="${p.nombre}">Producto</div>
+                            <div th:if="${p.precioOriginal != null}"><del class="text-muted small" th:text="'$ ' + ${#numbers.formatDecimal(p.precioOriginal, 1, 'POINT', 0, 'COMMA')}"></del></div>
                             <div class="product-price"
                                  th:text="'$ ' + ${p.precio != null ? #numbers.formatDecimal(p.precio, 1, 'POINT', 0, 'COMMA') : '0'}">$ 0</div>
                             <div class="product-stock">
@@ -211,7 +212,7 @@
                     <div class="cart-body" id="cartBody">
                         <div id="emptyCart" class="text-center py-5 text-muted">
                             <i class="bi bi-cart-x" style="font-size: 2.5rem;"></i>
-                            <p class="mt-2">Agrega productos al carrito</p>
+                            <p class="mt-2">No hay productos en el carrito</p>
                         </div>
                         <div id="cartItems"></div>
                     </div>
@@ -232,6 +233,7 @@
                             <span class="fw-bold fs-5">Total:</span>
                             <span class="fw-bold fs-4" style="color: var(--primary-color);" id="cartTotal">$ 0</span>
                         </div>
+
                         <button class="btn btn-lfarma w-100 py-2 fw-bold" id="btnPagar" disabled>
                             <i class="bi bi-check-circle me-1"></i> Confirmar Venta
                         </button>
@@ -248,6 +250,67 @@
         const csrf = document.querySelector('meta[name="_csrf"]').content;
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
 
+        window.loadProducts = function(url) {
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Response error');
+                return response.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.getElementById('productosContainer');
+                if (newContent) {
+                    document.getElementById('productosContainer').innerHTML = newContent.innerHTML;
+                    history.pushState(null, '', url);
+                    
+                    // Smooth scroll to product grid
+                    const targetEl = document.getElementById('productGrid') || document.querySelector('.product-grid');
+                    if (targetEl) {
+                        const targetPosition = targetEl.getBoundingClientRect().top + window.scrollY - 15;
+                        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('AJAX Error:', error);
+                window.location.href = url;
+            });
+        };
+
+        // Handle back/forward browser buttons
+        window.addEventListener('popstate', function() {
+            fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.getElementById('productosContainer');
+                if (newContent) {
+                    document.getElementById('productosContainer').innerHTML = newContent.innerHTML;
+                }
+            })
+            .catch(e => console.error(e));
+        });
+
+        // Intercept navigation & pagination clicks inside productsContainer
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('#productosContainer a.pill, #productosContainer a.page-link');
+            if (link) {
+                const url = link.getAttribute('href');
+                if (url && (url.startsWith('/ventas/nueva') || url.startsWith('ventas/nueva'))) {
+                    e.preventDefault();
+                    window.loadProducts(url);
+                }
+            }
+        });
+
         function cleanFormSubmit(event, form) {
             if (event) event.preventDefault();
             const search = form.querySelector('input[name="search"]').value.trim();
@@ -259,51 +322,29 @@
             if (categoria) params.set('categoria', categoria);
             if (size && size !== '24') params.set('size', size);
             
-            window.location.href = '/ventas/nueva?' + params.toString();
+            const url = '/ventas/nueva?' + params.toString();
+            window.loadProducts(url);
         }
 
         // Clear search input and submit
         function clearSearch() {
             const form = document.getElementById('searchForm');
-            form.querySelector('input[name="search"]').value = '';
-            cleanFormSubmit(null, form);
+            if (form) {
+                form.querySelector('input[name="search"]').value = '';
+                cleanFormSubmit(null, form);
+            }
         }
 
-        // Desplazamiento inteligente al paginar o filtrar
-        document.addEventListener("DOMContentLoaded", function () {
-            // Guardar indicador en sessionStorage al paginar
-            document.querySelectorAll(".page-link, .pagination a").forEach(link => {
-                link.addEventListener("click", function () {
-                    sessionStorage.setItem("didPaginate", "true");
-                });
-            });
-
-            document.querySelectorAll("form").forEach(form => {
-                form.addEventListener("submit", function () {
-                    sessionStorage.setItem("didPaginate", "true");
-                });
-            });
-
-            // Limpieza automática en botón 'X' nativo de buscadores
-            document.querySelectorAll('input[type="search"]').forEach(input => {
-                input.addEventListener('search', function() {
-                    if (this.value === '') {
-                        const form = this.closest('form');
-                        if (form) form.submit();
-                        else window.location.href = window.location.pathname;
+        // Native search input clear event delegation
+        document.addEventListener('search', function(e) {
+            if (e.target.matches('input[type="search"]')) {
+                if (e.target.value === '') {
+                    const form = e.target.closest('form');
+                    if (form) {
+                        cleanFormSubmit(null, form);
+                    } else {
+                        window.loadProducts(window.location.pathname);
                     }
-                });
-            });
-
-            // Al cargar, si venimos de paginación o filtro, hacemos scroll suave al listado
-            if (sessionStorage.getItem("didPaginate") === "true") {
-                sessionStorage.removeItem("didPaginate");
-                const targetEl = document.getElementById('productGrid') || document.querySelector('.product-grid');
-                if (targetEl) {
-                    setTimeout(() => {
-                        const targetPosition = targetEl.getBoundingClientRect().top + window.scrollY - 15;
-                        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
-                    }, 100);
                 }
             }
         });
@@ -339,6 +380,8 @@
             item.qty = newQty;
             renderCart();
         }
+
+
 
         function renderCart() {
             const container = document.getElementById('cartItems');

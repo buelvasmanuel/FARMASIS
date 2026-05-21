@@ -1,3 +1,6 @@
+<th:block sec:authorize="hasAnyAuthority('ROLE_OWNER', 'ROLE_ADMIN', 'OWNER', 'ADMIN')">
+<!-- Import Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <style>
     /* Estilos Épicos del Chatbot FarmaSIS */
     .farma-chat-container {
@@ -11,7 +14,7 @@
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         border-radius: 24px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
         display: none;
         flex-direction: column;
         overflow: hidden;
@@ -32,13 +35,15 @@
     }
 
     .farma-chat-header {
-        background: linear-gradient(135deg, #1B4332 0%, #52B788 100%);
+        background: #1a4d2e;
         color: white;
         padding: 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
 
     .farma-header-info {
@@ -55,7 +60,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #2D6A4F;
+        color: #1a4d2e;
         font-size: 24px;
         box-shadow: 0 0 15px rgba(255,255,255,0.5);
     }
@@ -136,17 +141,17 @@
 
     .chat-bubble.user {
         align-self: flex-end;
-        background: linear-gradient(135deg, #40916C 0%, #2D6A4F 100%);
-        color: white;
-        border-bottom-right-radius: 4px;
+        background: #d1e7dd;
+        color: #1e293b;
+        border-bottom-right-radius: 0px;
         transform-origin: bottom right;
     }
 
     .chat-bubble.ai {
         align-self: flex-start;
-        background: white;
+        background: #f8f9fa;
         color: #334155;
-        border-bottom-left-radius: 4px;
+        border-bottom-left-radius: 0px;
         border: 1px solid #e2e8f0;
     }
 
@@ -179,39 +184,38 @@
 
     .farma-input {
         width: 100%;
-        padding: 14px 20px;
-        border-radius: 25px;
-        border: 2px solid #e2e8f0;
+        padding: 12px 18px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
         background: #f8fafc;
         outline: none;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         font-size: 0.95rem;
     }
 
     .farma-input:focus {
-        border-color: #52B788;
+        border-color: #1a4d2e;
         background: white;
-        box-shadow: 0 0 0 4px rgba(82, 183, 136, 0.1);
+        box-shadow: 0 0 0 3px rgba(26, 77, 46, 0.15);
     }
 
     .farma-send-btn {
-        width: 50px;
-        height: 50px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #1B4332 0%, #52B788 100%);
+        background: #1a4d2e;
         color: white;
         border: none;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 10px rgba(45, 106, 79, 0.3);
+        transition: all 0.2s ease;
     }
 
     .farma-send-btn:hover {
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 15px rgba(45, 106, 79, 0.4);
+        background: #277443;
+        transform: scale(1.05);
     }
 
     .farma-send-btn:active {
@@ -226,7 +230,7 @@
         width: 65px;
         height: 65px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #1B4332 0%, #52B788 100%);
+        background: linear-gradient(135deg, #1a4d2e 0%, #2D6A4F 100%);
         color: white;
         border: none;
         cursor: pointer;
@@ -234,7 +238,7 @@
         align-items: center;
         justify-content: center;
         font-size: 28px;
-        box-shadow: 0 10px 25px rgba(45, 106, 79, 0.4);
+        box-shadow: 0 10px 25px rgba(26, 77, 46, 0.4);
         z-index: 10000;
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         animation: float 3s ease-in-out infinite;
@@ -246,14 +250,14 @@
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        background: rgba(45, 106, 79, 0.4);
+        background: rgba(26, 77, 46, 0.4);
         z-index: -1;
         animation: pulseEffect 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
 
     .farma-fab:hover {
         transform: scale(1.1) translateY(-5px);
-        box-shadow: 0 15px 35px rgba(45, 106, 79, 0.5);
+        box-shadow: 0 15px 35px rgba(26, 77, 46, 0.5);
     }
 
     @keyframes float {
@@ -280,7 +284,7 @@
     .typing-dot {
         width: 8px;
         height: 8px;
-        background: #52B788;
+        background: #2D6A4F;
         border-radius: 50%;
         animation: typeBounce 1.4s infinite ease-in-out both;
     }
@@ -296,12 +300,12 @@
     /* Markdown Formats */
     .chat-bubble p { margin-bottom: 0; }
     .chat-bubble ul { padding-left: 20px; margin-bottom: 0; margin-top: 5px; }
-    .chat-bubble strong { color: #1e293b; }
-    .chat-bubble.user strong { color: #f8fafc; }
+    .chat-bubble strong { color: #0f172a; }
+    .chat-bubble.user strong { color: #0f172a; }
 </style>
 
 <!-- Floating Action Button -->
-<button id="farma-fab" class="farma-fab" onclick="toggleChat()">
+<button type="button" id="farma-fab" class="farma-fab" onclick="toggleChat()">
     <i class="fas fa-robot"></i>
 </button>
 
@@ -319,7 +323,7 @@
                 </div>
             </div>
         </div>
-        <button class="farma-close-btn" onclick="toggleChat()">
+        <button type="button" class="farma-close-btn" onclick="toggleChat()">
             <i class="fas fa-times"></i>
         </button>
     </div>
@@ -339,10 +343,12 @@
         <div class="farma-input-wrapper">
             <input type="text" id="farma-input" class="farma-input" placeholder="Pregúntale al Agente..." autocomplete="off" onkeypress="handleEnter(event)">
         </div>
-        <button class="farma-send-btn" onclick="sendMessage()">
+        <button type="button" class="farma-send-btn" onclick="sendMessage(event)">
             <i class="fas fa-paper-plane"></i>
         </button>
     </div>
 </div>
 
 <script src="/js/chat.js"></script>
+</th:block>
+

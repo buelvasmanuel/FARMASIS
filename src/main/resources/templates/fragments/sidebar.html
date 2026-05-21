@@ -30,6 +30,14 @@
                 </a>
             </li>
 
+            <!-- Power BI — SOLO OWNER -->
+            <li class="nav-item" th:if="${loggedUser != null && loggedUser.rol == 'ROLE_OWNER'}">
+                <a class="nav-link" th:href="@{/bi}" id="nav-bi" th:classappend="${activePage == 'bi' ? 'active' : ''}">
+                    <i class="bi bi-bar-chart-line-fill"></i>
+                    <span class="nav-text">Power BI</span>
+                </a>
+            </li>
+
             <!-- LABEL: Gestión (OWNER & ADMIN) -->
             <li class="nav-label nav-text" th:if="${loggedUser != null && (loggedUser.rol == 'ROLE_OWNER' || loggedUser.rol == 'ROLE_ADMIN')}">Gestión</li>
 
