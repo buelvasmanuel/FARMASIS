@@ -27,18 +27,26 @@ public class DataInitializer {
     @Bean
     public CommandLineRunner initDatabase() {
         return args -> {
-            // Crear OWNER si no existe ninguno en la base de datos (Fail-safe)
-            if (!usuarioRepository.existsByRol("ROLE_OWNER")) {
+            // Actualizar OWNER existente o crear uno nuevo con el correo robertoamelendez15@gmail.com
+            java.util.List<Usuario> owners = usuarioRepository.findByRol("ROLE_OWNER");
+            if (owners.isEmpty()) {
                 log.info("👑 No se detectó ningún OWNER. Creando Superadministrador inicial...");
                 usuarioService.crearOwner(
-                        "juan.garces028@gmail.com", // username inicial
+                        "robertoamelendez15@gmail.com", // username inicial
                         "Admin123!", // password inicial
-                        "juan.garces028@gmail.com" // email inicial
+                        "robertoamelendez15@gmail.com" // email inicial
                 );
-                log.info("✅ OWNER inicial creado: usuario='juan.garces028@gmail.com', contraseña='Admin123!'");
+                log.info("✅ OWNER inicial creado: usuario='robertoamelendez15@gmail.com', contraseña='Admin123!'");
                 log.info("⚠️ IMPORTANTE: Por favor cambie sus credenciales en el módulo de Configuración.");
             } else {
-                log.info("👑 El sistema ya cuenta con un OWNER. Saltando inicialización.");
+                for (Usuario owner : owners) {
+                    if (!"robertoamelendez15@gmail.com".equalsIgnoreCase(owner.getEmail())) {
+                        log.info("📧 Actualizando correo del OWNER existente a robertoamelendez15@gmail.com...");
+                        owner.setEmail("robertoamelendez15@gmail.com");
+                        owner.setUsername("robertoamelendez15@gmail.com");
+                        usuarioRepository.save(owner);
+                    }
+                }
             }
         };
     }

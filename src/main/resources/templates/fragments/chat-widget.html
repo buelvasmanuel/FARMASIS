@@ -2,120 +2,160 @@
 <!-- Import Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <style>
-    /* Estilos Épicos del Chatbot FarmaSIS */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    /* Estilos Premium y Modernos del Chatbot FarmaSIS */
+    #farma-chat-container, .farma-fab, .chat-bubble, .farma-input, .quick-reply-btn {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
     .farma-chat-container {
         position: fixed;
         bottom: 90px;
         right: 30px;
         width: 380px;
-        height: 600px;
+        height: 650px;
         max-height: 80vh;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-radius: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 28px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(255, 255, 255, 0.5) inset;
         display: none;
         flex-direction: column;
         overflow: hidden;
         z-index: 9999;
         transform-origin: bottom right;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        border: 1px solid rgba(255, 255, 255, 0.4);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 1px solid rgba(255, 255, 255, 0.6);
     }
 
     .farma-chat-container.active {
         display: flex;
-        animation: chatSlideUp 0.4s ease-out forwards;
+        animation: chatBounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
-    @keyframes chatSlideUp {
-        0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+    @keyframes chatBounceIn {
+        0% { opacity: 0; transform: scale(0.8) translateY(30px); }
         100% { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .farma-chat-header {
-        background: #1a4d2e;
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
         color: white;
-        padding: 20px;
+        padding: 22px 24px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border-top-left-radius: 24px;
-        border-top-right-radius: 24px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Patrón sutil de fondo en el header */
+    .farma-chat-header::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background: url('data:image/svg+xml;utf8,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+        opacity: 0.6;
+        z-index: 0;
     }
 
     .farma-header-info {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
+        z-index: 1;
     }
 
     .farma-avatar {
-        width: 45px;
-        height: 45px;
+        width: 48px;
+        height: 48px;
         background: white;
-        border-radius: 50%;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #1a4d2e;
+        color: #059669;
         font-size: 24px;
-        box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transform: rotate(-5deg);
+        transition: transform 0.3s ease;
+    }
+
+    .farma-chat-header:hover .farma-avatar {
+        transform: rotate(5deg) scale(1.05);
     }
 
     .farma-header-text h5 {
         margin: 0;
         font-weight: 700;
-        font-size: 1.1rem;
-        letter-spacing: 0.5px;
+        font-size: 1.15rem;
+        letter-spacing: 0.3px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .farma-status {
         font-size: 0.8rem;
-        color: #e0e7ff;
+        color: #ecfdf5;
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 6px;
+        font-weight: 500;
+        margin-top: 2px;
     }
 
     .status-dot {
         width: 8px;
         height: 8px;
-        background: #34d399;
+        background: #6ee7b7;
         border-radius: 50%;
         display: inline-block;
-        box-shadow: 0 0 8px #34d399;
+        box-shadow: 0 0 8px #6ee7b7;
+        animation: pulseStatus 2s infinite;
+    }
+
+    @keyframes pulseStatus {
+        0% { box-shadow: 0 0 0 0 rgba(110, 231, 183, 0.7); }
+        70% { box-shadow: 0 0 0 6px rgba(110, 231, 183, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(110, 231, 183, 0); }
+    }
+
+    .farma-header-actions {
+        display: flex;
+        gap: 8px;
+        z-index: 1;
     }
 
     .farma-close-btn {
         background: rgba(255,255,255,0.2);
         border: none;
         color: white;
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
         cursor: pointer;
         transition: all 0.2s ease;
         display: flex;
         align-items: center;
         justify-content: center;
+        backdrop-filter: blur(5px);
     }
 
     .farma-close-btn:hover {
-        background: rgba(255,255,255,0.4);
-        transform: rotate(90deg);
+        background: rgba(255,255,255,0.3);
+        transform: scale(1.05);
     }
 
     .farma-chat-body {
         flex: 1;
-        padding: 20px;
+        padding: 24px 20px;
         overflow-y: auto;
-        background: #f8fafc;
+        background: transparent;
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 18px;
         scroll-behavior: smooth;
     }
 
@@ -124,57 +164,68 @@
     }
 
     .farma-chat-body::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
+        background: rgba(15, 23, 42, 0.15);
         border-radius: 10px;
     }
 
     .chat-bubble {
         max-width: 85%;
-        padding: 12px 16px;
-        border-radius: 18px;
+        padding: 14px 18px;
+        border-radius: 20px;
         font-size: 0.95rem;
         line-height: 1.5;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        animation: bubblePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        transform-origin: bottom left;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        animation: bubblePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
 
     .chat-bubble.user {
         align-self: flex-end;
-        background: #d1e7dd;
-        color: #1e293b;
-        border-bottom-right-radius: 0px;
+        background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
         transform-origin: bottom right;
     }
 
     .chat-bubble.ai {
         align-self: flex-start;
-        background: #f8f9fa;
+        background: white;
         color: #334155;
-        border-bottom-left-radius: 0px;
-        border: 1px solid #e2e8f0;
+        border-bottom-left-radius: 4px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transform-origin: bottom left;
     }
 
     .bubble-label {
         font-size: 0.75rem;
-        margin-bottom: 4px;
-        opacity: 0.7;
+        margin-bottom: 6px;
+        font-weight: 600;
+        opacity: 0.8;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
     }
 
-    .chat-bubble.user .bubble-label { text-align: right; }
+    .chat-bubble.user .bubble-label { 
+        text-align: right; 
+        color: #94a3b8;
+    }
+    
+    .chat-bubble.ai .bubble-label {
+        color: #059669;
+    }
     
     @keyframes bubblePop {
-        0% { transform: scale(0.5); opacity: 0; }
-        100% { transform: scale(1); opacity: 1; }
+        0% { transform: scale(0.8) translateY(10px); opacity: 0; }
+        100% { transform: scale(1) translateY(0); opacity: 1; }
     }
 
     .farma-chat-input-area {
-        padding: 15px 20px;
-        background: white;
-        border-top: 1px solid #e2e8f0;
+        padding: 16px 20px 20px 20px;
+        background: rgba(255, 255, 255, 0.8);
+        border-top: 1px solid rgba(226, 232, 240, 0.6);
         display: flex;
-        gap: 10px;
+        gap: 12px;
         align-items: center;
+        backdrop-filter: blur(10px);
     }
 
     .farma-input-wrapper {
@@ -184,38 +235,41 @@
 
     .farma-input {
         width: 100%;
-        padding: 12px 18px;
-        border-radius: 20px;
-        border: 1px solid #e2e8f0;
-        background: #f8fafc;
+        padding: 14px 20px;
+        border-radius: 24px;
+        border: 1px solid rgba(203, 213, 225, 0.8);
+        background: rgba(248, 250, 252, 0.8);
         outline: none;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
         font-size: 0.95rem;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
     }
 
     .farma-input:focus {
-        border-color: #1a4d2e;
+        border-color: #10b981;
         background: white;
-        box-shadow: 0 0 0 3px rgba(26, 77, 46, 0.15);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15), inset 0 2px 4px rgba(0,0,0,0.02);
     }
 
     .farma-send-btn {
-        width: 44px;
-        height: 44px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
-        background: #1a4d2e;
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
         color: white;
         border: none;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        font-size: 1.1rem;
     }
 
     .farma-send-btn:hover {
-        background: #277443;
-        transform: scale(1.05);
+        transform: scale(1.08) rotate(-10deg);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
     }
 
     .farma-send-btn:active {
@@ -227,21 +281,21 @@
         position: fixed;
         bottom: 30px;
         right: 30px;
-        width: 65px;
-        height: 65px;
+        width: 68px;
+        height: 68px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #1a4d2e 0%, #2D6A4F 100%);
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
         color: white;
         border: none;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 28px;
-        box-shadow: 0 10px 25px rgba(26, 77, 46, 0.4);
+        font-size: 30px;
+        box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
         z-index: 10000;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        animation: float 3s ease-in-out infinite;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: float 4s ease-in-out infinite;
     }
 
     .farma-fab::before {
@@ -250,71 +304,163 @@
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        background: rgba(26, 77, 46, 0.4);
+        background: rgba(16, 185, 129, 0.4);
         z-index: -1;
-        animation: pulseEffect 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        animation: pulseEffect 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
 
     .farma-fab:hover {
         transform: scale(1.1) translateY(-5px);
-        box-shadow: 0 15px 35px rgba(26, 77, 46, 0.5);
+        box-shadow: 0 15px 35px rgba(16, 185, 129, 0.5);
     }
 
     @keyframes float {
         0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
+        50% { transform: translateY(-8px); }
     }
 
     @keyframes pulseEffect {
-        0%, 100% { transform: scale(1); opacity: 0; }
-        50% { transform: scale(1.5); opacity: 0.5; }
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.6); opacity: 0; }
     }
 
     /* Typing Indicator */
     .typing-indicator {
         display: flex;
-        gap: 5px;
-        padding: 5px 10px;
-        background: white;
-        border-radius: 15px;
+        gap: 6px;
+        padding: 6px 4px;
         align-self: flex-start;
-        border: 1px solid #e2e8f0;
     }
 
     .typing-dot {
         width: 8px;
         height: 8px;
-        background: #2D6A4F;
+        background: #059669;
         border-radius: 50%;
         animation: typeBounce 1.4s infinite ease-in-out both;
+        opacity: 0.6;
     }
 
     .typing-dot:nth-child(1) { animation-delay: -0.32s; }
     .typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
     @keyframes typeBounce {
-        0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
         40% { transform: scale(1); opacity: 1; }
     }
 
-    /* Markdown Formats */
+    /* Markdown Formats & Tables */
     .chat-bubble p { margin-bottom: 0; }
-    .chat-bubble ul { padding-left: 20px; margin-bottom: 0; margin-top: 5px; }
-    .chat-bubble strong { color: #0f172a; }
-    .chat-bubble.user strong { color: #0f172a; }
+    .chat-bubble ul { padding-left: 20px; margin-bottom: 0; margin-top: 8px; }
+    .chat-bubble li { margin-bottom: 4px; }
+    .chat-bubble strong { font-weight: 600; color: #0f172a; }
+    .chat-bubble.user strong { color: #f8fafc; }
+    
+    .farma-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 0.85rem;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .farma-table th {
+        background: #10b981;
+        color: white;
+        padding: 8px;
+        text-align: left;
+        font-weight: 600;
+    }
+    .farma-table td {
+        padding: 8px;
+        border-bottom: 1px solid #e2e8f0;
+        color: #334155;
+    }
+    .farma-table tr:last-child td {
+        border-bottom: none;
+    }
+    .chat-bubble.user .farma-table td {
+        color: #1e293b;
+    }
+    .chat-bubble ul { padding-left: 20px; margin-bottom: 0; margin-top: 8px; }
+    .chat-bubble li { margin-bottom: 4px; }
+    .chat-bubble strong { font-weight: 600; color: #0f172a; }
+    .chat-bubble.user strong { color: #f8fafc; }
+    
+    /* Code highlight */
+    .chat-bubble code {
+        background: rgba(15, 23, 42, 0.06);
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.85em;
+        color: #db2777;
+    }
+    .chat-bubble.user code {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fce7f3;
+    }
+
+    /* Quick Replies */
+    .quick-replies {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 8px 0;
+        animation: bubblePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        animation-delay: 0.2s;
+        opacity: 0;
+    }
+
+    .quick-reply-btn {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #059669;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        white-space: nowrap;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .quick-reply-btn:hover {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        color: white;
+        border-color: transparent;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    /* Message Timestamp */
+    .msg-time {
+        font-size: 0.68rem;
+        color: #94a3b8;
+        margin-top: 8px;
+        text-align: right;
+        font-weight: 500;
+    }
+
+    .chat-bubble.ai .msg-time {
+        text-align: left;
+    }
 </style>
 
 <!-- Floating Action Button -->
 <button type="button" id="farma-fab" class="farma-fab" onclick="toggleChat()">
-    <i class="fas fa-robot"></i>
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: white; margin-top: 2px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 </button>
 
 <!-- Chat Window -->
 <div id="farma-chat-container" class="farma-chat-container">
     <div class="farma-chat-header">
         <div class="farma-header-info">
-            <div class="farma-avatar">
-                <i class="fas fa-pills"></i>
+            <div class="farma-avatar" style="display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #059669;"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"></path></svg>
             </div>
             <div class="farma-header-text">
                 <h5>IA FarmaSIS</h5>
@@ -323,19 +469,31 @@
                 </div>
             </div>
         </div>
-        <button type="button" class="farma-close-btn" onclick="toggleChat()">
-            <i class="fas fa-times"></i>
-        </button>
+        <div class="farma-header-actions">
+            <button type="button" class="farma-close-btn" onclick="clearChat()" title="Limpiar chat" style="display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+            <button type="button" class="farma-close-btn" onclick="toggleChat()" style="display: flex; align-items: center; justify-content: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
     </div>
     
     <div class="farma-chat-body" id="farma-chat-body">
         <div class="chat-bubble ai">
             <div class="bubble-label">FarmaBot IA</div>
             <div th:with="nombreUser=${loggedUser != null ? loggedUser.nombre : 'Usuario'}">
-                ¡Hola, <span th:text="${nombreUser}"></span>! Soy el Agente de FarmaSIS. 💊<br><br>
+                ¡<span id="dynamic-greeting">Hola</span>, <span th:text="${nombreUser}"></span>! Soy el asistente virtual de L-Farma.<br><br>
                 Puedo revisar el <strong>stock de medicamentos</strong>, consultar <strong>precios</strong> o buscar alertas de <strong>bajo inventario</strong>.<br><br>
                 ¿Qué necesitas verificar hoy?
             </div>
+        </div>
+        <div class="quick-replies" id="quick-replies">
+            <button class="quick-reply-btn" onclick="sendQuickReply('Ver inventario de productos')">Ver inventario</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('Revisar las ventas del día')">Ventas de hoy</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('Mostrar productos con bajo stock')">Bajo stock</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('Lista de proveedores activos')">Proveedores</button>
+            <button class="quick-reply-btn" onclick="sendQuickReply('Consultar ofertas y descuentos')">Ofertas activas</button>
         </div>
     </div>
     
@@ -343,8 +501,8 @@
         <div class="farma-input-wrapper">
             <input type="text" id="farma-input" class="farma-input" placeholder="Pregúntale al Agente..." autocomplete="off" onkeypress="handleEnter(event)">
         </div>
-        <button type="button" class="farma-send-btn" onclick="sendMessage(event)">
-            <i class="fas fa-paper-plane"></i>
+        <button type="button" class="farma-send-btn" onclick="sendMessage(event)" style="display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: white; margin-right: 2px;"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>
     </div>
 </div>

@@ -164,16 +164,14 @@ public class ChatbotService {
                                     cleanMsg.contains("solicitudes");
 
         boolean hasAuditoriaKeyword = cleanMsg.contains("auditoria") || cleanMsg.contains("auditoría") || 
-                                      cleanMsg.contains("log") || cleanMsg.contains("logs") || 
-                                      cleanMsg.contains("registro") || cleanMsg.contains("registros") || 
-                                      cleanMsg.contains("actividad") || cleanMsg.contains("actividades") || 
-                                      cleanMsg.contains("historial cambios") || cleanMsg.contains("cambio") || 
-                                      cleanMsg.contains("cambios") || cleanMsg.contains("acción") || 
-                                      cleanMsg.contains("accion") || cleanMsg.contains("acciones") || 
-                                      cleanMsg.contains("quién hizo") || cleanMsg.contains("quien hizo") || 
-                                      cleanMsg.contains("modificó") || cleanMsg.contains("modifico") || 
-                                      cleanMsg.contains("eliminó") || cleanMsg.contains("elimino") || 
-                                      cleanMsg.contains("creó") || cleanMsg.contains("creo");
+                                       cleanMsg.contains("log") || cleanMsg.contains("logs") || 
+                                       cleanMsg.contains("registro de actividad") || cleanMsg.contains("registros de actividad") || 
+                                       cleanMsg.contains("historial de cambios") || 
+                                       cleanMsg.contains("acción realizada") || cleanMsg.contains("acciones realizadas") || 
+                                       cleanMsg.contains("quién hizo") || cleanMsg.contains("quien hizo") || 
+                                       cleanMsg.contains("quién modificó") || cleanMsg.contains("quien modifico") || 
+                                       cleanMsg.contains("quién eliminó") || cleanMsg.contains("quien elimino") || 
+                                       cleanMsg.contains("trazabilidad") || cleanMsg.contains("rastro");
 
         boolean hasOptimizacionKeyword = cleanMsg.contains("optimización") || cleanMsg.contains("optimizacion") || 
                                           cleanMsg.contains("optimizar") || cleanMsg.contains("pedido inteligente") || 
@@ -206,17 +204,16 @@ public class ChatbotService {
                                       cleanMsg.contains("medicamento") || cleanMsg.contains("medicamentos") || 
                                       cleanMsg.contains("bajo stock") || cleanMsg.contains("pocas unidades") || 
                                       cleanMsg.contains("por agotarse") || cleanMsg.contains("sin stock") || 
-                                      cleanMsg.contains("agotado") || cleanMsg.contains("pocos") || 
-                                      cleanMsg.contains("pocas") || cleanMsg.contains("stock minimo") || 
+                                      cleanMsg.contains("agotado") || cleanMsg.contains("stock minimo") || 
                                       cleanMsg.contains("stock mínimo") || cleanMsg.contains("faltantes") || 
                                       cleanMsg.contains("precio") || cleanMsg.contains("precios") || 
-                                      cleanMsg.contains("cantidad") || cleanMsg.contains("disponible") || 
-                                      cleanMsg.contains("disponibles") || cleanMsg.contains("cuanto") || 
-                                      cleanMsg.contains("cuántos") || cleanMsg.contains("cuesta") || 
-                                      cleanMsg.contains("cuestan") || cleanMsg.contains("valor") || 
+                                      cleanMsg.contains("disponible") || cleanMsg.contains("disponibles") || 
+                                      cleanMsg.contains("cuesta") || cleanMsg.contains("cuestan") || 
                                       cleanMsg.contains("código") || cleanMsg.contains("codigo") || 
-                                      cleanMsg.contains("tienes") || cleanMsg.contains("tienen") || 
-                                      cleanMsg.contains("hay");
+                                      cleanMsg.contains("pastilla") || cleanMsg.contains("pastillas") || 
+                                      cleanMsg.contains("jarabe") || cleanMsg.contains("tableta") || 
+                                      cleanMsg.contains("tabletas") || cleanMsg.contains("cápsula") || 
+                                      cleanMsg.contains("capsulas");
 
         boolean isDomainQuery = hasOfertaKeyword || hasAsistenciaKeyword || hasProveedorKeyword || 
                                 hasClienteKeyword || hasNovedadKeyword || hasAuditoriaKeyword || 
@@ -741,10 +738,20 @@ public class ChatbotService {
 
             contextData = conteoContextLine + "\nINVENTARIO REAL FILTRADO DE PRODUCTOS (Medicamentos):\n" + inventarioContext;
 
-        // --- GENERAL (Fallback) ---
+        // --- GENERAL (Fallback Inteligente) ---
         } else {
-            // Intención 'General': No se consulta base de datos.
-            contextData = "[Consulta de propósito general. No se inyectaron datos de base de datos para optimizar recursos.]\n";
+            // Intención 'General': Proporcionar contexto mínimo del sistema para respuestas inteligentes
+            long totalProductos = productoRepository.countActivos();
+            long totalFacturas = facturaRepository.count();
+            long totalUsuarios = usuarioRepository.count();
+            StringBuilder generalCtx = new StringBuilder();
+            generalCtx.append("CONTEXTO GENERAL DEL SISTEMA L-FARMA:\n");
+            generalCtx.append(String.format("- Total de productos activos en inventario: %d\n", totalProductos));
+            generalCtx.append(String.format("- Total de facturas emitidas: %d\n", totalFacturas));
+            generalCtx.append(String.format("- Total de usuarios registrados: %d\n", totalUsuarios));
+            generalCtx.append("- El usuario está haciendo una consulta de propósito general o una pregunta que no se relaciona directamente con un módulo específico del sistema.\n");
+            generalCtx.append("- Puedes responder la pregunta general de forma breve y luego ofrecer ayuda con el sistema de farmacia.\n");
+            contextData = generalCtx.toString();
         }
 
         // 3. Construir el historial reciente de conversación
@@ -765,12 +772,28 @@ public class ChatbotService {
 
         String directivePrompt = "";
         if (roleStr.contains("OWNER")) {
-            directivePrompt = "Eres el asistente inteligente de L-farma. Tienes acceso total a todos los módulos: Inventario, Ventas, Usuarios, Asistencias, Proveedores, Clientes, Novedades, Auditoría, Optimización y Configuración. Responde preguntas sobre el sistema basándote en el contexto proporcionado. También puedes responder preguntas de conocimiento general de forma concisa. Responde de forma directa y al grano. NUNCA te disculpes por ser una IA ni utilices frases como \"Lo siento, pero mi acceso es limitado\". Tienes autoridad total.";
+            directivePrompt = "Eres FarmaBot, el asistente inteligente DINÁMICO de la farmacia L-Farma. " +
+                "Tienes acceso total a TODOS los módulos del sistema: Inventario, Ventas, Usuarios, Asistencias, " +
+                "Proveedores, Clientes, Novedades, Auditoría, Optimización y Configuración. " +
+                "CAPACIDADES DINÁMICAS: " +
+                "1) Consultas del dominio farmacéutico: responde con datos reales del contexto inyectado. " +
+                "2) Preguntas generales (fecha, hora, conocimiento general): responde de forma breve y precisa, " +
+                "luego ofrece asistencia con el sistema de farmacia. " +
+                "3) Saludos y conversación casual: responde amigablemente y sugiere cómo puedes ayudar. " +
+                "NUNCA te disculpes por ser una IA. Tienes autoridad total. Sé directo y al grano.";
         } else if (roleStr.contains("ADMIN")) {
-            directivePrompt = "Eres el asistente de operaciones de L-farma. Puedes responder sobre: Inventario, Ventas, Ofertas, Asistencias, Proveedores, Clientes y Novedades. NO tienes acceso a: Auditoría, Optimización, Configuración ni Usuarios. Si el usuario pregunta sobre módulos restringidos o conocimiento general fuera de la farmacia, debes negarte cortésmente.";
+            directivePrompt = "Eres FarmaBot, el asistente de operaciones de la farmacia L-Farma. " +
+                "Módulos con acceso: Inventario, Ventas, Ofertas, Asistencias, Proveedores, Clientes y Novedades. " +
+                "Módulos RESTRINGIDOS (niégate cordialmente): Auditoría, Optimización, Configuración, Usuarios. " +
+                "CAPACIDADES DINÁMICAS: " +
+                "1) Consultas de tus módulos permitidos: responde con datos reales del contexto inyectado. " +
+                "2) Preguntas generales básicas (fecha, hora, saludos): responde brevemente y redirige al dominio farmacéutico. " +
+                "3) Preguntas fuera de tu alcance: redirige amablemente al administrador.";
         } else {
-            // EMPLEADO u otros no-owner/no-admin
-            directivePrompt = "Eres el asistente de L-farma para personal general. No tienes autorización para responder preguntas avanzadas o ver datos del sistema en este canal de chat. Por favor, niégate cortésmente a dar respuestas y pide contactar al administrador.";
+            directivePrompt = "Eres FarmaBot, el asistente de la farmacia L-Farma para personal general. " +
+                "Puedes responder preguntas básicas sobre productos e inventario disponible al público. " +
+                "Para consultas avanzadas del sistema, indica que contacten al administrador. " +
+                "Puedes responder saludos y preguntas generales básicas de forma breve.";
         }
 
         String systemPrompt = String.format("""
@@ -779,18 +802,20 @@ public class ChatbotService {
                 %s
                 Responde siempre en español, de forma profesional, amable y concisa.
                 
-                CONVENIO DE INTENCIONES Y PRECISIÓN:
-                El sistema detecta automáticamente de qué módulo de negocio estás hablando e inyecta únicamente el contexto y datos reales correspondientes de MongoDB o MySQL.
+                SISTEMA INTELIGENTE DE CONTEXTO DINÁMICO:
+                La base de datos YA ha sido consultada por ti en el backend. A continuación se te proporcionan los DATOS REALES, EXACTOS Y ACTUALIZADOS EN TIEMPO REAL de la farmacia. 
+                TÚ ERES PARTE DEL SISTEMA, por lo tanto SÍ TIENES ACCESO EN TIEMPO REAL a esta información.
                 
-                CONTEXTO DE NEGOCIO REAL INYECTADO (Datos en tiempo real):
+                DATOS EN TIEMPO REAL DEL SISTEMA (Contexto dinámico inyectado):
                 %s%s
                 
                 INSTRUCCIONES CRÍTICAS:
-                - Responde la consulta del usuario basándote ESTRICTAMENTE en las directivas de tu rol y en los datos reales del "CONTEXTO DE NEGOCIO REAL INYECTADO" si están disponibles.
-                - Cuando el usuario pregunte por cantidades, totales o stock de productos (por categoría, bajo stock o total general), debes basar tu respuesta SIEMPRE en el valor del "Total real" (ej. "Total real de productos con bajo stock", "Total real en BD para esta categoría", "Total real de productos registrados") proporcionado en el contexto inyectado, y NO en la cantidad de elementos de la lista de muestra (la cual está limitada por razones de rendimiento).
-                - Si estás actuando como ADMIN y el usuario pregunta sobre módulos restringidos (Auditoría, Optimización, Configuración, Usuarios), niégate cordialmente.
-                - Si estás actuando como OWNER, responde a consultas del dominio o generales con alta precisión y de forma sumamente concisa.
-                - Sé directo, veraz y no inventes existencias o datos.
+                - ¡CRÍTICO!: TÚ SÍ TIENES ACCESO A LA INFORMACIÓN. NUNCA te disculpes ni digas que no tienes acceso a la información en tiempo real o actualizada. El contexto inyectado arriba ES la información en tiempo real. ¡Asúmelo con autoridad!
+                - Para consultas del DOMINIO FARMACÉUTICO: Basa tu respuesta ESTRICTAMENTE en los datos reales del contexto inyectado.
+                - Para TOTALES y CONTEOS: Usa SIEMPRE el valor de "Total real" del contexto inyectado.
+                - Si el usuario pregunta "cuántos productos hay", responde con el Total Real indicado en el contexto.
+                - Usa tablas Markdown si devuelves listas de productos, ventas o asistencias para que se vean bien formateadas.
+                - Sé directo, veraz, conciso y profesional.
                 """, formattedDateTime, directivePrompt, contextData, historyBuilder.toString());
 
         // 5. Ejecutar llamada al LLM
@@ -805,7 +830,7 @@ public class ChatbotService {
         sessionHistory.add(new ChatMessage("user", userMessage));
         sessionHistory.add(new ChatMessage("assistant", aiResponse));
 
-        while (sessionHistory.size() > 4) {
+        while (sessionHistory.size() > 8) {
             sessionHistory.remove(0);
         }
 
@@ -867,10 +892,14 @@ public class ChatbotService {
 
         String[] tokens = cleanMsg.split("\\s+");
         Set<String> stopWords = getStopWordsList();
+        
+        // Evitar que palabras genéricas del dominio se usen para buscar el nombre de un producto específico
+        Set<String> domainStopWords = new java.util.HashSet<>(stopWords);
+        domainStopWords.addAll(java.util.Arrays.asList("ver", "mostrar", "inventario", "producto", "productos", "medicamento", "medicamentos", "lista", "listar"));
 
         List<Producto> matching = new ArrayList<>();
         for (String token : tokens) {
-            if (token.length() >= 3 && !stopWords.contains(token)) {
+            if (token.length() >= 3 && !domainStopWords.contains(token)) {
                 List<Producto> found = productoRepository.findByNombreContainingIgnoreCaseOrCodigoContainingIgnoreCase(token, token);
                 for (Producto p : found) {
                     if (Boolean.TRUE.equals(p.getActivo()) && matching.size() < 12 && !matching.contains(p)) {
