@@ -1,10 +1,10 @@
-# 💊 L-Farma: Sistema de Gestión de Farmacias Inteligente
+#  FARMASIS: Sistema de Gestión de Farmacias Inteligente
 
-L-Farma es un sistema de gestión empresarial (ERP) y de punto de venta (POS) de alta fidelidad diseñado para farmacias modernas. La plataforma incorpora Inteligencia Artificial (RAG con Llama 3) para la atención al personal y optimización matemática para sugerencias de reabastecimiento inteligente de inventario.
+FARMASIS es un sistema de gestión empresarial (ERP) y de punto de venta (POS) de alta fidelidad diseñado para farmacias modernas. La plataforma incorpora Inteligencia Artificial (RAG con Llama 3) para la atención al personal y optimización matemática para sugerencias de reabastecimiento inteligente de inventario.
 
 ---
 
-## 🚀 Arquitectura y Tecnologías
+##  Arquitectura y Tecnologías
 
 ### **Backend**
 *   **Lenguaje:** Java 21
@@ -24,7 +24,7 @@ L-Farma es un sistema de gestión empresarial (ERP) y de punto de venta (POS) de
 
 ---
 
-## 📦 Requisitos de Instalación
+##  Requisitos de Instalación
 
 Asegúrate de contar con las siguientes herramientas en tu entorno de desarrollo local:
 *   **Java Development Kit (JDK):** Versión 21 o superior.
@@ -34,7 +34,7 @@ Asegúrate de contar con las siguientes herramientas en tu entorno de desarrollo
 
 ---
 
-## 🛠️ Configuración e Instalación
+##  Configuración e Instalación
 
 ### **1. Clonar el repositorio**
 ```bash
@@ -80,7 +80,7 @@ La aplicación estará disponible para su uso en: `http://localhost:8092`
 
 ---
 
-## 🔒 Higiene del Repositorio (.gitignore)
+##  Higiene del Repositorio (.gitignore)
 
 El archivo `.gitignore` del proyecto está configurado para cumplir de forma estricta con las mejores prácticas de la industria, asegurando que:
 1.  **Archivos Sensibles:** El archivo `application-secrets.properties` queda completamente excluido del control de versiones.
